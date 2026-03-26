@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔️ 勇者挂机物语</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-dark:#1a1a2e;--bg-mid:#16213e;--bg-panel:#0f3460;
+  --gold:#f5c542;--hp-red:#e74c3c;--mp-blue:#3498db;--exp-green:#2ecc71;
+  --common:#aaa;--uncommon:#55cc55;--rare:#5555ff;--epic:#aa55ff;--legendary:#ffaa00;--mythic:#ff5555;
+}
+body{background:var(--bg-dark);color:#e0e0e0;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;image-rendering:pixelated}
+.pf{font-family:'Press Start 2P',monospace}
+.pb{border:3px solid #555;border-top-color:#888;border-left-color:#888;border-right-color:#333;border-bottom-color:#333;background:var(--bg-mid);padding:10px}
+.pbi{border:3px solid #555;border-top-color:#333;border-left-color:#333;border-right-color:#888;border-bottom-color:#888;background:rgba(0,0,0,.3);padding:8px}
+
+.gc{max-width:920px;margin:0 auto;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:100vh}
+.header{text-align:center;padding:12px 8px}
+.header h1{font-family:'Press Start 2P',monospace;font-size:18px;color:var(--gold);text-shadow:3px 3px 0 #000;letter-spacing:2px;margin-bottom:6px}
+.header .sub{font-size:11px;color:#888;font-family:'Press Start 2P',monospace}
+
+.timer-sec{text-align:center;padding:8px}
+.timer-d{font-family:'Press Start 2P',monospace;font-size:28px;color:var(--gold);text-shadow:2px 2px 0 #000;margin:6px 0}
+.timer-l{font-size:11px;color:#999}
+.fbtn{font-family:'Press Start 2P',monospace;font-size:12px;padding:12px 28px;margin-top:10px;cursor:pointer;border:3px solid #888;border-bottom-color:#333;border-right-color:#333;background:linear-gradient(180deg,#4a6fa5,#2d4a7a);color:#fff;text-shadow:1px 1px 0 #000;transition:all .05s}
+.fbtn:hover{background:linear-gradient(180deg,#5a7fb5,#3d5a8a)}
+.fbtn:active,.fbtn.active{border-top-color:#333;border-left-color:#333;border-bottom-color:#888;border-right-color:#888;transform:translateY(1px)}
+.fbtn.active{background:linear-gradient(180deg,#7a2d2d,#a54a4a);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.8}}
+
+/* TABS */
+.tab-bar{display:flex;gap:4px}
+.tab-btn{font-family:'Press Start 2P',monospace;font-size:9px;padding:8px 14px;cursor:pointer;border:2px solid #555;border-bottom:none;background:#1a1a2e;color:#888;transition:all .1s}
+.tab-btn:hover{color:#ccc}
+.tab-btn.active{background:var(--bg-mid);color:var(--gold);border-top-color:#888;border-left-color:#888;border-right-color:#333;position:relative;z-index:2}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.main-area{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* BATTLE */
+.battle-scene{position:relative;height:260px;overflow:hidden;background:#111}
+.scene-bg{position:absolute;inset:0;overflow:hidden}
+.scene-bg .ground{position:absolute;bottom:0;width:100%;height:60px;background:repeating-linear-gradient(90deg,#2d5a1e 0px,#3a6b2a 8px,#2d5a1e 16px)}
+.scene-bg .sky{position:absolute;top:0;width:100%;height:calc(100% - 60px);background:linear-gradient(180deg,#0a0a2a 0%,#1a1a4a 60%,#2a3a2a 100%)}
+.stars{position:absolute;top:0;width:100%;height:60%}
+.star{position:absolute;width:2px;height:2px;background:#fff;animation:twinkle 2s infinite}
+@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.2}}
+.battle-entities{position:absolute;bottom:65px;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 30px}
+.sprite-container{display:flex;flex-direction:column;align-items:center;gap:4px}
+.sprite{width:48px;height:48px;image-rendering:pixelated}
+.hero-sprite{animation:hero-idle .8s steps(2) infinite}
+@keyframes hero-idle{0%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.hero-sprite.attacking{animation:hero-atk .3s ease-out}
+@keyframes hero-atk{0%{transform:translateX(0)}40%{transform:translateX(60px)}100%{transform:translateX(0)}}
+.monster-sprite{animation:mon-idle 1s steps(2) infinite}
+@keyframes mon-idle{0%{transform:translateY(0) scaleX(-1)}50%{transform:translateY(-2px) scaleX(-1)}}
+.monster-sprite.hit{animation:mon-hit .3s ease-out}
+@keyframes mon-hit{0%{transform:scaleX(-1)}25%{transform:scaleX(-1) translateX(10px);filter:brightness(3)}100%{transform:scaleX(-1)}}
+.monster-sprite.dying{animation:mon-die .5s ease-out forwards}
+@keyframes mon-die{0%{transform:scaleX(-1);opacity:1}50%{transform:scaleX(-1) rotate(20deg);opacity:.5;filter:brightness(3)}100%{transform:scaleX(-1) rotate(45deg) translateY(20px);opacity:0}}
+
+.hp-bm{width:52px;height:6px;background:#333;border:1px solid #555}
+.hp-bm-f{height:100%;background:var(--hp-red);transition:width .2s}
+.hp-bm-f.elite{background:linear-gradient(90deg,#ffaa00,#ff6600)}.hp-bm-f.boss{background:linear-gradient(90deg,#ff2222,#ff0066);animation:boss-pulse 1s infinite}
+@keyframes boss-pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+.en{font-family:'Press Start 2P',monospace;font-size:7px;color:#fff;text-shadow:1px 1px 0 #000}
+.el{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--gold);text-shadow:1px 1px 0 #000}
+.damage-num{position:absolute;font-family:'Press Start 2P',monospace;font-size:14px;color:#ff4444;text-shadow:1px 1px 0 #000;pointer-events:none;animation:dmg .8s ease-out forwards;z-index:10}
+.damage-num.crit{font-size:18px;color:var(--gold)}
+.damage-num.skill-dmg{font-size:16px;color:#55ccff}
+@keyframes dmg{0%{opacity:1;transform:translateY(0) scale(1)}20%{transform:translateY(-15px) scale(1.2)}100%{opacity:0;transform:translateY(-50px) scale(.8)}}
+.blo{position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,.7);border:1px solid #555;padding:4px 6px;max-height:50px;overflow:hidden}
+.blo .ll{font-family:'Press Start 2P',monospace;font-size:7px;color:#ccc;line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blo .ll.gt{color:var(--gold)}.blo .ll.rt{color:#f66}.blo .ll.grt{color:#6f6}.blo .ll.pt{color:#c8f}
+.battle-scene::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:5}
+
+/* Skill activation flash */
+.skill-flash{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:11px;color:#55ccff;text-shadow:0 0 10px rgba(85,204,255,.8),2px 2px 0 #000;pointer-events:none;animation:skfl .9s ease-out forwards;z-index:12;white-space:nowrap}
+@keyframes skfl{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}30%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+
+/* STATUS */
+.sp{display:flex;flex-direction:column;gap:6px}
+.hi{padding:8px}
+.hi .ir{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.hi .hn{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold)}
+.hi .hl{font-family:'Press Start 2P',monospace;font-size:9px;color:#ccc}
+.sb{height:14px;background:#222;border:2px solid #444;margin:3px 0;position:relative;overflow:hidden}
+.sbf{height:100%;transition:width .3s}
+.sbf.hp{background:linear-gradient(180deg,#e74c3c,#c0392b)}
+.sbf.mp{background:linear-gradient(180deg,#3498db,#2980b9)}
+.sbf.exp{background:linear-gradient(180deg,#2ecc71,#27ae60)}
+.sbt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:6px;color:#fff;text-shadow:1px 1px 0 #000;white-space:nowrap}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;padding:6px;font-size:10px}
+.sg .si{display:flex;justify-content:space-between;padding:2px 0}
+.sg .sl{color:#999}.sg .sv{color:#fff;font-weight:700}
+
+/* EQUIP */
+.es{padding:6px}
+.es h3{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.auto-label{font-family:'Press Start 2P',monospace;font-size:7px;color:#888;display:flex;align-items:center;gap:4px;font-weight:normal}
+.auto-toggle{width:32px;height:16px;background:#333;border:2px solid #555;display:inline-block;position:relative;cursor:pointer;vertical-align:middle}
+.auto-toggle.on{background:#2a6a2a;border-color:#4a4}
+.auto-toggle::after{content:'';position:absolute;top:1px;left:1px;width:10px;height:10px;background:#888;transition:left .15s}
+.auto-toggle.on::after{left:17px;background:#5f5}
+.eg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.esl{aspect-ratio:1;border:2px solid #555;background:rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:default;font-size:20px;min-height:50px}
+.esl .sll{font-family:'Press Start 2P',monospace;font-size:5px;color:#666;margin-top:2px}
+.esl.q-common{border-color:var(--common)}.esl.q-uncommon{border-color:var(--uncommon);box-shadow:0 0 6px rgba(85,204,85,.3)}
+.esl.q-rare{border-color:var(--rare);box-shadow:0 0 6px rgba(85,85,255,.3)}
+.esl.q-epic{border-color:var(--epic);box-shadow:0 0 8px rgba(170,85,255,.4)}
+.esl.q-legendary{border-color:var(--legendary);box-shadow:0 0 10px rgba(255,170,0,.5);animation:lglow 2s infinite}
+.esl.q-mythic{border-color:var(--mythic);box-shadow:0 0 12px rgba(255,85,85,.6);animation:mglow 1.5s infinite}
+@keyframes lglow{0%,100%{box-shadow:0 0 8px rgba(255,170,0,.4)}50%{box-shadow:0 0 16px rgba(255,170,0,.7)}}
+@keyframes mglow{0%,100%{box-shadow:0 0 10px rgba(255,85,85,.5)}50%{box-shadow:0 0 20px rgba(255,85,85,.9)}}
+.ett{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#111;border:2px solid #666;padding:8px;z-index:100;min-width:170px;pointer-events:none}
+.esl:hover .ett{display:block}
+.ett .tn{font-family:'Press Start 2P',monospace;font-size:8px;margin-bottom:4px}
+.ett .ts{font-size:10px;color:#aaa;line-height:1.5}.ett .ts span{color:#5f5}
+
+/* SKILL TREE */
+.skill-tree-panel{padding:10px}
+.sk-h3{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--gold);margin-bottom:8px}
+.sk-points{font-family:'Press Start 2P',monospace;font-size:9px;color:#ccc;margin-bottom:12px}
+.sk-points span{color:var(--gold)}
+.sk-branches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sk-branch{padding:8px}
+.sk-branch-title{font-family:'Press Start 2P',monospace;font-size:8px;text-align:center;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #333}
+.sk-branch-title.atk-t{color:#ff6644;border-color:#442211}.sk-branch-title.def-t{color:#44aaff;border-color:#112244}.sk-branch-title.util-t{color:#44ff88;border-color:#114422}
+.sk-nodes{display:flex;flex-direction:column;gap:6px}
+.sk-node{border:2px solid #444;background:rgba(0,0,0,.3);padding:7px;cursor:pointer;transition:all .15s;position:relative}
+.sk-node:hover:not(.locked){border-color:#888;background:rgba(255,255,255,.05)}
+.sk-node.unlocked{border-color:#5a5;background:rgba(50,120,50,.15)}
+.sk-node.maxed{border-color:var(--gold);background:rgba(120,100,30,.15)}
+.sk-node.locked{opacity:.35;cursor:not-allowed}
+.sk-node .sk-row{display:flex;justify-content:space-between;align-items:center}
+.sk-node .sk-icon{font-size:16px;margin-right:4px}
+.sk-node .sk-name{font-family:'Press Start 2P',monospace;font-size:7px;color:#ddd}
+.sk-node .sk-lvl{font-family:'Press Start 2P',monospace;font-size:6px;color:#aaa}
+.sk-node .sk-desc{font-size:9px;color:#888;margin-top:4px;line-height:1.4}
+.sk-node .sk-cost{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--gold);margin-top:3px}
+.sk-node.unlocked .sk-name{color:#7f7}
+.sk-node.maxed .sk-name{color:var(--gold)}
+.sk-arrow{text-align:center;color:#444;font-size:14px;line-height:1;padding:2px 0}
+.sk-node.unlocked+.sk-arrow{color:#5a5}
+
+/* BOTTOM */
+.bs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lp{padding:6px;max-height:140px}
+.lp h3{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:6px}
+.lc{max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#555 #222}
+.lc::-webkit-scrollbar{width:6px}.lc::-webkit-scrollbar-track{background:#222}.lc::-webkit-scrollbar-thumb{background:#555}
+.le{font-size:10px;padding:1px 0;color:#aaa;line-height:1.5;border-bottom:1px solid rgba(255,255,255,.03)}
+.le .time{color:#666;margin-right:4px}
+.le.gt{color:var(--gold)}.le.grt{color:#6f6}.le.rt{color:#f66}.le.pt{color:#c8f}
+.mp2{padding:6px}
+.mp2 h3{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);margin-bottom:6px}
+.ml{max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#555 #222}
+.mi{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,.03)}
+.mi .ms-i{font-size:14px}.mi .ms-t{flex:1;color:#ccc}.mi .ms-r{color:#666;font-size:9px}
+.mi.locked{opacity:.4}.mi.achieved{opacity:1}.mi.achieved .ms-t{color:var(--gold)}
+
+/* POPUPS */
+.ip{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;background:#111;border:3px solid var(--gold);padding:20px;text-align:center;animation:popin .3s ease-out;min-width:260px}
+@keyframes popin{0%{transform:translate(-50%,-50%) scale(.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.ip.show{display:block}
+.po{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199}.po.show{display:block}
+.ip .pt2{font-family:'Press Start 2P',monospace;font-size:10px;color:var(--gold);margin-bottom:12px}
+.ip .pi2{font-size:36px;margin:8px 0}
+.ip .pn2{font-family:'Press Start 2P',monospace;font-size:9px;margin:8px 0}
+.ip .ps2{font-size:11px;color:#aaa;line-height:1.8}.ip .ps2 span{color:#5f5}
+.ip .compare{margin-top:8px;padding-top:8px;border-top:1px solid #444;font-size:10px;color:#999;line-height:1.7}
+.ip .compare .better{color:#5f5}.ip .compare .worse{color:#f55}
+.ip .compare .old-name{font-family:'Press Start 2P',monospace;font-size:7px;margin-bottom:4px}
+.pc{font-family:'Press Start 2P',monospace;font-size:9px;margin-top:14px;padding:8px 20px;cursor:pointer;border:2px solid #888;border-bottom-color:#333;border-right-color:#333;background:#444;color:#fff}
+.pc:active{border-top-color:#333;border-left-color:#333;border-bottom-color:#888;border-right-color:#888}
+.luf{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:28px;color:var(--gold);text-shadow:3px 3px 0 #000,0 0 20px rgba(245,197,66,.8);z-index:150;pointer-events:none}
+.luf.show{display:block;animation:luanim 1.5s ease-out forwards}
+@keyframes luanim{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}20%{transform:translate(-50%,-50%) scale(1.3);opacity:1}40%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{transform:translate(-50%,-70%) scale(1);opacity:0}}
+
+.auto-equip-notif{position:fixed;top:20px;right:20px;background:#1a3a1a;border:2px solid #4a4;padding:10px 16px;font-family:'Press Start 2P',monospace;font-size:8px;color:#5f5;z-index:180;animation:notifSlide .4s ease-out;pointer-events:none;max-width:300px;line-height:1.6}
+@keyframes notifSlide{0%{transform:translateX(120%);opacity:0}100%{transform:translateX(0);opacity:1}}
+
+@media(max-width:640px){
+  .main-area{grid-template-columns:1fr}.bs{grid-template-columns:1fr}
+  .header h1{font-size:14px}.timer-d{font-size:22px}.battle-scene{height:200px}
+  .sk-branches{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="gc">
+  <div class="header pb"><h1>⚔️ 勇者挂机物语</h1><div class="sub">专注越久 · 勇者越强</div></div>
+  <div class="timer-sec pb">
+    <div class="timer-l">⏱ 专注时间</div>
+    <div class="timer-d" id="timerDisplay">00:00:00</div>
+    <button class="fbtn" id="focusBtn" onclick="toggleFocus()">▶ 开始专注</button>
+  </div>
+  <div class="tab-bar">
+    <div class="tab-btn active" onclick="switchTab('battle')">⚔️ 战斗</div>
+    <div class="tab-btn" onclick="switchTab('skills')">🌟 技能树</div>
+  </div>
+
+  <!-- BATTLE TAB -->
+  <div class="tab-content active" id="tab-battle">
+    <div class="main-area">
+      <div class="battle-scene pbi" id="battleScene">
+        <div class="scene-bg"><div class="sky"></div><div class="stars" id="stars"></div><div class="ground"></div></div>
+        <div class="battle-entities">
+          <div class="sprite-container">
+            <div class="en" id="heroNameLabel">勇者</div>
+            <div class="el" id="heroLevelLabel">Lv.1</div>
+            <canvas class="sprite hero-sprite" id="heroCanvas" width="48" height="48"></canvas>
+            <div class="hp-bm"><div class="hp-bm-f" id="heroHpMini" style="width:100%"></div></div>
+          </div>
+          <div class="sprite-container" id="monsterContainer" style="opacity:0">
+            <div class="en" id="monsterNameLabel">史莱姆</div>
+            <div class="el" id="monsterLevelLabel">Lv.1</div>
+            <canvas class="sprite monster-sprite" id="monsterCanvas" width="48" height="48"></canvas>
+            <div class="hp-bm"><div class="hp-bm-f" id="monsterHpMini" style="width:100%"></div></div>
+          </div>
+        </div>
+        <div class="blo" id="battleLogOverlay"><div class="ll" style="color:#888">点击「开始专注」勇者将出发冒险...</div></div>
+      </div>
+      <div class="sp">
+        <div class="hi pb">
+          <div class="ir"><span class="hn" id="statusName">勇者</span><span class="hl" id="statusLevel">Lv.1</span></div>
+          <div class="sb"><div class="sbf hp" id="hpBar" style="width:100%"></div><div class="sbt" id="hpText">100/100</div></div>
+          <div class="sb"><div class="sbf mp" id="mpBar" style="width:100%"></div><div class="sbt" id="mpText">30/30</div></div>
+          <div class="sb"><div class="sbf exp" id="expBar" style="width:0%"></div><div class="sbt" id="expText">0/100</div></div>
+          <div class="sg">
+            <div class="si"><span class="sl">⚔攻击</span><span class="sv" id="statAtk">10</span></div>
+            <div class="si"><span class="sl">🛡防御</span><span class="sv" id="statDef">5</span></div>
+            <div class="si"><span class="sl">💨速度</span><span class="sv" id="statSpd">8</span></div>
+            <div class="si"><span class="sl">🍀暴击</span><span class="sv" id="statCrit">5%</span></div>
+            <div class="si"><span class="sl">💰金币</span><span class="sv" id="statGold">0</span></div>
+            <div class="si"><span class="sl">💀击杀</span><span class="sv" id="statKills">0</span></div>
+            <div class="si"><span class="sl">🌟技能点</span><span class="sv" id="statSP">0</span></div>
+            <div class="si"><span class="sl">🔥连击</span><span class="sv" id="statCombo">0</span></div>
+          </div>
+        </div>
+        <div class="es pb">
+          <h3><span>🎒 装备</span><span class="auto-label">自动换装 <span class="auto-toggle on" id="autoEquipToggle" onclick="toggleAutoEquip()"></span></span></h3>
+          <div class="eg" id="equipGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKILL TREE TAB -->
+  <div class="tab-content" id="tab-skills">
+    <div class="skill-tree-panel pb">
+      <div class="sk-h3">🌟 技能树</div>
+      <div class="sk-points">可用技能点: <span id="skPointsDisplay">0</span> （每升2级获得1点）</div>
+      <div class="sk-branches" id="skillBranches"></div>
+    </div>
+  </div>
+
+  <div class="bs">
+    <div class="lp pb"><h3>📜 冒险日志</h3><div class="lc" id="logContent"></div></div>
+    <div class="mp2 pb"><h3>🏆 专注成就</h3><div class="ml" id="milestoneList"></div></div>
+  </div>
+</div>
+
+<div class="po" id="popupOverlay"></div>
+<div class="ip" id="itemPopup">
+  <div class="pt2" id="popupTitle">✨ 获得新装备！</div>
+  <div class="pi2" id="popupIcon"></div>
+  <div class="pn2" id="popupName"></div>
+  <div class="ps2" id="popupStats"></div>
+  <div class="compare" id="popupCompare"></div>
+  <button class="pc" onclick="closePopup()">确认</button>
+</div>
+<div class="luf" id="levelupFlash">LEVEL UP!</div>
+
+<script>
+const S={
+  focusing:false,focusSeconds:0,
+  hero:{name:'勇者',level:1,hp:100,maxHp:100,mp:30,maxMp:30,exp:0,maxExp:100,atk:10,def:5,spd:8,crit:5,gold:0,kills:0,combo:0,skillPoints:0,equipment:{weapon:null,armor:null,helmet:null,accessory:null}},
+  monster:null,battleTick:0,autoEquip:true,achievedMilestones:new Set(),skills:{},
+};
+
+const QUALITIES=[{name:'普通',key:'common',color:'#aaa',multi:1},{name:'优秀',key:'uncommon',color:'#55cc55',multi:1.5},{name:'稀有',key:'rare',color:'#5577ff',multi:2.2},{name:'史诗',key:'epic',color:'#aa55ff',multi:3.5},{name:'传说',key:'legendary',color:'#ffaa00',multi:5},{name:'神话',key:'mythic',color:'#ff5555',multi:8}];
+const ESLOTS=[{key:'weapon',label:'武器',icon:'⚔️'},{key:'armor',label:'铠甲',icon:'🛡️'},{key:'helmet',label:'头盔',icon:'⛑️'},{key:'accessory',label:'饰品',icon:'💍'}];
+const W_N=['木剑','铁剑','钢剑','秘银剑','龙牙剑','天界圣剑','混沌魔剑','星辰之刃'];
+const A_N=['布衣','皮甲','锁子甲','板甲','秘银甲','龙鳞甲','圣光铠','混沌战甲'];
+const H_N=['布帽','皮帽','铁盔','钢盔','秘银冠','龙角冠','圣光冕','星辰王冠'];
+const C_N=['木戒','铜环','银链','金坠','翡翠链','龙心坠','圣光戒','创世之环'];
+const MONSTERS=[
+  {name:'史莱姆',icon:'🟢',baseHp:40,baseAtk:5,baseDef:1,exp:20,gold:5,color:'#55cc55'},
+  {name:'哥布林',icon:'👺',baseHp:80,baseAtk:12,baseDef:4,exp:35,gold:10,color:'#88aa44'},
+  {name:'骷髅兵',icon:'💀',baseHp:150,baseAtk:18,baseDef:8,exp:50,gold:15,color:'#ccccaa'},
+  {name:'狼人',icon:'🐺',baseHp:250,baseAtk:28,baseDef:12,exp:70,gold:22,color:'#8888aa'},
+  {name:'石像鬼',icon:'🗿',baseHp:400,baseAtk:22,baseDef:25,exp:90,gold:30,color:'#999'},
+  {name:'暗影法师',icon:'🧙',baseHp:350,baseAtk:45,baseDef:10,exp:110,gold:40,color:'#7744bb'},
+  {name:'巨龙',icon:'🐉',baseHp:800,baseAtk:55,baseDef:30,exp:180,gold:80,color:'#cc4444'},
+  {name:'魔王',icon:'👹',baseHp:2000,baseAtk:80,baseDef:45,exp:350,gold:150,color:'#ff2222'}
+];
+const MILESTONES=[
+  {time:60,icon:'⭐',text:'专注1分钟',reward:'经验+50'},
+  {time:300,icon:'🌟',text:'专注5分钟',reward:'稀有装备'},
+  {time:600,icon:'💫',text:'专注10分钟',reward:'史诗装备'},
+  {time:900,icon:'🔥',text:'专注15分钟',reward:'攻击+10'},
+  {time:1800,icon:'⚡',text:'专注30分钟',reward:'传说装备'},
+  {time:3600,icon:'👑',text:'专注1小时',reward:'神话装备'},
+  {time:7200,icon:'🏆',text:'专注2小时',reward:'全属性x2'}
+];
+
+// ====== SKILL TREE ======
+const SKILL_TREE={
+  attack:{name:'⚔️ 战斗之道',css:'atk-t',skills:[
+    {id:'power_strike',name:'力量打击',icon:'💥',maxLv:5,desc:'攻击力+{v}%',val:i=>i*8,req:null},
+    {id:'critical_edge',name:'致命锋刃',icon:'🗡️',maxLv:5,desc:'暴击率+{v}%',val:i=>i*4,req:null},
+    {id:'fury',name:'狂怒',icon:'😤',maxLv:3,desc:'攻击速度+{v}%',val:i=>i*15,req:'power_strike'},
+    {id:'execute',name:'斩杀',icon:'⚡',maxLv:3,desc:'目标<30%血时伤害+{v}%',val:i=>i*25,req:'critical_edge'},
+    {id:'blade_storm',name:'剑刃风暴',icon:'🌪️',maxLv:3,desc:'每{v}秒释放全屏AOE',val:i=>Math.max(15-i*3,6),req:'fury'},
+    {id:'god_slayer',name:'弑神者',icon:'👹',maxLv:1,desc:'全部伤害+{v}%',val:()=>50,req:'blade_storm'}
+  ]},
+  defense:{name:'🛡️ 守护之壁',css:'def-t',skills:[
+    {id:'tough_skin',name:'坚韧体魄',icon:'💪',maxLv:5,desc:'防御力+{v}%',val:i=>i*8,req:null},
+    {id:'regen',name:'自然恢复',icon:'💚',maxLv:5,desc:'每5秒恢复+{v}%HP',val:i=>i*2,req:null},
+    {id:'block',name:'格挡',icon:'🛡️',maxLv:3,desc:'{v}%几率完全格挡',val:i=>i*8,req:'tough_skin'},
+    {id:'thorns',name:'荆棘护甲',icon:'🌵',maxLv:3,desc:'反弹{v}%受到伤害',val:i=>i*10,req:'tough_skin'},
+    {id:'undying',name:'不死之身',icon:'🔥',maxLv:3,desc:'{v}%几率1HP存活',val:i=>i*15,req:'block'},
+    {id:'immortal',name:'永恒不灭',icon:'✨',maxLv:1,desc:'生命上限+{v}%',val:()=>100,req:'undying'}
+  ]},
+  utility:{name:'🍀 财运天赋',css:'util-t',skills:[
+    {id:'lucky',name:'幸运加持',icon:'🍀',maxLv:5,desc:'掉落率+{v}%',val:i=>i*6,req:null},
+    {id:'gold_rush',name:'黄金猎手',icon:'💰',maxLv:5,desc:'金币获取+{v}%',val:i=>i*10,req:null},
+    {id:'exp_boost',name:'经验加速',icon:'📚',maxLv:3,desc:'经验获取+{v}%',val:i=>i*12,req:'gold_rush'},
+    {id:'quality_up',name:'品质提升',icon:'💎',maxLv:3,desc:'装备品质提升{v}级(15%率)',val:i=>i,req:'lucky'},
+    {id:'double_drop',name:'双倍掉落',icon:'🎁',maxLv:3,desc:'{v}%几率双倍掉落',val:i=>i*10,req:'quality_up'},
+    {id:'time_warp',name:'时间扭曲',icon:'⏰',maxLv:1,desc:'全局速度+{v}%',val:()=>50,req:'double_drop'}
+  ]}
+};
+Object.values(SKILL_TREE).forEach(b=>b.skills.forEach(sk=>{S.skills[sk.id]=0}));
+function skLv(id){return S.skills[id]||0}
+function skVal(id){const lv=skLv(id);if(!lv)return 0;for(const b of Object.values(SKILL_TREE)){const sk=b.skills.find(s=>s.id===id);if(sk)return sk.val(lv)}return 0}
+function skB(stat){
+  const map={atk:'power_strike',def:'tough_skin',crit:'critical_edge',atkSpd:['fury','time_warp'],regen:'regen',block:'block',thorns:'thorns',undying:'undying',dropRate:'lucky',goldBonus:'gold_rush',expBonus:'exp_boost',qualityUp:'quality_up',doubleDrop:'double_drop',execute:'execute',allDmg:'god_slayer',maxHpBonus:'immortal'};
+  const ids=map[stat];if(!ids)return 0;
+  if(Array.isArray(ids))return ids.reduce((s,id)=>s+skVal(id),0);
+  return skVal(ids);
+}
+
+// ====== PIXEL ART ======
+function drawPx(c,px,pal){const ctx=c.getContext('2d');ctx.clearRect(0,0,48,48);for(let y=0;y<px.length;y++)for(let x=0;x<px[y].length;x++){const v=px[y][x];if(v>0&&pal[v]){ctx.fillStyle=pal[v];ctx.fillRect(x*3,y*3,3,3)}}}
+const HERO_PX=[[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,1,3,3,4,3,3,4,3,3,1,0,0,0],[0,0,0,1,3,3,3,3,3,3,3,3,1,0,0,0],[0,0,0,1,3,3,5,3,3,5,3,3,1,0,0,0],[0,0,0,0,1,3,3,6,6,3,3,1,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,7,7,7,7,7,7,7,7,7,7,7,7,0,0],[0,0,0,7,7,8,8,8,8,8,8,7,7,0,0,0],[0,9,0,0,7,8,8,8,8,8,8,7,0,0,9,0],[0,9,9,0,0,8,8,8,8,8,8,0,0,9,9,0],[0,0,9,0,0,3,3,0,0,3,3,0,0,9,0,0],[0,0,0,0,0,3,3,0,0,3,3,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0]];
+const HERO_PAL={1:'#333',2:'#cc8833',3:'#ffcc99',4:'#fff',5:'#2244aa',6:'#cc5544',7:'#4466bb',8:'#3355aa',9:'#aaa'};
+function getMonPx(icon){
+  const T={
+    '🟢':{px:[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,1,1,2,2,1,1,2,2,1,1,0,0,0],[0,0,0,1,1,2,3,1,1,2,3,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,4,4,4,4,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0]],pal:{1:'#44bb44',2:'#fff',3:'#222',4:'#cc4444'}},
+    '👺':{px:[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0],[0,0,1,2,3,3,2,2,2,3,3,2,1,0,0,0],[0,0,1,2,3,4,2,2,2,3,4,2,1,0,0,0],[0,5,1,2,2,2,2,2,2,2,2,2,1,5,0,0],[0,5,0,1,2,6,6,6,6,6,2,1,0,5,0,0],[0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,7,7,7,7,7,7,7,7,7,0,0,0,0],[0,0,0,0,7,7,7,7,7,7,7,0,0,0,0,0],[0,0,8,0,0,7,7,7,7,7,0,0,8,0,0,0],[0,0,8,0,0,0,7,7,7,0,0,0,8,0,0,0],[0,0,0,0,0,2,2,0,2,2,0,0,0,0,0,0],[0,0,0,0,0,2,2,0,2,2,0,0,0,0,0,0],[0,0,0,0,1,1,1,0,1,1,1,0,0,0,0,0]],pal:{1:'#333',2:'#88aa44',3:'#f33',4:'#ff0',5:'#88aa44',6:'#fff',7:'#753',8:'#888'}}
+  };
+  const def={px:[[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,2,2,1,1,1,2,2,1,1,0,0,0],[0,0,1,1,2,3,1,1,1,2,3,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,1,1,4,4,4,4,4,1,1,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,0,0,1,1,1,1,1,1,1,0,0,1,0,0],[0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0],[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],pal:{1:'#aa4444',2:'#ff4',3:'#222',4:'#fff'}};
+  return T[icon]||def;
+}
+function drawHero(){drawPx(document.getElementById('heroCanvas'),HERO_PX,HERO_PAL)}
+function drawMonster(icon,color){const t=getMonPx(icon);const p={...t.pal};if(color)p[1]=color;drawPx(document.getElementById('monsterCanvas'),t.px,p)}
+
+// ====== UTIL ======
+function genStars(){const c=document.getElementById('stars');for(let i=0;i<30;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.animationDelay=Math.random()*2+'s';c.appendChild(s)}}
+function formatTime(s){return`${String(s/3600|0).padStart(2,'0')}:${String((s%3600)/60|0).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+function switchTab(t){document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(t==='battle'?0:1)));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');if(t==='skills')renderSkillTree()}
+function toggleAutoEquip(){S.autoEquip=!S.autoEquip;document.getElementById('autoEquipToggle').classList.toggle('on',S.autoEquip)}
+
+// ====== RENDER ======
+function renderEquipGrid(){
+  const g=document.getElementById('equipGrid');g.innerHTML='';
+  ESLOTS.forEach(slot=>{
+    const item=S.hero.equipment[slot.key];
+    const d=document.createElement('div');d.className='esl'+(item?' q-'+item.quality.key:'');
+    if(item){d.innerHTML=`<span style="font-size:22px">${item.icon}</span><span class="sll" style="color:${item.quality.color}">${item.name}</span><div class="ett"><div class="tn" style="color:${item.quality.color}">[${item.quality.name}] ${item.name}</div><div class="ts">${item.statsText}</div></div>`}
+    else{d.innerHTML=`<span style="font-size:18px;opacity:.3">${slot.icon}</span><span class="sll">${slot.label}</span>`}
+    g.appendChild(d);
+  });
+}
+function renderMilestones(){
+  const l=document.getElementById('milestoneList');l.innerHTML='';
+  MILESTONES.forEach(m=>{const a=S.achievedMilestones.has(m.time);const d=document.createElement('div');d.className='mi '+(a?'achieved':'locked');d.innerHTML=`<span class="ms-i">${a?m.icon:'🔒'}</span><span class="ms-t">${m.text}</span><span class="ms-r">${m.reward}</span>`;l.appendChild(d)});
+}
+function renderSkillTree(){
+  const c=document.getElementById('skillBranches');c.innerHTML='';
+  Object.entries(SKILL_TREE).forEach(([key,branch])=>{
+    const bd=document.createElement('div');bd.className='sk-branch pbi';
+    let html=`<div class="sk-branch-title ${branch.css}">${branch.name}</div><div class="sk-nodes">`;
+    branch.skills.forEach((sk,i)=>{
+      const lv=skLv(sk.id),maxed=lv>=sk.maxLv,reqMet=!sk.req||skLv(sk.req)>0,canBuy=S.hero.skillPoints>0&&!maxed&&reqMet,locked=!reqMet&&lv===0;
+      const valNow=lv>0?sk.val(lv):0,valNext=lv<sk.maxLv?sk.val(lv+1):sk.val(sk.maxLv);
+      const descShow=lv>0?sk.desc.replace('{v}',valNow):(locked?'需要前置技能':sk.desc.replace('{v}',valNext));
+      if(i>0)html+=`<div class="sk-arrow">${reqMet||lv>0?'▼':'▽'}</div>`;
+      html+=`<div class="sk-node${maxed?' maxed':lv>0?' unlocked':''}${locked?' locked':''}" data-id="${sk.id}" data-can="${canBuy?1:0}">
+        <div class="sk-row"><div><span class="sk-icon">${sk.icon}</span><span class="sk-name">${sk.name}</span></div><span class="sk-lvl">${lv}/${sk.maxLv}</span></div>
+        <div class="sk-desc">${descShow}</div>
+        ${!maxed&&!locked?`<div class="sk-cost">${canBuy?'点击学习 (1技能点)':'需要技能点'} ${lv>0?' → '+sk.desc.replace('{v}',valNext):''}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';bd.innerHTML=html;c.appendChild(bd);
+    bd.querySelectorAll('.sk-node[data-can="1"]').forEach(node=>{
+      node.onclick=()=>{
+        const id=node.dataset.id;S.hero.skillPoints--;S.skills[id]++;
+        addLog(`🌟 学习了 ${branch.skills.find(s=>s.id===id).name} Lv.${S.skills[id]}！`,'pt');
+        renderSkillTree();updateUI();
+      };
+    });
+  });
+}
+
+// ====== TIMER ======
+let timerInterval=null;
+function toggleFocus(){
+  const btn=document.getElementById('focusBtn');
+  if(!S.focusing){S.focusing=true;btn.textContent='⏸ 停止专注';btn.classList.add('active');addLog('🚀 勇者出发冒险！','grt');spawnMonster();timerInterval=setInterval(tickTimer,1000)}
+  else{S.focusing=false;btn.textContent='▶ 开始专注';btn.classList.remove('active');addLog('💤 勇者休息中...','');clearInterval(timerInterval)}
+}
+function tickTimer(){S.focusSeconds++;document.getElementById('timerDisplay').textContent=formatTime(S.focusSeconds);checkMilestones();battleTick()}
+function checkMilestones(){MILESTONES.forEach(m=>{if(S.focusSeconds>=m.time&&!S.achievedMilestones.has(m.time)){S.achievedMilestones.add(m.time);handleMR(m);renderMilestones()}})}
+function handleMR(m){
+  addLog(`🏆 达成：${m.text}`,'gt');
+  if(m.time===60)S.hero.exp+=50;if(m.time===300)grantItem(2);if(m.time===600)grantItem(3);
+  if(m.time===900){S.hero.atk+=10;addLog('⚔️ 攻击力永久+10！','gt')}
+  if(m.time===1800)grantItem(4);if(m.time===3600)grantItem(5);
+  if(m.time===7200){S.hero.atk*=2;S.hero.def*=2;S.hero.spd*=2;addLog('💥 全属性翻倍！','gt')}
+}
+
+// ====== MONSTERS ======
+function getMonTier(){const m=S.focusSeconds/60;if(m<2)return 0;if(m<5)return 1;if(m<10)return 2;if(m<15)return 3;if(m<20)return 4;if(m<30)return 5;if(m<45)return 6;return 7}
+function spawnMonster(){
+  const tier=getMonTier(),base=MONSTERS[tier];
+  // Exponential scaling: gets dramatically harder over time
+  const timeMin=S.focusSeconds/60;
+  const scale=Math.pow(1.03,timeMin)*(1+tier*0.4);
+  // Random variance ±20%
+  const variance=0.8+Math.random()*0.4;
+  // Elite & Boss system: 15% elite (1.8x), 5% boss (3x)
+  const roll=Math.random()*100;
+  let prefix='',hpMult=1,atkMult=1,defMult=1,expMult=1,goldMult=1;
+  if(roll<5){prefix='💀BOSS·';hpMult=3.5;atkMult=2.5;defMult=2;expMult=4;goldMult=5}
+  else if(roll<20){prefix='⭐精英·';hpMult=2;atkMult=1.6;defMult=1.5;expMult=2;goldMult=2.5}
+  const monName=prefix+base.name;
+  const hp=Math.floor(base.baseHp*scale*variance*hpMult);
+  const atk=Math.floor(base.baseAtk*scale*variance*atkMult);
+  const def=Math.floor(base.baseDef*scale*variance*defMult);
+  const monLv=Math.max(1,Math.floor(scale*(tier+1)));
+  S.monster={...base,name:monName,hp,maxHp:hp,atk,def,level:monLv,
+    exp:Math.floor(base.exp*scale*expMult*0.5),gold:Math.floor(base.gold*scale*goldMult*0.5),
+    isBoss:roll<5,isElite:roll<20&&roll>=5};
+  document.getElementById('monsterContainer').style.opacity='1';
+  document.getElementById('monsterNameLabel').textContent=S.monster.name;
+  document.getElementById('monsterNameLabel').style.color=S.monster.isBoss?'#ff4444':S.monster.isElite?'#ffaa00':'#fff';
+  document.getElementById('monsterLevelLabel').textContent='Lv.'+S.monster.level;
+  drawMonster(S.monster.icon,S.monster.color);updateMonHp();
+  addBL(`${S.monster.isBoss?'💀':S.monster.isElite?'⭐':''}${S.monster.icon} ${S.monster.name} Lv.${S.monster.level} 出现了！`,S.monster.isBoss?'rt':S.monster.isElite?'gt':'');
+}
+
+// ====== COMBAT ======
+function getEquipBonus(stat){let b=0;Object.values(S.hero.equipment).forEach(i=>{if(i&&i.stats[stat])b+=i.stats[stat]});return b}
+function totalAtk(){return Math.floor((S.hero.atk+getEquipBonus('atk'))*(1+skB('atk')/100)*(1+skB('allDmg')/100))}
+function totalDef(){return Math.floor((S.hero.def+getEquipBonus('def'))*(1+skB('def')/100))}
+function totalCrit(){return Math.min(95,S.hero.crit+getEquipBonus('crit')+skB('crit'))}
+function effectiveMaxHp(){return Math.floor(S.hero.maxHp*(1+skB('maxHpBonus')/100))}
+
+function battleTick(){
+  if(!S.monster||!S.focusing)return;S.battleTick++;
+  const spdB=1+skB('atkSpd')/100;
+  const heroInt=Math.max(1,Math.floor((4-S.hero.spd/20)/spdB));
+  if(S.battleTick%heroInt===0)heroAttack();
+  // Monsters attack every 2s, bosses every 1.5s
+  const monInt=S.monster.isBoss?2:S.monster.isElite?2:3;
+  if(S.battleTick%monInt===0&&S.monster&&S.monster.hp>0)monsterAttack();
+  // Regen nerfed: base 2% per 5s instead of 5%
+  if(S.battleTick%5===0){const rp=2+skB('regen');S.hero.hp=Math.min(effectiveMaxHp(),S.hero.hp+Math.floor(effectiveMaxHp()*rp/100))}
+  // Blade Storm
+  const bsLv=skLv('blade_storm');
+  if(bsLv>0){const interval=skVal('blade_storm');if(S.battleTick%interval===0&&S.monster&&S.monster.hp>0){const dmg=Math.floor(totalAtk()*1.5);S.monster.hp-=dmg;showSkillFlash('🌪️ 剑刃风暴！');showDmg(dmg,false,true,true);if(S.monster.hp<=0){S.monster.hp=0;killMonster()}updateMonHp()}}
+  updateUI();
+}
+function heroAttack(){
+  if(!S.monster||S.monster.hp<=0)return;
+  const atk=totalAtk(),isCrit=Math.random()*100<totalCrit();
+  let dmg=Math.max(1,Math.floor((atk*(.85+Math.random()*.2))-S.monster.def*.5));
+  if(isCrit)dmg=Math.floor(dmg*2);
+  if(S.monster.hp/S.monster.maxHp<.3)dmg=Math.floor(dmg*(1+skB('execute')/100));
+  S.monster.hp-=dmg;showDmg(dmg,isCrit,true,false);animateHeroAtk();S.hero.combo++;
+  if(S.monster.hp<=0){S.monster.hp=0;killMonster()}updateMonHp();
+}
+function monsterAttack(){
+  if(!S.monster)return;
+  if(Math.random()*100<skB('block')){addBL('🛡️ 格挡！','grt');showSkillFlash('🛡️ 完美格挡！');return}
+  const def=totalDef();
+  // Monster enrage: below 30% HP, +50% damage
+  const enrage=(S.monster.hp/S.monster.maxHp<0.3)?1.5:1;
+  // Monster crit: 10% chance (bosses 20%) for 2x damage
+  const monCrit=Math.random()*100<(S.monster.isBoss?20:10);
+  let dmg=Math.max(1,Math.floor(S.monster.atk*(.8+Math.random()*.4)*enrage-def*.4));
+  if(monCrit)dmg=Math.floor(dmg*2);
+  // Boss special: every 5 hits, devastating attack ignoring 70% defense
+  if(S.monster.isBoss){
+    if(!S.monster.atkCount)S.monster.atkCount=0;
+    S.monster.atkCount++;
+    if(S.monster.atkCount%5===0){
+      dmg=Math.max(1,Math.floor(S.monster.atk*1.8*enrage-def*.15));
+      showSkillFlash('💀 毁灭重击！');addBL('💀 BOSS释放毁灭重击！','rt');
+    }
+  }
+  // Elite special: chance to attack twice
+  if(S.monster.isElite&&Math.random()<0.2){
+    const dmg2=Math.max(1,Math.floor(S.monster.atk*(.6+Math.random()*.3)*enrage-def*.4));
+    dmg+=dmg2;showSkillFlash('⭐ 连续攻击！');
+  }
+  if(enrage>1&&monCrit)addBL('🔥 怪物狂暴暴击！','rt');
+  else if(enrage>1)addBL('🔥 怪物进入狂暴！','rt');
+  if(skB('thorns')>0&&S.monster){const td=Math.floor(dmg*skB('thorns')/100);S.monster.hp-=td;if(S.monster.hp<=0){S.monster.hp=0;killMonster();return}}
+  S.hero.hp-=dmg;showDmg(dmg,monCrit,false,false);
+  if(S.hero.hp<=0){
+    if(Math.random()*100<skB('undying')){S.hero.hp=1;addBL('🔥 不死之身！','gt');showSkillFlash('🔥 不死之身！');return}
+    S.hero.hp=0;S.hero.combo=0;
+    const goldLost=Math.floor(S.hero.gold*0.1);S.hero.gold-=goldLost;
+    addBL('💔 勇者倒下...自动复活！','rt');addLog(`💔 被击败！损失${goldLost}金币，自动复活`,'rt');S.hero.hp=effectiveMaxHp();setTimeout(()=>spawnMonster(),1500);
+  }
+}
+function killMonster(){
+  S.hero.kills++;
+  const eg=Math.floor(S.monster.exp*(1+skB('expBonus')/100)),gg=Math.floor(S.monster.gold*(1+skB('goldBonus')/100));
+  S.hero.exp+=eg;S.hero.gold+=gg;
+  addBL(`✨ 击败 ${S.monster.name}！+${eg}exp +${gg}g`,'gt');
+  addLog(`⚔️ 击败 ${S.monster.name} Lv.${S.monster.level}`,'');
+  const mc=document.getElementById('monsterCanvas');mc.classList.add('dying');
+  while(S.hero.exp>=S.hero.maxExp)levelUp();
+  const dropChance=Math.min(90,15+S.focusSeconds/30+skB('dropRate'));
+  if(Math.random()*100<dropChance){let q=getDropQ();if(skB('qualityUp')>0&&Math.random()*100<15)q=Math.min(5,q+Math.min(skVal('quality_up'),2));grantItem(q);if(Math.random()*100<skB('doubleDrop')){grantItem(q);addLog('🎁 双倍掉落！','gt')}}
+  setTimeout(()=>{mc.classList.remove('dying');if(S.focusing)spawnMonster();else document.getElementById('monsterContainer').style.opacity='0'},800);
+  S.monster=null;
+}
+function getDropQ(){const m=S.focusSeconds/60,r=Math.random()*100;if(m>=45&&r<5)return 5;if(m>=25&&r<10)return 4;if(m>=15&&r<20)return 3;if(m>=8&&r<35)return 2;if(m>=3&&r<55)return 1;return 0}
+function levelUp(){
+  S.hero.exp-=S.hero.maxExp;S.hero.level++;
+  S.hero.maxExp=Math.floor(100*Math.pow(1.15,S.hero.level-1));
+  S.hero.maxHp+=15;S.hero.hp=effectiveMaxHp();S.hero.maxMp+=5;S.hero.mp=S.hero.maxMp;
+  S.hero.atk+=2;S.hero.def+=1;S.hero.spd+=1;S.hero.crit=Math.min(80,S.hero.crit+.5);
+  if(S.hero.level%2===0){S.hero.skillPoints++;addLog(`🌟 获得1技能点！`,'pt')}
+  addLog(`🎉 升级！Lv.${S.hero.level}`,'gt');addBL(`⬆ LEVEL UP! Lv.${S.hero.level}`,'gt');showLevelUp();
+}
+
+// ====== ITEMS & AUTO EQUIP ======
+function itemPower(item){return item?Object.values(item.stats).reduce((a,b)=>a+b,0):0}
+function qualityRank(item){return item?QUALITIES.findIndex(q=>q.key===item.quality.key):-1}
+function grantItem(qIdx){
+  const quality=QUALITIES[qIdx],slotIdx=Math.floor(Math.random()*4),slot=ESLOTS[slotIdx];
+  const names=[W_N,A_N,H_N,C_N][slotIdx],nameIdx=Math.min(qIdx+Math.floor(Math.random()*2),names.length-1),name=names[nameIdx];
+  const multi=quality.multi*(1+S.hero.level*.05),stats={};let statsText='';
+  if(slot.key==='weapon'){stats.atk=Math.floor(5*multi);stats.crit=Math.floor(2*quality.multi);statsText=`攻击 <span>+${stats.atk}</span><br>暴击 <span>+${stats.crit}%</span>`}
+  else if(slot.key==='armor'){stats.def=Math.floor(4*multi);stats.atk=Math.floor(1*multi);statsText=`防御 <span>+${stats.def}</span><br>攻击 <span>+${stats.atk}</span>`}
+  else if(slot.key==='helmet'){stats.def=Math.floor(3*multi);stats.crit=Math.floor(1*quality.multi);statsText=`防御 <span>+${stats.def}</span><br>暴击 <span>+${stats.crit}%</span>`}
+  else{stats.atk=Math.floor(2*multi);stats.def=Math.floor(2*multi);stats.crit=Math.floor(3*quality.multi);statsText=`攻击 <span>+${stats.atk}</span><br>防御 <span>+${stats.def}</span><br>暴击 <span>+${stats.crit}%</span>`}
+  const item={name,icon:slot.icon,quality,slot:slot.key,stats,statsText};
+  const current=S.hero.equipment[slot.key];
+  const curQ=qualityRank(current),newQ=qualityRank(item),curP=itemPower(current),newP=itemPower(item);
+  const shouldEquip=!current||newQ>curQ||(newQ===curQ&&newP>curP);
+  if(shouldEquip){
+    const oldItem=current;S.hero.equipment[slot.key]=item;
+    if(S.autoEquip){showItemPopup(item,oldItem);addLog(`🔄 自动装备 [${quality.name}]${name}`,'pt');showAutoEquipNotif(item,oldItem)}
+    else{showItemPopup(item,oldItem);addLog(`✨ 装备 [${quality.name}]${name}！`,'pt')}
+  }else{addLog(`📦 获得 [${quality.name}]${name}（不如当前）`,'')}
+  renderEquipGrid();
+}
+function showAutoEquipNotif(item,old){
+  const el=document.createElement('div');el.className='auto-equip-notif';
+  let txt=`🔄 自动换装：<span style="color:${item.quality.color}">[${item.quality.name}]${item.name}</span>`;
+  if(old)txt+=`<br><span style="color:#888;font-size:7px">替换: [${old.quality.name}]${old.name}</span>`;
+  el.innerHTML=txt;document.body.appendChild(el);setTimeout(()=>el.remove(),2800);
+}
+
+// ====== UI EFFECTS ======
+function showDmg(dmg,crit,isHero,isSkill){
+  const scene=document.getElementById('battleScene'),el=document.createElement('div');
+  el.className='damage-num'+(crit?' crit':'')+(isSkill?' skill-dmg':'');
+  el.textContent=(crit?'暴击! ':'')+(isSkill?'🌪️ ':'')+dmg;
+  if(isHero){el.style.right=(50+Math.random()*40)+'px'}else{el.style.left=(50+Math.random()*40)+'px';el.style.color='#ff4444'}
+  el.style.bottom=(120+Math.random()*30)+'px';
+  scene.appendChild(el);setTimeout(()=>el.remove(),800);
+}
+function showSkillFlash(text){const scene=document.getElementById('battleScene'),el=document.createElement('div');el.className='skill-flash';el.textContent=text;scene.appendChild(el);setTimeout(()=>el.remove(),1000)}
+function animateHeroAtk(){
+  const c=document.getElementById('heroCanvas');c.classList.remove('hero-sprite');c.classList.add('attacking');
+  setTimeout(()=>{c.classList.remove('attacking');c.classList.add('hero-sprite');const mc=document.getElementById('monsterCanvas');mc.classList.remove('monster-sprite');mc.classList.add('hit');setTimeout(()=>{mc.classList.remove('hit');mc.classList.add('monster-sprite')},300)},300);
+}
+function showLevelUp(){const el=document.getElementById('levelupFlash');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1500)}
+function showItemPopup(item,oldItem){
+  document.getElementById('popupIcon').textContent=item.icon;
+  const pn=document.getElementById('popupName');pn.style.color=item.quality.color;pn.innerHTML=`[${item.quality.name}] ${item.name}`;
+  document.getElementById('popupStats').innerHTML=item.statsText;
+  document.getElementById('itemPopup').style.borderColor=item.quality.color;
+  const cmp=document.getElementById('popupCompare');
+  if(oldItem){
+    let html=`<div class="old-name" style="color:${oldItem.quality.color}">替换: [${oldItem.quality.name}] ${oldItem.name}</div>`;
+    ['atk','def','crit'].forEach(s=>{
+      const labels={atk:'攻击',def:'防御',crit:'暴击'};
+      const ov=oldItem.stats[s]||0,nv=item.stats[s]||0;
+      if(ov||nv){const diff=nv-ov;html+=`${labels[s]}: ${ov} → ${nv} <span class="${diff>0?'better':diff<0?'worse':''}">(${diff>0?'+':''}${diff})</span><br>`}
+    });
+    cmp.innerHTML=html;cmp.style.display='block';
+  }else cmp.style.display='none';
+  document.getElementById('popupTitle').textContent=S.autoEquip?'🔄 自动换装！':'✨ 获得新装备！';
+  document.getElementById('itemPopup').classList.add('show');document.getElementById('popupOverlay').classList.add('show');
+}
+function closePopup(){document.getElementById('itemPopup').classList.remove('show');document.getElementById('popupOverlay').classList.remove('show')}
+function addBL(text,cls){const o=document.getElementById('battleLogOverlay'),l=document.createElement('div');l.className='ll '+cls;l.textContent=text;o.appendChild(l);if(o.children.length>3)o.children[0].remove()}
+function addLog(text,cls){const c=document.getElementById('logContent'),e=document.createElement('div');e.className='le '+cls;e.innerHTML=`<span class="time">[${formatTime(S.focusSeconds)}]</span> ${text}`;c.insertBefore(e,c.firstChild);if(c.children.length>50)c.lastChild.remove()}
+function updateMonHp(){if(!S.monster)return;const bar=document.getElementById('monsterHpMini');bar.style.width=Math.max(0,(S.monster.hp/S.monster.maxHp)*100)+'%';bar.className='hp-bm-f'+(S.monster.isBoss?' boss':S.monster.isElite?' elite':'')}
+function updateUI(){
+  const h=S.hero,emHp=effectiveMaxHp();
+  document.getElementById('statusName').textContent=h.name;document.getElementById('statusLevel').textContent=`Lv.${h.level}`;document.getElementById('heroLevelLabel').textContent=`Lv.${h.level}`;
+  document.getElementById('hpBar').style.width=(h.hp/emHp)*100+'%';document.getElementById('hpText').textContent=`${h.hp}/${emHp}`;document.getElementById('heroHpMini').style.width=(h.hp/emHp)*100+'%';
+  document.getElementById('mpBar').style.width=(h.mp/h.maxMp)*100+'%';document.getElementById('mpText').textContent=`${h.mp}/${h.maxMp}`;
+  document.getElementById('expBar').style.width=(h.exp/h.maxExp)*100+'%';document.getElementById('expText').textContent=`${h.exp}/${h.maxExp}`;
+  document.getElementById('statAtk').textContent=totalAtk();document.getElementById('statDef').textContent=totalDef();
+  document.getElementById('statSpd').textContent=h.spd;document.getElementById('statCrit').textContent=totalCrit().toFixed(1)+'%';
+  document.getElementById('statGold').textContent=h.gold;document.getElementById('statKills').textContent=h.kills;
+  document.getElementById('statSP').textContent=h.skillPoints;document.getElementById('statCombo').textContent=h.combo;
+  document.getElementById('skPointsDisplay').textContent=h.skillPoints;
+}
+
+// ====== INIT ======
+genStars();drawHero();renderEquipGrid();renderMilestones();renderSkillTree();updateUI();
+</script>
+</body>
+</html>

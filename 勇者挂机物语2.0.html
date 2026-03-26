@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔️ 勇者挂机物语</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1a2e;--mid:#16213e;--gold:#f5c542;--hpr:#e74c3c;--mpb:#3498db;--expg:#2ecc71}
+body{background:var(--bg);color:#e0e0e0;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;image-rendering:pixelated}
+.pb{border:3px solid #555;border-top-color:#888;border-left-color:#888;border-right-color:#333;border-bottom-color:#333;background:var(--mid);padding:10px}
+.pbi{border:3px solid #555;border-top-color:#333;border-left-color:#333;border-right-color:#888;border-bottom-color:#888;background:rgba(0,0,0,.3);padding:8px}
+.gc{max-width:1200px;margin:0 auto;padding:8px;display:flex;flex-direction:column;gap:6px}
+.header{text-align:center;padding:8px}.header h1{font-family:'Press Start 2P',monospace;font-size:22px;color:var(--gold);text-shadow:3px 3px 0 #000;letter-spacing:2px;margin-bottom:3px}.header .sub{font-size:12px;color:#888;font-family:'Press Start 2P',monospace}
+.timer-sec{text-align:center;padding:6px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.timer-d{font-family:'Press Start 2P',monospace;font-size:32px;color:var(--gold);text-shadow:2px 2px 0 #000}
+.fbtn{font-family:'Press Start 2P',monospace;font-size:13px;padding:10px 22px;cursor:pointer;border:3px solid #888;border-bottom-color:#333;border-right-color:#333;background:linear-gradient(180deg,#4a6fa5,#2d4a7a);color:#fff;text-shadow:1px 1px 0 #000}
+.fbtn:hover{background:linear-gradient(180deg,#5a7fb5,#3d5a8a)}.fbtn:active,.fbtn.active{border-top-color:#333;border-left-color:#333;border-bottom-color:#888;border-right-color:#888}.fbtn.active{background:linear-gradient(180deg,#7a2d2d,#a54a4a);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.8}}
+.save-btns{display:flex;gap:4px;justify-content:center;margin-top:3px;flex-wrap:wrap}
+.save-btn{font-family:'Press Start 2P',monospace;font-size:9px;padding:6px 10px;cursor:pointer;border:2px solid #666;border-bottom-color:#333;border-right-color:#333;background:#333;color:#aaa}.save-btn:hover{color:#fff;background:#444}
+.tab-bar{display:flex;gap:2px;flex-wrap:wrap}.tab-btn{font-family:'Press Start 2P',monospace;font-size:10px;padding:8px 14px;cursor:pointer;border:2px solid #555;border-bottom:none;background:#1a1a2e;color:#888}.tab-btn:hover{color:#ccc}.tab-btn.active{background:var(--mid);color:var(--gold);border-top-color:#888;border-left-color:#888;border-right-color:#333;z-index:2}
+.tab-content{display:none}.tab-content.active{display:block}
+.main-area{display:flex;flex-direction:column;gap:6px}.status-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.battle-scene{position:relative;height:380px;overflow:hidden;background:#111}
+.scene-bg{position:absolute;inset:0}.scene-bg .ground{position:absolute;bottom:0;width:100%;height:60px;background:repeating-linear-gradient(90deg,#2d5a1e 0px,#3a6b2a 8px,#2d5a1e 16px)}.scene-bg .sky{position:absolute;top:0;width:100%;height:calc(100% - 60px);background:linear-gradient(180deg,#0a0a2a,#1a1a4a 60%,#2a3a2a)}
+.stars{position:absolute;top:0;width:100%;height:60%}.star{position:absolute;width:2px;height:2px;background:#fff;animation:twinkle 2s infinite}@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.2}}
+.battle-entities{position:absolute;bottom:80px;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 15px}
+.ally-side,.enemy-side{display:flex;gap:4px;align-items:flex-end}.enemy-side{flex-direction:row-reverse}
+.sprite-container{display:flex;flex-direction:column;align-items:center;gap:2px}
+.sprite{width:48px;height:48px;image-rendering:pixelated}.sprite-sm{width:38px;height:38px;image-rendering:pixelated}
+.hero-sprite{animation:hi .8s steps(2) infinite}@keyframes hi{0%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.hero-sprite.attacking{animation:ha .3s ease-out}@keyframes ha{0%{transform:translateX(0)}40%{transform:translateX(40px)}100%{transform:translateX(0)}}
+.hero-sprite.hero-hit{animation:hh .25s ease-out}@keyframes hh{0%{filter:brightness(1)}20%{filter:brightness(2.5);transform:translateX(-4px)}100%{filter:brightness(1);transform:translateX(0)}}
+.monster-sprite{animation:mi2 1s steps(2) infinite}@keyframes mi2{0%{transform:translateY(0) scaleX(-1)}50%{transform:translateY(-2px) scaleX(-1)}}
+.monster-sprite.mon-atk{animation:ma .3s ease-out}@keyframes ma{0%{transform:scaleX(-1)}40%{transform:scaleX(-1) translateX(-30px)}100%{transform:scaleX(-1)}}
+.monster-sprite.hit{animation:mh .3s ease-out}@keyframes mh{0%{transform:scaleX(-1)}25%{transform:scaleX(-1) translateX(8px);filter:brightness(3)}100%{transform:scaleX(-1)}}
+.monster-sprite.dying{animation:md .5s ease-out forwards}@keyframes md{0%{transform:scaleX(-1);opacity:1}50%{transform:scaleX(-1) rotate(20deg);opacity:.5}100%{transform:scaleX(-1) rotate(45deg) translateY(20px);opacity:0}}
+.hp-bm{width:46px;height:5px;background:#333;border:1px solid #555}.hp-bm-f{height:100%;background:var(--hpr);transition:width .2s}.hp-bm-f.elite{background:linear-gradient(90deg,#ffaa00,#ff6600)}.hp-bm-f.boss{background:linear-gradient(90deg,#ff2222,#ff0066)}
+.en{font-family:'Press Start 2P',monospace;font-size:9px;color:#fff;text-shadow:1px 1px 0 #000}.el{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--gold);text-shadow:1px 1px 0 #000}
+.damage-num{position:absolute;font-family:'Press Start 2P',monospace;font-size:16px;color:#ff4444;text-shadow:1px 1px 0 #000;pointer-events:none;animation:dmg .8s ease-out forwards;z-index:10}.damage-num.crit{font-size:22px;color:var(--gold)}.damage-num.heal{color:#55ff55;font-size:14px}
+@keyframes dmg{0%{opacity:1;transform:translateY(0) scale(1)}20%{transform:translateY(-12px) scale(1.15)}100%{opacity:0;transform:translateY(-40px) scale(.8)}}
+.blo{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);padding:4px 8px;max-height:70px;overflow:hidden;pointer-events:none}
+.blo .ll{font-family:'Noto Sans SC',sans-serif;font-size:14px;color:#eee;line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:1px 1px 2px #000}
+.blo .ll.gt{color:var(--gold)}.blo .ll.rt{color:#f66}.blo .ll.grt{color:#6f6}.blo .ll.pt{color:#c8f}
+.battle-scene::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:5}
+.skill-flash{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:14px;color:#55ccff;text-shadow:0 0 8px rgba(85,204,255,.8),2px 2px 0 #000;pointer-events:none;animation:skfl .9s ease-out forwards;z-index:12;white-space:nowrap}
+.skill-flash.necro-flash{color:#aa55ff;text-shadow:0 0 8px rgba(170,85,255,.8),2px 2px 0 #000}
+@keyframes skfl{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}30%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+.summon-unit{display:flex;flex-direction:column;align-items:center;transition:opacity .3s}.summon-unit.dead{opacity:.15;filter:grayscale(1)}
+.summon-unit canvas{animation:su-bob 1.2s infinite}@keyframes su-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+.su-hp{width:34px;height:4px;background:#333;border:1px solid #444;margin-top:2px}.su-hp-f{height:100%;background:#aa55ff;transition:width .2s}
+.su-label{font-family:'Press Start 2P',monospace;font-size:8px;color:#aa55ff;text-shadow:1px 1px 0 #000}
+.aoe-flash{position:absolute;inset:0;background:rgba(255,100,50,.15);pointer-events:none;animation:aoefl .4s ease-out forwards;z-index:11}@keyframes aoefl{0%{opacity:1}100%{opacity:0}}
+.wave-ind{position:absolute;top:4px;right:6px;font-family:'Press Start 2P',monospace;font-size:9px;color:#888;text-shadow:1px 1px 0 #000;z-index:8}.wave-ind .mon-count{color:var(--gold)}
+.hi2{padding:8px}.hi2 .ir{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}.hi2 .hn{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--gold)}.hi2 .hl{font-family:'Press Start 2P',monospace;font-size:11px;color:#ccc}
+.sb{height:16px;background:#222;border:2px solid #444;margin:2px 0;position:relative;overflow:hidden}.sbf{height:100%;transition:width .3s}.sbf.hp{background:linear-gradient(180deg,#e74c3c,#c0392b)}.sbf.mp{background:linear-gradient(180deg,#3498db,#2980b9)}.sbf.exp{background:linear-gradient(180deg,#2ecc71,#27ae60)}
+.sbt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:8px;color:#fff;text-shadow:1px 1px 0 #000;white-space:nowrap}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;padding:6px;font-size:12px}.sg .si{display:flex;justify-content:space-between;padding:1px 0}.sg .sl{color:#999}.sg .sv{color:#fff;font-weight:700}
+.es{padding:8px}.es h3{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.auto-label{font-family:'Press Start 2P',monospace;font-size:8px;color:#888;display:flex;align-items:center;gap:3px;font-weight:normal}
+.auto-toggle{width:28px;height:14px;background:#333;border:2px solid #555;display:inline-block;position:relative;cursor:pointer}.auto-toggle.on{background:#2a6a2a;border-color:#4a4}.auto-toggle::after{content:'';position:absolute;top:1px;left:1px;width:8px;height:8px;background:#888;transition:left .15s}.auto-toggle.on::after{left:15px;background:#5f5}
+.eg{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.esl{aspect-ratio:1;border:2px solid #555;background:rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:default;font-size:18px;min-height:55px}
+.esl .sll{font-family:'Press Start 2P',monospace;font-size:6px;color:#666;margin-top:1px}
+.esl.q-common{border-color:#aaa}.esl.q-uncommon{border-color:#55cc55}.esl.q-rare{border-color:#5555ff}.esl.q-epic{border-color:#aa55ff}.esl.q-legendary{border-color:#ffaa00}.esl.q-mythic{border-color:#ff5555}
+.ett{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#111;border:2px solid #666;padding:6px;z-index:100;min-width:150px;pointer-events:none}.esl:hover .ett{display:block}.ett .tn{font-family:'Press Start 2P',monospace;font-size:10px;margin-bottom:3px}.ett .ts{font-size:12px;color:#aaa;line-height:1.4}.ett .ts span{color:#5f5}
+.shop-panel{padding:8px}.shop-h{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--gold);margin-bottom:3px}.shop-gold{font-family:'Press Start 2P',monospace;font-size:11px;color:#ccc;margin-bottom:8px}.shop-gold span{color:var(--gold)}
+.shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.shop-item{border:2px solid #444;background:rgba(0,0,0,.3);padding:8px;cursor:pointer;transition:all .15s}.shop-item:hover{border-color:#888}.shop-item.bought{opacity:.4;cursor:not-allowed}
+.shop-item .si-icon{font-size:26px;display:block;text-align:center;margin-bottom:3px}.shop-item .si-name{font-family:'Press Start 2P',monospace;font-size:9px;color:#ddd;text-align:center;display:block;margin-bottom:2px}.shop-item .si-desc{font-size:11px;color:#888;text-align:center;line-height:1.3;display:block;margin-bottom:3px}.shop-item .si-cost{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);text-align:center;display:block}
+.skill-tree-panel{padding:8px}.sk-h3{font-family:'Press Start 2P',monospace;font-size:13px;color:var(--gold);margin-bottom:6px}.sk-points{font-family:'Press Start 2P',monospace;font-size:11px;color:#ccc;margin-bottom:8px}.sk-points span{color:var(--gold)}
+.sk-branches{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.sk-branch{padding:5px}.sk-branch-title{font-family:'Press Start 2P',monospace;font-size:9px;text-align:center;margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid #333}
+.sk-branch-title.atk-t{color:#ff6644;border-color:#442211}.sk-branch-title.def-t{color:#44aaff;border-color:#112244}.sk-branch-title.util-t{color:#44ff88;border-color:#114422}.sk-branch-title.necro-t{color:#aa55ff;border-color:#331144}
+.sk-nodes{display:flex;flex-direction:column;gap:3px}.sk-node{border:2px solid #444;background:rgba(0,0,0,.3);padding:5px;cursor:pointer;transition:all .15s}.sk-node:hover:not(.locked){border-color:#888}.sk-node.unlocked{border-color:#5a5;background:rgba(50,120,50,.15)}.sk-node.maxed{border-color:var(--gold);background:rgba(120,100,30,.15)}.sk-node.locked{opacity:.35;cursor:not-allowed}
+.sk-node .sk-row{display:flex;justify-content:space-between;align-items:center}.sk-node .sk-icon{font-size:16px;margin-right:2px}.sk-node .sk-name{font-family:'Press Start 2P',monospace;font-size:8px;color:#ddd}.sk-node .sk-lvl{font-family:'Press Start 2P',monospace;font-size:7px;color:#aaa}.sk-node .sk-desc{font-size:11px;color:#888;margin-top:2px;line-height:1.2}.sk-node .sk-cost{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--gold);margin-top:1px}
+.sk-node.unlocked .sk-name{color:#7f7}.sk-node.maxed .sk-name{color:var(--gold)}.sk-arrow{text-align:center;color:#444;font-size:10px;line-height:1;padding:0}
+.bs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.lp{padding:5px;max-height:130px}.lp h3{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold);margin-bottom:4px}
+.lc{max-height:95px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#555 #222}.le{font-size:12px;padding:1px 0;color:#aaa;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.03)}.le .time{color:#666;margin-right:3px}.le.gt{color:var(--gold)}.le.grt{color:#6f6}.le.rt{color:#f66}.le.pt{color:#c8f}
+.mp2{padding:5px}.mp2 h3{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold);margin-bottom:4px}.ml{max-height:95px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#555 #222}
+.mi{display:flex;align-items:center;gap:4px;padding:2px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03)}.mi .ms-i{font-size:12px}.mi .ms-t{flex:1;color:#ccc}.mi .ms-r{color:#666;font-size:10px}.mi.locked{opacity:.4}.mi.achieved .ms-t{color:var(--gold)}
+.ip{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;background:#111;border:3px solid var(--gold);padding:16px;text-align:center;animation:popin .3s ease-out;min-width:220px}@keyframes popin{0%{transform:translate(-50%,-50%) scale(.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.ip.show{display:block}.po{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199}.po.show{display:block}
+.ip .pt2{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--gold);margin-bottom:8px}.ip .pi2{font-size:40px;margin:4px 0}.ip .pn2{font-family:'Press Start 2P',monospace;font-size:11px;margin:4px 0}.ip .ps2{font-size:13px;color:#aaa;line-height:1.6}.ip .ps2 span{color:#5f5}
+.ip .compare{margin-top:6px;padding-top:6px;border-top:1px solid #444;font-size:12px;color:#999;line-height:1.5}.ip .compare .better{color:#5f5}.ip .compare .worse{color:#f55}
+.pc{font-family:'Press Start 2P',monospace;font-size:10px;margin-top:10px;padding:6px 16px;cursor:pointer;border:2px solid #888;border-bottom-color:#333;border-right-color:#333;background:#444;color:#fff}
+.luf{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:32px;color:var(--gold);text-shadow:3px 3px 0 #000,0 0 16px rgba(245,197,66,.8);z-index:150;pointer-events:none}.luf.show{display:block;animation:lu 1.5s ease-out forwards}
+@keyframes lu{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}20%{transform:translate(-50%,-50%) scale(1.3);opacity:1}40%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{transform:translate(-50%,-70%) scale(1);opacity:0}}
+.auto-equip-notif{position:fixed;top:16px;right:16px;background:#1a3a1a;border:2px solid #4a4;padding:8px 12px;font-family:'Press Start 2P',monospace;font-size:9px;color:#5f5;z-index:180;animation:ns .4s ease-out;pointer-events:none;max-width:250px;line-height:1.5}@keyframes ns{0%{transform:translateX(120%);opacity:0}100%{transform:translateX(0);opacity:1}}
+@media(max-width:640px){.status-row,.bs{grid-template-columns:1fr}.header h1{font-size:12px}.timer-d{font-size:18px}.battle-scene{height:240px}.sk-branches,.shop-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="gc">
+<div class="header pb"><h1>⚔️ 勇者挂机物语</h1><div class="sub">专注越久 · 勇者越强</div></div>
+<div class="timer-sec pb"><div><div style="font-size:10px;color:#999;margin-bottom:2px">⏱ 专注时间</div><div class="timer-d" id="timerDisplay">00:00:00</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="fbtn" id="focusBtn" onclick="toggleFocus()">▶ 开始专注</button><button class="fbtn" id="speedBtn" onclick="cycleSpeed()" style="font-size:10px;padding:8px 12px;background:linear-gradient(180deg,#5a4a2a,#3a3a1a)">⚡x1</button></div><div class="save-btns"><button class="save-btn" onclick="saveGame()">💾存档</button><button class="save-btn" onclick="loadGame()">📂读档</button><button class="save-btn" onclick="confirmRestart()" style="color:#f66">🔄重开</button><button class="save-btn" onclick="exportLog()" style="color:#5cf">📋日志</button></div></div>
+<div class="tab-bar"><div class="tab-btn active" onclick="switchTab('battle')">⚔️ 战斗</div><div class="tab-btn" onclick="switchTab('skills')">🌟 技能树</div><div class="tab-btn" onclick="switchTab('shop')">🏪 商店</div><div class="tab-btn" onclick="switchTab('bestiary')">📖 图鉴</div></div>
+<div class="tab-content active" id="tab-battle"><div class="main-area">
+<div class="battle-scene pbi" id="battleScene"><div class="scene-bg"><div class="sky"></div><div class="stars" id="stars"></div><div class="ground"></div></div><div class="wave-ind" id="waveInd">怪物: <span class="mon-count" id="monCount">0</span></div>
+<div class="battle-entities"><div class="ally-side" id="allySide"><div class="sprite-container"><div class="en" id="heroNameLabel">勇者</div><div class="el" id="heroLevelLabel">Lv.1</div><canvas class="sprite hero-sprite" id="heroCanvas" width="48" height="48"></canvas><div class="hp-bm"><div class="hp-bm-f" id="heroHpMini" style="width:100%"></div></div></div></div><div class="enemy-side" id="enemySide"></div></div>
+<div class="blo" id="battleLogOverlay"><div class="ll" style="color:#888">点击「开始专注」出发冒险...</div></div></div>
+<div class="status-row"><div class="hi2 pb"><div class="ir"><span class="hn" id="statusName">勇者</span><span class="hl" id="statusLevel">Lv.1</span></div>
+<div class="sb"><div class="sbf hp" id="hpBar" style="width:100%"></div><div class="sbt" id="hpText">100/100</div></div>
+<div class="sb"><div class="sbf mp" id="mpBar" style="width:100%"></div><div class="sbt" id="mpText">30/30</div></div>
+<div class="sb"><div class="sbf exp" id="expBar" style="width:0%"></div><div class="sbt" id="expText">0/100</div></div>
+<div class="sg"><div class="si"><span class="sl">⚔攻击</span><span class="sv" id="sAtk">10</span></div><div class="si"><span class="sl">🛡防御</span><span class="sv" id="sDef">5</span></div><div class="si"><span class="sl">💨速度</span><span class="sv" id="sSpd">8</span></div><div class="si"><span class="sl">🍀暴击</span><span class="sv" id="sCrit">5%</span></div><div class="si"><span class="sl">🩸吸血</span><span class="sv" id="sLifesteal">0%</span></div><div class="si"><span class="sl">💰金币</span><span class="sv" id="sGold">100</span></div><div class="si"><span class="sl">💀击杀</span><span class="sv" id="sKills">0</span></div><div class="si"><span class="sl">☠️军团</span><span class="sv" id="sSummon">0/0</span></div></div></div>
+<div class="es pb"><h3><span>🎒 装备</span><span class="auto-label">自动 <span class="auto-toggle on" id="autoEquipToggle" onclick="toggleAutoEquip()"></span></span></h3><div class="eg" id="equipGrid"></div></div></div></div></div>
+<div class="tab-content" id="tab-skills"><div class="skill-tree-panel pb"><div class="sk-h3">🌟 技能树</div><div class="sk-points">技能点: <span id="skPD">0</span></div><div class="sk-branches" id="skillBranches"></div></div></div>
+<div class="tab-content" id="tab-shop"><div class="shop-panel pb"><div class="shop-h">🏪 商店 <button class="save-btn" onclick="refreshShop()" style="margin-left:8px;color:#5cf">🔄 刷新</button></div><div class="shop-gold">金币: <span id="shopGold">0</span> | <span style="color:#888" id="shopRefreshCost">刷新:50g</span></div><div class="shop-grid" id="shopGrid"></div></div></div>
+<div class="tab-content" id="tab-bestiary"><div class="pb" style="padding:10px"><div style="font-family:'Press Start 2P',monospace;font-size:13px;color:var(--gold);margin-bottom:10px">📖 怪物图鉴</div><div style="font-size:12px;color:#888;margin-bottom:10px">击败怪物后解锁 | 已发现: <span id="bestiaryCount" style="color:var(--gold)">0</span>/10</div><div id="bestiaryGrid" style="display:flex;flex-direction:column;gap:8px"></div></div></div>
+<div class="bs"><div class="lp pb"><h3>📜 日志</h3><div class="lc" id="logContent"></div></div><div class="mp2 pb"><h3>🏆 成就</h3><div class="ml" id="milestoneList"></div></div></div>
+</div>
+<div class="po" id="popupOverlay"></div>
+<div class="ip" id="itemPopup"><div class="pt2" id="popupTitle">✨</div><div class="pi2" id="popupIcon"></div><div class="pn2" id="popupName"></div><div class="ps2" id="popupStats"></div><div class="compare" id="popupCompare"></div><button class="pc" onclick="closePopup()">确认</button></div>
+<div class="luf" id="levelupFlash">LEVEL UP!</div>
+<script>
+// This is a complete rebuild. Due to the extreme length, the JS will be compact.
+// ====== DEBUG ======
+const debugLog=[];function dlog(m){debugLog.push('['+fmtT(S?S.focusSeconds:0)+'] '+m);if(debugLog.length>2000)debugLog.shift()}
+function snapStats(){return'Lv'+S.hero.level+' HP'+S.hero.hp+'/'+eMaxHp()+' ATK'+totalAtk()+' DEF'+totalDef()+' LS'+totalLifesteal()+'%'}
+function exportLog(){let t='=== 勇者挂机物语 调试日志 ===\n'+new Date().toLocaleString()+'\n'+snapStats()+'\n\n'+debugLog.join('\n');const b=new Blob([t],{type:'text/plain'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='log_'+Date.now()+'.txt';a.click();URL.revokeObjectURL(u)}
+
+// ====== STATE ======
+let S;function defaultState(){return{focusing:false,focusSeconds:0,deathStreak:0,
+hero:{name:'勇者',level:1,hp:100,maxHp:100,mp:30,maxMp:30,exp:0,maxExp:100,atk:10,def:5,spd:8,crit:5,lifesteal:0,gold:100,kills:0,combo:0,skillPoints:3,equipment:{weapon:null,armor:null,helmet:null,accessory:null}},
+monsters:[],battleTick:0,autoEquip:true,achievedMilestones:[],skills:{},shopBought:[],shopBuyCount:{},shopRefreshes:0,_shopSlots:[],
+summonUnits:[],summoningTurns:0,bestiaryFound:[],_debuffs:[],_queenShield:0,_queenShieldTicks:0,_lordCD:0,_queenCD:0,_raisedEnemies:[]}}
+S=defaultState();
+
+// ====== DATA ======
+const QUALITIES=[{name:'普通',key:'common',color:'#aaa',multi:1},{name:'优秀',key:'uncommon',color:'#55cc55',multi:1.5},{name:'稀有',key:'rare',color:'#5577ff',multi:2.2},{name:'史诗',key:'epic',color:'#aa55ff',multi:3.5},{name:'传说',key:'legendary',color:'#ffaa00',multi:5},{name:'神话',key:'mythic',color:'#ff5555',multi:8}];
+const ESLOTS=[{key:'weapon',label:'武器',icon:'⚔️'},{key:'armor',label:'铠甲',icon:'🛡️'},{key:'helmet',label:'头盔',icon:'⛑️'},{key:'accessory',label:'饰品',icon:'💍'}];
+const W_N=['木剑','铁剑','钢剑','秘银剑','龙牙剑','天界剑','混沌剑','星辰刃'];const A_N=['布衣','皮甲','锁子甲','板甲','秘银甲','龙鳞甲','圣光铠','混沌甲'];const H_N=['布帽','皮帽','铁盔','钢盔','秘银冠','龙角冠','圣光冕','星辰冠'];const C_N=['木戒','铜环','银链','金坠','翡翠链','龙心坠','圣光戒','创世环'];
+const MONSTERS=[
+{name:'史莱姆',icon:'🟢',baseHp:50,baseAtk:8,baseDef:2,baseSpd:3,exp:20,gold:10,color:'#55cc55',trait:'split',bossName:'史莱姆之王'},
+{name:'哥布林',icon:'👺',baseHp:85,baseAtk:14,baseDef:4,baseSpd:2,exp:35,gold:16,color:'#88aa44',trait:'steal',bossName:'哥布林酋长'},
+{name:'骷髅兵',icon:'💀',baseHp:130,baseAtk:18,baseDef:6,baseSpd:3,exp:50,gold:22,color:'#ccccaa',trait:'reassemble',bossName:'骷髅将军'},
+{name:'狼人',icon:'🐺',baseHp:180,baseAtk:26,baseDef:9,baseSpd:2,exp:70,gold:30,color:'#8888aa',trait:'bleed',bossName:'狼王'},
+{name:'萨满',icon:'🧿',baseHp:200,baseAtk:24,baseDef:12,baseSpd:4,exp:80,gold:35,color:'#44ccaa',role:'shaman',trait:'purge',bossName:'大萨满'},
+{name:'石像鬼',icon:'🗿',baseHp:280,baseAtk:22,baseDef:22,baseSpd:5,exp:90,gold:40,color:'#999',trait:'harden',bossName:'远古石像'},
+{name:'亡灵祭司',icon:'🕯️',baseHp:230,baseAtk:30,baseDef:7,baseSpd:4,exp:105,gold:48,color:'#8855bb',role:'necro',trait:'curse',bossName:'大祭司'},
+{name:'暗影法师',icon:'🧙',baseHp:260,baseAtk:36,baseDef:8,baseSpd:3,exp:115,gold:55,color:'#7744bb',trait:'spellstorm',bossName:'大魔导师'},
+{name:'巨龙',icon:'🐉',baseHp:500,baseAtk:48,baseDef:22,baseSpd:4,exp:180,gold:90,color:'#cc4444',role:'dragon',trait:'dragonfear',bossName:'龙皇'},
+{name:'魔王',icon:'👹',baseHp:1200,baseAtk:65,baseDef:32,baseSpd:3,exp:350,gold:180,color:'#ff2222',role:'demon',trait:'dominate',bossName:'终焉魔王'}];
+const MILESTONES=[{time:60,icon:'⭐',text:'专注1分钟',reward:'经验+50'},{time:300,icon:'🌟',text:'专注5分钟',reward:'稀有装备'},{time:600,icon:'💫',text:'专注10分钟',reward:'史诗装备'},{time:900,icon:'🔥',text:'专注15分钟',reward:'攻击+10'},{time:1800,icon:'⚡',text:'专注30分钟',reward:'传说装备'},{time:3600,icon:'👑',text:'专注1小时',reward:'神话装备'},{time:7200,icon:'🏆',text:'专注2小时',reward:'全属性x2'}];
+
+// ====== SHOP with lifesteal potion ======
+const SHOP_ITEMS=[
+{id:'potion_hp',name:'生命药水',icon:'🧪',desc:'+30HP',baseCost:40,repeat:true,fn:()=>{S.hero.maxHp+=30;S.hero.hp=eMaxHp()}},
+{id:'potion_atk',name:'力量药水',icon:'💪',desc:'+3攻击',baseCost:80,repeat:true,fn:()=>{S.hero.atk+=3}},
+{id:'potion_def',name:'铁壁药水',icon:'🛡️',desc:'+2防御',baseCost:50,repeat:true,fn:()=>{S.hero.def+=2}},
+{id:'potion_crit',name:'锐利药水',icon:'🎯',desc:'+2%暴击',baseCost:100,repeat:true,fn:()=>{S.hero.crit+=2}},
+{id:'potion_spd',name:'疾风药水',icon:'💨',desc:'+2速度',baseCost:70,repeat:true,fn:()=>{S.hero.spd+=2}},
+{id:'potion_ls',name:'嗜血药水',icon:'🩸',desc:'+2%吸血',baseCost:120,repeat:true,fn:()=>{S.hero.lifesteal+=2}},
+{id:'potion_all',name:'万能药水',icon:'🌈',desc:'+2攻+1防+1速+10HP+1%吸血',baseCost:180,repeat:true,fn:()=>{S.hero.atk+=2;S.hero.def+=1;S.hero.spd+=1;S.hero.maxHp+=10;S.hero.lifesteal+=1;S.hero.hp=eMaxHp()}},
+{id:'sp_book',name:'技能秘籍',icon:'📖',desc:'+2技能点',baseCost:200,repeat:true,fn:()=>{S.hero.skillPoints+=2}},
+{id:'exp_scroll',name:'经验卷轴',icon:'📜',desc:'+等级x40经验',baseCost:100,repeat:true,fn:()=>{S.hero.exp+=S.hero.level*40}},
+{id:'chest_common',name:'普通宝箱',icon:'📦',desc:'随机普通装备',baseCost:30,repeat:true,fn:()=>{grantItem(0)}},
+{id:'chest_uncommon',name:'优秀宝箱',icon:'🎁',desc:'随机优秀装备',baseCost:80,repeat:true,fn:()=>{grantItem(1)}},
+{id:'chest_rare',name:'稀有宝箱',icon:'💙',desc:'随机稀有装备',baseCost:200,repeat:true,fn:()=>{grantItem(2)}},
+{id:'chest_epic',name:'史诗宝箱',icon:'💜',desc:'随机史诗装备',baseCost:500,repeat:true,fn:()=>{grantItem(3)}},
+{id:'chest_legend',name:'传说宝箱',icon:'🧡',desc:'随机传说装备',baseCost:1200,repeat:true,fn:()=>{grantItem(4)}},
+{id:'chest_mythic',name:'神话宝箱',icon:'❤️',desc:'随机神话装备',baseCost:3000,repeat:true,fn:()=>{grantItem(5)}},
+{id:'revival_charm',name:'复活护符',icon:'💎',desc:'死亡不丢金币',baseCost:400,repeat:false,fn:()=>{}},
+{id:'treasure_map',name:'藏宝图',icon:'🗺️',desc:'掉落率+10%',baseCost:350,repeat:false,fn:()=>{}}];
+function getItemCost(item){if(!item.repeat)return item.baseCost;return Math.floor(item.baseCost*Math.pow(1.2,(S.shopBuyCount[item.id]||0)))}
+
+// ====== SKILL TREE with lifesteal skill ======
+const SKILL_TREE={
+attack:{name:'⚔️ 战斗之道',css:'atk-t',skills:[
+{id:'power_strike',name:'力量打击',icon:'💥',maxLv:5,desc:'攻击+{v}%',val:i=>i*6,req:null},
+{id:'critical_edge',name:'致命锋刃',icon:'🗡️',maxLv:5,desc:'暴击+{v}%',val:i=>i*3,req:null},
+{id:'fury',name:'狂怒',icon:'😤',maxLv:3,desc:'攻速+{v}%',val:i=>i*12,req:'power_strike'},
+{id:'whirlwind',name:'旋风斩',icon:'🌀',maxLv:3,desc:'每{v}s全体AOE(70%攻击)',val:i=>Math.max(12-i*3,5),req:'fury'},
+{id:'execute',name:'斩杀',icon:'⚡',maxLv:3,desc:'<30%血+{v}%伤害',val:i=>i*20,req:'critical_edge'},
+{id:'god_slayer',name:'弑神者',icon:'👹',maxLv:1,desc:'全伤+{v}%',val:()=>35,req:'whirlwind'}]},
+defense:{name:'🛡️ 守护之壁',css:'def-t',skills:[
+{id:'tough_skin',name:'坚韧体魄',icon:'💪',maxLv:5,desc:'防御+{v}%',val:i=>i*6,req:null},
+{id:'regen',name:'自然恢复',icon:'💚',maxLv:5,desc:'+{v}%HP/5s',val:i=>i*1.5,req:null},
+{id:'vampiric',name:'吸血本能',icon:'🩸',maxLv:5,desc:'攻击吸血+{v}%',val:i=>i*3,req:null},
+{id:'block',name:'格挡',icon:'🛡️',maxLv:3,desc:'{v}%格挡',val:i=>i*6,req:'tough_skin'},
+{id:'thorns',name:'荆棘',icon:'🌵',maxLv:3,desc:'反弹{v}%',val:i=>i*8,req:'tough_skin'},
+{id:'undying',name:'不死之身',icon:'🔥',maxLv:3,desc:'{v}%1HP存活',val:i=>i*10,req:'block'},
+{id:'immortal',name:'永恒不灭',icon:'✨',maxLv:1,desc:'HP+{v}%',val:()=>60,req:'undying'}]},
+utility:{name:'🍀 财运天赋',css:'util-t',skills:[
+{id:'lucky',name:'幸运',icon:'🍀',maxLv:5,desc:'掉落+{v}%',val:i=>i*6,req:null},
+{id:'gold_rush',name:'黄金猎手',icon:'💰',maxLv:5,desc:'金币+{v}%',val:i=>i*10,req:null},
+{id:'exp_boost',name:'经验加速',icon:'📚',maxLv:3,desc:'经验+{v}%',val:i=>i*12,req:'gold_rush'},
+{id:'quality_up',name:'品质提升',icon:'💎',maxLv:3,desc:'品质+{v}级',val:i=>i,req:'lucky'},
+{id:'double_drop',name:'双倍掉落',icon:'🎁',maxLv:3,desc:'{v}%双倍',val:i=>i*10,req:'quality_up'},
+{id:'time_warp',name:'时间扭曲',icon:'⏰',maxLv:1,desc:'全速+{v}%',val:()=>50,req:'double_drop'}]},
+necro:{name:'☠️ 暗影军团',css:'necro-t',skills:[
+{id:'raise_dead',name:'骷髅召唤',icon:'💀',maxLv:3,desc:'召唤{v}个骷髅兵',val:i=>i,req:null},
+{id:'dark_pact',name:'暗黑契约',icon:'🩸',maxLv:5,desc:'召唤物攻+{v}%',val:i=>i*15,req:null},
+{id:'soul_drain',name:'灵魂吸取',icon:'👻',maxLv:3,desc:'击杀回{v}%HP',val:i=>i*8,req:'raise_dead'},
+{id:'shadow_assassin',name:'暗影刺客',icon:'🗡️',maxLv:2,desc:'召唤{v}个刺客',val:i=>i,req:'raise_dead'},
+{id:'shadow_hunter',name:'暗影猎手',icon:'🏹',maxLv:2,desc:'召唤{v}个猎手(AOE)',val:i=>i,req:'dark_pact'},
+{id:'plague',name:'瘟疫',icon:'☣️',maxLv:3,desc:'全体-{v}%HP/s',val:i=>i*1.5,req:'dark_pact'},
+{id:'corpse_explode',name:'尸爆',icon:'💥',maxLv:3,desc:'击杀AOE{v}%攻击',val:i=>i*20,req:'soul_drain'},
+{id:'shadow_lord',name:'暗影君主',icon:'👑',maxLv:1,desc:'召唤君主(需Lv10)',val:()=>1,req:'shadow_assassin',reqLv:10},
+{id:'shadow_queen',name:'暗影女皇',icon:'👸',maxLv:1,desc:'召唤女皇(需Lv15)',val:()=>1,req:'shadow_hunter',reqLv:15}]},
+lord_sub:{name:'👑 君主技能',css:'necro-t',skills:[
+{id:'lord_domain',name:'暗影领域',icon:'🌑',maxLv:5,desc:'军团攻击+{v}%，受伤减免{v}%',val:i=>i*5,req:'shadow_lord'},
+{id:'lord_sword',name:'黑暗大剑',icon:'⚔️',maxLv:5,desc:'君主每5s重击{v}%攻击力',val:i=>150+i*50,req:'shadow_lord'},
+{id:'lord_raise',name:'站起来！',icon:'🧟',maxLv:3,desc:'击杀{v}%率复活敌人(保留{r}%属性)',val:i=>10+i*8,req:'shadow_lord',raisePct:i=>40+i*10,raiseCap:i=>i}]},
+queen_sub:{name:'👸 女皇技能',css:'necro-t',skills:[
+{id:'queen_heal',name:'生命潮汐',icon:'💚',maxLv:5,desc:'勇者{h}%HP/次',val:i=>i*20,req:'shadow_queen',healPct:i=>2+i*1.5},
+{id:'queen_shield',name:'暗影壁垒',icon:'🛡️',maxLv:5,desc:'{v}%率,防+{d},6回合',val:i=>10+i*5,req:'shadow_queen',shieldDef:i=>15+i*8},
+{id:'queen_summon',name:'亡灵仪式',icon:'☠️',maxLv:3,desc:'{v}%率召唤(上限{c})',val:i=>8+i*5,req:'shadow_queen',sumCap:i=>8+i*2}]}};
+function initSkills(){Object.values(SKILL_TREE).forEach(b=>b.skills.forEach(sk=>{if(S.skills[sk.id]===undefined)S.skills[sk.id]=0}))}
+initSkills();
+function skLv(id){return S.skills[id]||0}
+function skVal(id){const lv=skLv(id);if(!lv)return 0;for(const b of Object.values(SKILL_TREE)){const sk=b.skills.find(s=>s.id===id);if(sk)return sk.val(lv)}return 0}
+function skB(stat){const m={atk:'power_strike',def:'tough_skin',crit:'critical_edge',atkSpd:['fury','time_warp'],regen:'regen',block:'block',thorns:'thorns',undying:'undying',dropRate:'lucky',goldBonus:'gold_rush',expBonus:'exp_boost',qualityUp:'quality_up',doubleDrop:'double_drop',execute:'execute',allDmg:'god_slayer',maxHpBonus:'immortal',vampiric:'vampiric',summonAtk:'dark_pact',soulDrain:'soul_drain',corpseExplode:'corpse_explode',plague:'plague',lordDomain:'lord_domain',lordSword:'lord_sword',lordRaise:'lord_raise',queenHeal:'queen_heal',queenShield:'queen_shield',queenSummon:'queen_summon'};const ids=m[stat];if(!ids)return 0;if(Array.isArray(ids))return ids.reduce((s,id)=>s+skVal(id),0);return skVal(ids)}
+
+// ====== SUMMON TYPES ======
+const SUMMON_TYPES={
+skeleton:{name:'骷髅兵',color:'#ddd',hpMult:0.25,atkMult:0.12,px:[[0,0,0,1,1,1,0,0,0,0],[0,0,1,2,2,2,1,0,0,0],[0,0,1,3,2,3,1,0,0,0],[0,0,1,2,2,2,1,0,0,0],[0,0,0,1,4,1,0,0,0,0],[0,0,1,1,1,1,1,0,0,0],[0,1,0,1,1,1,0,1,0,0],[0,0,0,1,0,1,0,0,0,0],[0,0,0,1,0,1,0,0,0,0],[0,0,1,1,0,1,1,0,0,0]],pal:{1:'#ddd',2:'#fff',3:'#222',4:'#aaa'}},
+assassin:{name:'暗影刺客',color:'#8844aa',hpMult:0.15,atkMult:0.25,px:[[0,0,0,0,1,1,0,0,0,0],[0,0,0,1,2,2,1,0,0,0],[0,0,0,1,3,3,1,0,0,0],[0,0,1,2,2,2,2,1,0,0],[0,0,0,1,4,4,1,0,0,0],[0,0,1,4,4,4,4,1,0,0],[0,5,1,4,4,4,4,1,5,0],[0,0,0,4,4,4,4,0,0,0],[0,0,0,1,0,0,1,0,0,0],[0,0,1,1,0,0,1,1,0,0]],pal:{1:'#333',2:'#8844aa',3:'#ff4444',4:'#553388',5:'#aaa'}},
+hunter:{name:'暗影猎手',color:'#448844',hpMult:0.2,atkMult:0.1,isAoe:true,px:[[0,0,0,1,1,0,0,0,0,0],[0,0,1,2,2,1,0,0,0,0],[0,0,1,3,3,1,0,0,0,0],[0,0,1,2,2,1,0,0,0,0],[0,0,0,1,1,0,0,0,0,0],[0,4,1,1,1,1,1,4,0,0],[0,0,1,1,1,1,1,0,0,0],[0,0,0,1,0,1,0,0,0,0],[0,0,0,1,0,1,0,0,0,0],[0,0,1,1,0,1,1,0,0,0]],pal:{1:'#333',2:'#448844',3:'#55ff55',4:'#886633'}},
+lord:{name:'暗影君主',color:'#6622cc',hpMult:0.6,atkMult:0.35,px:[[0,0,1,1,1,1,1,1,0,0],[0,1,2,2,5,5,2,2,1,0],[0,0,1,3,3,3,3,1,0,0],[0,0,1,4,3,4,3,1,0,0],[0,0,1,3,3,3,3,1,0,0],[0,0,0,1,5,5,1,0,0,0],[0,1,1,2,2,2,2,1,1,0],[0,0,1,2,2,2,2,1,0,0],[0,0,0,1,0,0,1,0,0,0],[0,0,1,1,0,0,1,1,0,0]],pal:{1:'#333',2:'#6622cc',3:'#9955ff',4:'#ff4444',5:'#ffcc00'}},
+queen:{name:'暗影女皇',color:'#cc44aa',hpMult:0.4,atkMult:0.08,isHealer:true,px:[[0,0,0,5,5,5,5,0,0,0],[0,0,5,3,5,5,3,5,0,0],[0,0,1,2,2,2,2,1,0,0],[0,0,1,4,2,4,2,1,0,0],[0,0,1,2,3,3,2,1,0,0],[0,0,0,1,2,2,1,0,0,0],[0,3,1,2,2,2,2,1,3,0],[0,0,1,2,2,2,2,1,0,0],[0,0,2,2,2,2,2,2,0,0],[0,2,2,0,0,0,0,2,2,0]],pal:{1:'#333',2:'#cc44aa',3:'#ff88cc',4:'#55ffff',5:'#ffcc00'}}};
+
+// ====== PIXEL ART ======
+function drawPx(c,px,pal){const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);const s=c.width/(px[0]?px[0].length:10);for(let y=0;y<px.length;y++)for(let x=0;x<px[y].length;x++){const v=px[y][x];if(v>0&&pal[v]){ctx.fillStyle=pal[v];ctx.fillRect(x*s,y*s,s,s)}}}
+const HPX=[[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,1,3,3,4,3,3,4,3,3,1,0,0,0],[0,0,0,1,3,3,3,3,3,3,3,3,1,0,0,0],[0,0,0,1,3,3,5,3,3,5,3,3,1,0,0,0],[0,0,0,0,1,3,3,6,6,3,3,1,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,7,7,7,7,7,7,7,7,7,7,7,7,0,0],[0,0,0,7,7,8,8,8,8,8,8,7,7,0,0,0],[0,9,0,0,7,8,8,8,8,8,8,7,0,0,9,0],[0,9,9,0,0,8,8,8,8,8,8,0,0,9,9,0],[0,0,9,0,0,3,3,0,0,3,3,0,0,9,0,0],[0,0,0,0,0,3,3,0,0,3,3,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0]];
+const HPAL={1:'#333',2:'#cc8833',3:'#ffcc99',4:'#fff',5:'#2244aa',6:'#cc5544',7:'#4466bb',8:'#3355aa',9:'#aaa'};
+function getMonPx(icon){const T={'🟢':{px:[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,1,1,2,2,1,1,2,2,1,1,0,0,0],[0,0,0,1,1,2,3,1,1,2,3,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,4,4,4,4,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0]],pal:{1:'#44bb44',2:'#fff',3:'#222',4:'#cc4444'}}};const def={px:[[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,2,2,1,1,1,2,2,1,1,0,0,0],[0,0,1,1,2,3,1,1,1,2,3,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,1,1,4,4,4,4,4,1,1,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,0,0,1,1,1,1,1,1,1,0,0,1,0,0],[0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0],[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],pal:{1:'#aa4444',2:'#ff4',3:'#222',4:'#fff'}};return T[icon]||def}
+function drawHero(){drawPx(document.getElementById('heroCanvas'),HPX,HPAL)}
+function drawMonSprite(canvas,icon,color){const t=getMonPx(icon);const p={...t.pal};if(color)p[1]=color;drawPx(canvas,t.px,p)}
+
+// ====== LIFESTEAL SYSTEM ======
+function totalLifesteal(){return Math.min(30,S.hero.lifesteal+getEquipBonus('lifesteal')+skB('vampiric'))} // cap at 30%
+function applyLifesteal(dmg){const ls=totalLifesteal();if(ls>0){const heal=Math.floor(dmg*ls/100);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+heal);if(heal>0)showDmg(heal,false,true,true)}} // green heal number
+
+// ====== DEBUFF SYSTEM ======
+function initDebuffs(){if(!S._debuffs)S._debuffs=[]}
+function addDebuff(id,name,ticks,opts){initDebuffs();const e=S._debuffs.find(d=>d.id===id);if(e){e.ticks=ticks;Object.assign(e,opts)}else S._debuffs.push({id,name,ticks,...opts});addBL('⚠️ '+name+'！'+ticks+'回合','rt')}
+function tickDebuffs(){initDebuffs();S._debuffs.forEach(d=>{if(d.dot){const dd=Math.floor(eMaxHp()*d.dot/100);S.hero.hp-=dd;if(S.hero.hp<=0)S.hero.hp=1}if(d.dotSum){aliveSummons().forEach(su=>{su.hp-=Math.floor(su.maxHp*d.dotSum/100);if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp()}});S._debuffs=S._debuffs.filter(d=>{d.ticks--;return d.ticks>0})}
+function debuffMult(stat){initDebuffs();let m=1;S._debuffs.forEach(d=>{if(d[stat])m*=d[stat]});return m}
+
+// ====== COMBAT STATS ======
+function getEquipBonus(stat){let b=0;Object.values(S.hero.equipment).forEach(i=>{if(i&&i.stats[stat])b+=i.stats[stat]});return b}
+function totalAtk(){return Math.floor((S.hero.atk+getEquipBonus('atk'))*(1+skB('atk')/100)*(1+skB('allDmg')/100)*debuffMult('atkMult'))}
+function totalDef(){return Math.floor(((S.hero.def+getEquipBonus('def'))*(1+skB('def')/100)+(S._queenShield||0))*debuffMult('defMult'))}
+function totalCrit(){return Math.min(95,S.hero.crit+getEquipBonus('crit')+skB('crit'))}
+function eMaxHp(){return Math.floor(S.hero.maxHp*(1+skB('maxHpBonus')/100))}
+
+// ====== SUMMON SYSTEM ======
+function buildSummonList(){const list=[];for(let i=0;i<skVal('raise_dead');i++)list.push('skeleton');for(let i=0;i<skVal('shadow_assassin');i++)list.push('assassin');for(let i=0;i<skVal('shadow_hunter');i++)list.push('hunter');if(!S._lordCD)S._lordCD=0;if(!S._queenCD)S._queenCD=0;if(skLv('shadow_lord')>0){if(S._lordCD<=0)list.push('lord');else{S._lordCD--;addBL('👑 君主冷却('+S._lordCD+'波)','pt')}}if(skLv('shadow_queen')>0){if(S._queenCD<=0)list.push('queen');else{S._queenCD--;addBL('👸 女皇冷却('+S._queenCD+'波)','pt')}}return list}
+function initSummons(){const types=buildSummonList();S.summonUnits=[];S._raisedEnemies=S._raisedEnemies||[];const dB=1+skB('lordDomain')/100;types.forEach(t=>{const st=SUMMON_TYPES[t];const hp=Math.floor((eMaxHp()*st.hpMult+S.hero.level*3)*dB);S.summonUnits.push({type:t,hp,maxHp:hp,alive:true})});S._raisedEnemies.forEach(re=>{if(re.alive)S.summonUnits.push(re)});S.summoningTurns=types.length;renderAllySide()}
+function renderAllySide(){const as=document.getElementById('allySide');as.querySelectorAll('.summon-unit').forEach(e=>e.remove());S.summonUnits.forEach((u,i)=>{const isR=u.type==='raised';const st=isR?null:SUMMON_TYPES[u.type];const color=isR?'#55aa55':(st?st.color:'#ddd');const name=isR?('🧟'+u.raisedName):(st?st.name:'?');const div=document.createElement('div');div.className='summon-unit'+(u.alive?'':' dead');div.id='su'+i;const c=document.createElement('canvas');c.className='sprite-sm';c.width=38;c.height=38;c.style.animationDelay=(i*0.15)+'s';c.style.filter=u.alive?'drop-shadow(0 0 2px '+color+')':'grayscale(1)';div.appendChild(c);const hb=document.createElement('div');hb.className='su-hp';const hf=document.createElement('div');hf.className='su-hp-f';hf.id='suhp'+i;hf.style.width=(u.alive?(u.hp/u.maxHp)*100:0)+'%';hf.style.background=color;hb.appendChild(hf);div.appendChild(hb);const lb=document.createElement('div');lb.className='su-label';lb.style.color=color;lb.textContent=name;div.appendChild(lb);as.appendChild(div);if(isR)drawMonSprite(c,u.raisedIcon||'💀',u.raisedColor||'#55aa55');else if(st)drawPx(c,st.px,st.pal)})}
+function updateSummonHp(){S.summonUnits.forEach((u,i)=>{const b=document.getElementById('suhp'+i);const d=document.getElementById('su'+i);if(b)b.style.width=(u.alive?(u.hp/u.maxHp)*100:0)+'%';if(d)d.classList.toggle('dead',!u.alive)});S.summonUnits.forEach(u=>{if(!u.alive&&!u._dL){u._dL=true;if(u.type==='lord'){S._lordCD=3;addBL('👑 君主阵亡！3波后复归','rt')}if(u.type==='queen'){S._queenCD=3;addBL('👸 女皇阵亡！3波后复归','rt')}}})}
+function aliveSummons(){return S.summonUnits.filter(u=>u.alive)}
+function animateSummonAtk(){S.summonUnits.forEach((u,i)=>{if(!u.alive)return;const el=document.querySelector('#su'+i+' canvas');if(!el)return;el.style.animation='none';void el.offsetHeight;el.style.animation='su-atk .3s ease-out';setTimeout(()=>{if(el)el.style.animation=''},350)})}
+
+// ====== MULTI-MONSTER ======
+function renderEnemySide(){const es=document.getElementById('enemySide');es.innerHTML='';S.monsters.forEach((m,i)=>{if(!m.alive)return;const div=document.createElement('div');div.className='sprite-container';div.id='mon'+i;const nm=document.createElement('div');nm.className='en';nm.textContent=m.name;nm.style.color=m.isBoss?'#f44':m.isElite?'#fa0':'#fff';const lv=document.createElement('div');lv.className='el';lv.textContent='Lv.'+m.level;const c=document.createElement('canvas');c.className='sprite monster-sprite';c.width=42;c.height=42;c.id='monC'+i;const hpBar=document.createElement('div');hpBar.className='hp-bm';const hpF=document.createElement('div');hpF.className='hp-bm-f'+(m.isBoss?' boss':m.isElite?' elite':'');hpF.id='monHp'+i;hpF.style.width=(m.hp/m.maxHp)*100+'%';hpBar.appendChild(hpF);div.appendChild(nm);div.appendChild(lv);div.appendChild(c);div.appendChild(hpBar);es.appendChild(div);drawMonSprite(c,m.icon,m.color)});document.getElementById('monCount').textContent=S.monsters.filter(m=>m.alive).length}
+function updateMonHpAll(){S.monsters.forEach((m,i)=>{if(!m.alive)return;const b=document.getElementById('monHp'+i);if(b)b.style.width=Math.max(0,(m.hp/m.maxHp)*100)+'%'})}
+function aliveMonsters(){return S.monsters.filter(m=>m.alive)}
+function firstAliveMonster(){return S.monsters.find(m=>m.alive)}
+
+// ====== UTIL ======
+function genStars(){const c=document.getElementById('stars');for(let i=0;i<25;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.animationDelay=Math.random()*2+'s';c.appendChild(s)}}
+function fmtT(s){return String(s/3600|0).padStart(2,'0')+':'+String((s%3600)/60|0).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function switchTab(t){const tabs=['battle','skills','shop','bestiary'];document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');if(t==='skills')renderSkillTree();if(t==='shop')renderShop();if(t==='bestiary')renderBestiary()}
+function toggleAutoEquip(){S.autoEquip=!S.autoEquip;document.getElementById('autoEquipToggle').classList.toggle('on',S.autoEquip)}
+function showAoeFlash(){const sc=document.getElementById('battleScene'),el=document.createElement('div');el.className='aoe-flash';sc.appendChild(el);setTimeout(()=>el.remove(),400)}
+
+// ====== SAVE/LOAD ======
+function saveGame(){try{localStorage.setItem('idle_rpg_save',JSON.stringify({...S,monsters:[],focusing:false}));addLog('💾 已保存','gt')}catch(e){}}
+function loadGame(){try{const raw=localStorage.getItem('idle_rpg_save');if(!raw)return addLog('📂 无存档','');const d=JSON.parse(raw);if(S.focusing)clearInterval(timerInterval);Object.assign(S,d);S.monsters=[];S.focusing=false;S.achievedMilestones=d.achievedMilestones||[];S.shopBought=d.shopBought||[];S.shopBuyCount=d.shopBuyCount||{};S.shopRefreshes=d.shopRefreshes||0;S._shopSlots=d._shopSlots||[];S.bestiaryFound=d.bestiaryFound||[];S.skills=d.skills||{};S.summonUnits=d.summonUnits||[];S._debuffs=[];if(!S.hero.lifesteal)S.hero.lifesteal=0;initSkills();renderAll();document.getElementById('timerDisplay').textContent=fmtT(S.focusSeconds);document.getElementById('focusBtn').textContent='▶ 开始专注';document.getElementById('focusBtn').classList.remove('active');addLog('📂 读档成功','gt')}catch(e){addLog('❌ 读档失败','rt')}}
+function confirmRestart(){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center';const box=document.createElement('div');box.style.cssText='background:#111;border:3px solid #f66;padding:16px;text-align:center;max-width:280px;font-family:Press Start 2P,monospace';box.innerHTML='<div style="font-size:10px;color:#f66;margin-bottom:10px">⚠️ 重新开始？</div><div style="display:flex;gap:8px;justify-content:center"><button class="pc" id="rstY" style="background:#622;color:#f66">确定</button><button class="pc" id="rstN">取消</button></div>';d.appendChild(box);document.body.appendChild(d);document.getElementById('rstY').onclick=()=>{d.remove();resetGame()};document.getElementById('rstN').onclick=()=>{d.remove()};d.onclick=e=>{if(e.target===d)d.remove()}}
+function resetGame(){try{if(S.focusing)clearInterval(timerInterval)}catch(e){}localStorage.removeItem('idle_rpg_save');S=defaultState();initSkills();document.getElementById('timerDisplay').textContent='00:00:00';document.getElementById('focusBtn').textContent='▶ 开始专注';document.getElementById('focusBtn').classList.remove('active');document.getElementById('enemySide').innerHTML='';document.getElementById('battleLogOverlay').innerHTML='<div class="ll" style="color:#888">点击「开始专注」...</div>';drawHero();renderAll();addLog('🔄 已重新开始','gt')}
+setInterval(()=>{if(S.focusing)try{localStorage.setItem('idle_rpg_save',JSON.stringify({...S,monsters:[],focusing:false}))}catch(e){}},30000);
+
+// ====== RENDER ======
+function renderAll(){renderEquipGrid();renderMilestones();renderSkillTree();renderShop();renderAllySide();updateUI()}
+function renderEquipGrid(){const g=document.getElementById('equipGrid');g.innerHTML='';ESLOTS.forEach(slot=>{const item=S.hero.equipment[slot.key];const d=document.createElement('div');d.className='esl'+(item?' q-'+item.quality.key:'');if(item)d.innerHTML='<span style="font-size:20px">'+item.icon+'</span><span class="sll" style="color:'+item.quality.color+'">'+item.name+'</span><div class="ett"><div class="tn" style="color:'+item.quality.color+'">['+item.quality.name+']'+item.name+'</div><div class="ts">'+item.statsText+'</div></div>';else d.innerHTML='<span style="font-size:16px;opacity:.3">'+slot.icon+'</span><span class="sll">'+slot.label+'</span>';g.appendChild(d)})}
+function renderMilestones(){const l=document.getElementById('milestoneList');l.innerHTML='';MILESTONES.forEach(m=>{const a=S.achievedMilestones.includes(m.time);const d=document.createElement('div');d.className='mi '+(a?'achieved':'locked');d.innerHTML='<span class="ms-i">'+(a?m.icon:'🔒')+'</span><span class="ms-t">'+m.text+'</span><span class="ms-r">'+m.reward+'</span>';l.appendChild(d)})}
+function renderSkillTree(){const c=document.getElementById('skillBranches');c.innerHTML='';Object.entries(SKILL_TREE).forEach(([key,branch])=>{const bd=document.createElement('div');bd.className='sk-branch pbi';let html='<div class="sk-branch-title '+branch.css+'">'+branch.name+'</div><div class="sk-nodes">';branch.skills.forEach((sk,i)=>{const lv=skLv(sk.id),maxed=lv>=sk.maxLv,reqSkMet=!sk.req||skLv(sk.req)>0,reqLvMet=!sk.reqLv||S.hero.level>=sk.reqLv,reqMet=reqSkMet&&reqLvMet,canBuy=S.hero.skillPoints>0&&!maxed&&reqMet,locked=!reqMet&&lv===0;const vN=lv<sk.maxLv?sk.val(lv+1):sk.val(sk.maxLv);let desc=lv>0?sk.desc.replaceAll('{v}',sk.val(lv)):(locked?'':sk.desc.replaceAll('{v}',vN));if(sk.raisePct)desc=desc.replaceAll('{r}',lv>0?sk.raisePct(lv):sk.raisePct(Math.min(lv+1,sk.maxLv)));if(sk.healPct)desc=desc.replaceAll('{h}',lv>0?sk.healPct(lv):sk.healPct(Math.min(lv+1,sk.maxLv)));if(sk.shieldDef)desc=desc.replaceAll('{d}',lv>0?sk.shieldDef(lv):sk.shieldDef(Math.min(lv+1,sk.maxLv)));if(sk.sumCap)desc=desc.replaceAll('{c}',lv>0?sk.sumCap(lv):sk.sumCap(Math.min(lv+1,sk.maxLv)));let lr='';if(locked){if(!reqSkMet)lr='需前置';if(!reqLvMet)lr='需Lv.'+sk.reqLv;if(!reqSkMet&&!reqLvMet)lr='需前置+Lv.'+sk.reqLv}if(i>0)html+='<div class="sk-arrow">▼</div>';html+='<div class="sk-node'+(maxed?' maxed':lv>0?' unlocked':'')+(locked?' locked':'')+'" data-id="'+sk.id+'" data-can="'+(canBuy?1:0)+'"><div class="sk-row"><div><span class="sk-icon">'+sk.icon+'</span><span class="sk-name">'+sk.name+'</span></div><span class="sk-lvl">'+lv+'/'+sk.maxLv+'</span></div><div class="sk-desc">'+(locked?lr:desc)+'</div>'+(!maxed&&!locked?'<div class="sk-cost">'+(canBuy?'▶学习':'需点数')+'</div>':'')+'</div>'});html+='</div>';bd.innerHTML=html;c.appendChild(bd);bd.querySelectorAll('.sk-node[data-can="1"]').forEach(node=>{node.onclick=()=>{const id=node.dataset.id;S.hero.skillPoints--;S.skills[id]++;const sk=branch.skills.find(s=>s.id===id);dlog('[技能] '+sk.name+' Lv'+S.skills[id]);addLog('🌟 '+sk.name+' Lv.'+S.skills[id],'pt');renderSkillTree();updateUI()}})})}
+
+// ====== BESTIARY ======
+const TRAIT_DESC={split:'💚 分裂：死亡分裂为2个小史莱姆。BOSS召唤军团。',steal:'💰 偷窃：攻击偷5%金币。',reassemble:'🦴 重组：20%回10%HP。死亡30%复活一次。',bleed:'🩸 撕裂：攻击附带出血DOT 6回合。',purge:'✨ 净化：20%清除护盾。',harden:'🗿 石化：<50%HP时防御+80%。',curse:'🕯️ 诅咒：30%施加攻防-15% 8回合。',spellstorm:'🌪️ 魔法风暴：25%对全军团AOE。',dragonfear:'😱 龙威：15%施加攻速大降5回合。',dominate:'👁️ 支配：10%消灭一个召唤物。'};
+const ROLE_DESC={shaman:'🧿 治愈/护盾/闪电链(每2回合)',necro:'🕯️ 召唤亡灵小兵(每2回合)',dragon:'🐉 烈焰/凌冬/吐息/龙啸/龙鳞(5技能轮换)',demon:'👹 凝视/暗黑领域/陨石/亡者之手/鲜血祭礼(5技能轮换)'};
+function renderBestiary(){const g=document.getElementById('bestiaryGrid');g.innerHTML='';if(!S.bestiaryFound)S.bestiaryFound=[];let fc=0;MONSTERS.forEach(m=>{const nF=S.bestiaryFound.includes(m.name);const eF=S.bestiaryFound.some(b=>b.includes('⭐')&&b.includes(m.name));const bF=S.bestiaryFound.some(b=>b.includes('boss_')&&b.includes(m.bossName));const disc=nF||eF||bF;if(disc)fc++;const card=document.createElement('div');card.style.cssText='border:2px solid '+(disc?m.color:'#333')+';background:rgba(0,0,0,.4);padding:12px;'+(disc?'':'opacity:0.4');let h='<div style="display:flex;gap:12px"><div style="font-size:36px;min-width:42px;text-align:center">'+(disc?m.icon:'❓')+'</div><div style="flex:1"><div style="font-family:Press Start 2P,monospace;font-size:11px;color:'+m.color+';margin-bottom:6px">'+(disc?m.name:'???')+'</div>';if(disc){h+='<div style="font-size:12px;color:#aaa;line-height:1.8">❤️'+m.baseHp+' ⚔️'+m.baseAtk+' 🛡️'+m.baseDef+' 💨'+m.baseSpd+'tick</div>';if(m.trait&&TRAIT_DESC[m.trait])h+='<div style="font-size:11px;color:#dda;margin-top:4px;padding:3px 6px;background:rgba(255,200,50,.08);border-left:3px solid #a80">'+TRAIT_DESC[m.trait]+'</div>';if(m.role&&ROLE_DESC[m.role])h+='<div style="font-size:11px;color:#adf;margin-top:3px;padding:3px 6px;background:rgba(100,150,255,.08);border-left:3px solid #48c">'+ROLE_DESC[m.role]+'</div>';h+='<div style="margin-top:4px;font-size:10px"><span style="color:'+(eF?'#fa0':'#555')+'">⭐精英'+(eF?'✅':'🔒')+'</span> <span style="color:'+(bF?'#f44':'#555')+'">💀'+m.bossName+(bF?'✅':'🔒')+'</span></div>'}else h+='<div style="font-size:11px;color:#666">击败后解锁</div>';h+='</div></div>';card.innerHTML=h;g.appendChild(card)});document.getElementById('bestiaryCount').textContent=fc}
+
+// ====== SHOP ======
+function getRefreshCost(){return Math.floor(50*Math.pow(1.3,S.shopRefreshes||0))}
+function refreshShop(){const cost=getRefreshCost();if(S.hero.gold<cost){addBL('金币不足','rt');return}S.hero.gold-=cost;S.shopRefreshes=(S.shopRefreshes||0)+1;S._shopSlots=[];const pool=[...SHOP_ITEMS];for(let i=0;i<Math.min(8,pool.length);i++){const idx=Math.floor(Math.random()*pool.length);S._shopSlots.push(pool.splice(idx,1)[0])}addLog('🔄 商店刷新','gt');renderShop();updateUI()}
+function getShopItems(){if(!S._shopSlots||!S._shopSlots.length)S._shopSlots=SHOP_ITEMS.slice(0,8);return S._shopSlots}
+function renderShop(){const g=document.getElementById('shopGrid');g.innerHTML='';document.getElementById('shopGold').textContent=S.hero.gold;document.getElementById('shopRefreshCost').textContent='刷新:'+getRefreshCost()+'g';if(!S.shopBuyCount)S.shopBuyCount={};getShopItems().forEach(item=>{const bought=!item.repeat&&S.shopBought.includes(item.id);const cost=getItemCost(item);const canBuy=S.hero.gold>=cost&&!bought;const bc=S.shopBuyCount[item.id]||0;const d=document.createElement('div');d.className='shop-item'+(bought?' bought':'');d.innerHTML='<span class="si-icon">'+item.icon+'</span><span class="si-name">'+item.name+'</span><span class="si-desc">'+item.desc+'</span><span class="si-cost">'+(bought?'已购':'💰'+cost)+(item.repeat&&bc>0?' (x'+bc+')':'')+'</span>';if(canBuy)d.onclick=()=>{const ac=getItemCost(item);if(S.hero.gold<ac)return;S.hero.gold-=ac;item.fn();if(!item.repeat)S.shopBought.push(item.id);S.shopBuyCount[item.id]=(S.shopBuyCount[item.id]||0)+1;addLog('🏪 '+item.name+' -'+ac+'g','gt');renderShop();updateUI();while(S.hero.exp>=S.hero.maxExp)levelUp()};g.appendChild(d)})}
+
+// ====== TIMER ======
+let timerInterval=null;const SPEEDS=[1,2,3,5];let battleSpeed=1;
+function cycleSpeed(){battleSpeed=SPEEDS[(SPEEDS.indexOf(battleSpeed)+1)%SPEEDS.length];document.getElementById('speedBtn').textContent='⚡x'+battleSpeed;if(S.focusing){clearInterval(timerInterval);timerInterval=setInterval(tickTimer,1000)}addBL('⚡ 速度x'+battleSpeed,'gt')}
+function toggleFocus(){const btn=document.getElementById('focusBtn');if(!S.focusing){S.focusing=true;btn.textContent='⏸ 停止';btn.classList.add('active');addLog('🚀 出发！','grt');spawnWave();timerInterval=setInterval(tickTimer,1000)}else{S.focusing=false;btn.textContent='▶ 开始专注';btn.classList.remove('active');clearInterval(timerInterval)}}
+function tickTimer(){S.focusSeconds++;document.getElementById('timerDisplay').textContent=fmtT(S.focusSeconds);checkMS();for(let i=0;i<battleSpeed;i++){battleTick();if(!S.focusing)break}}
+function checkMS(){MILESTONES.forEach(m=>{if(S.focusSeconds>=m.time&&!S.achievedMilestones.includes(m.time)){S.achievedMilestones.push(m.time);handleMR(m);renderMilestones()}})}
+function handleMR(m){addLog('🏆 '+m.text,'gt');if(m.time===60)S.hero.exp+=50;if(m.time===300)grantItem(2);if(m.time===600)grantItem(3);if(m.time===900)S.hero.atk+=10;if(m.time===1800)grantItem(4);if(m.time===3600)grantItem(5);if(m.time===7200){S.hero.atk*=2;S.hero.def*=2;S.hero.spd*=2}}
+
+// ====== SPAWN ======
+function getMonTier(){const m=S.focusSeconds/60;if(m<2)return 0;if(m<4)return 1;if(m<7)return 2;if(m<10)return 3;if(m<14)return 4;if(m<18)return 5;if(m<24)return 6;if(m<32)return 7;if(m<45)return 8;return 9}
+function spawnWave(){S._debuffs=[];const tier=getMonTier(),timeMin=S.focusSeconds/60;let scale=(1+Math.log2(1+timeMin)*0.4)*(1+tier*0.2);if(S.deathStreak>0)scale*=(1-Math.min(0.5,S.deathStreak*0.12));let monCount=1;const mc=Math.min(80,timeMin*2.5);if(Math.random()*100<mc)monCount=2;if(Math.random()*100<mc*0.5)monCount=3;if(timeMin>=20&&Math.random()*100<mc*0.3)monCount=4;if(timeMin>=35&&Math.random()*100<mc*0.2)monCount=5;const bR=Math.min(20,5+timeMin*0.4),eR=Math.min(40,15+timeMin*0.6);S.monsters=[];for(let n=0;n<monCount;n++){const weights=MONSTERS.map((_,i)=>Math.max(1,Math.pow(0.5,Math.abs(i-tier))*10));const tW=weights.reduce((a,b)=>a+b,0);let rr=Math.random()*tW,pickTier=tier;for(let i=0;i<weights.length;i++){rr-=weights[i];if(rr<=0){pickTier=i;break}}const base=MONSTERS[pickTier];const tB=Math.max(1,1+(tier-pickTier)*0.3);const variance=0.85+Math.random()*0.3;const roll=Math.random()*100;let prefix='',hpM=1,atkM=1,defM=1,expM=1,goldM=1,isBoss=false,isElite=false;if(roll<bR&&S.deathStreak===0&&!S.monsters.some(m=>m.isBoss)){prefix=base.bossName?('💀'+base.bossName):('💀BOSS·'+base.name);hpM=3;atkM=2.2;defM=1.8;expM=4;goldM=5;isBoss=true}else if(roll<eR&&S.deathStreak<=1){prefix='⭐'+base.name;hpM=1.6;atkM=1.4;defM=1.2;expM=2;goldM=2;isElite=true}else prefix=base.name;const cs=monCount>1?(0.8-monCount*0.03):1;S.monsters.push({...base,name:prefix,hp:Math.floor(base.baseHp*scale*variance*hpM*cs*tB),maxHp:Math.floor(base.baseHp*scale*variance*hpM*cs*tB),atk:Math.floor(base.baseAtk*scale*variance*atkM*cs*tB),def:Math.floor(base.baseDef*scale*variance*defM*tB),level:Math.max(1,S.hero.level+Math.floor(Math.random()*5)-1+tier),exp:Math.floor(base.exp*scale*expM*0.6/monCount),gold:Math.floor(base.gold*scale*goldM*0.6/monCount),isBoss,isElite,alive:true,ac:0,_eL:false,spd:Math.max(1,(base.baseSpd||3)-(isBoss?1:0)),_atkOffset:n,role:base.role||'normal',trait:base.trait||'',_summonCD:0,_shieldCD:0,_traitCD:0,_skCD:0})}renderEnemySide();addBL((monCount>1?'⚔️'+monCount+'只！':'')+S.monsters.map(m=>m.name).join(', '),S.monsters.some(m=>m.isBoss)?'rt':'');initSummons()}
+
+// ====== BATTLE TICK ======
+function battleTick(){if(aliveMonsters().length===0||!S.focusing)return;S.battleTick++;
+if(S.summoningTurns>0){S.summoningTurns=0;if(S.summonUnits.length>0){addBL('💀 召唤'+S.summonUnits.length+'个单位！','pt');showSkillFlash('💀 暗影军团！','necro-flash');renderAllySide()}updateUI();return}
+const spdB=1+skB('atkSpd')/100,spdD=debuffMult('spdMult');const heroInt=Math.max(1,Math.floor((4-S.hero.spd/20)/spdB/spdD));if(S.battleTick%heroInt===0){const tgt=firstAliveMonster();if(tgt)heroAttack(tgt)}
+if(aliveMonsters().length===0){updateUI();return}
+aliveMonsters().forEach(m=>{const iv=m.spd||3,off=m._atkOffset||0;if((S.battleTick+off)%iv===0)monsterDoAttack(m)});
+if(aliveMonsters().length===0){updateUI();return}
+if(S.battleTick%5===0){const rp=2+skB('regen');S.hero.hp=Math.min(eMaxHp(),S.hero.hp+Math.floor(eMaxHp()*rp/100));if(S._queenShieldTicks>0){S._queenShieldTicks--;if(S._queenShieldTicks<=0)S._queenShield=0}aliveSummons().forEach(su=>{if(su._shieldTicks>0){su._shieldTicks--;if(su._shieldTicks<=0)su._shield=0}});aliveMonsters().forEach(am=>{if(am._shieldTicks>0){am._shieldTicks--;if(am._shieldTicks<=0)am._shieldBuff=0}})}
+if(S.battleTick%2===0)tickDebuffs();
+if(skLv('whirlwind')>0){const iv=skVal('whirlwind');if(S.battleTick%iv===0&&aliveMonsters().length>0){const d=Math.floor(totalAtk()*0.7);showSkillFlash('🌀 旋风斩！','');showAoeFlash();addBL('🌀 旋风斩 全体'+d+'伤害','pt');aliveMonsters().forEach(m=>{m.hp-=d;if(m.hp<=0){m.hp=0;m.alive=false}});applyLifesteal(d);checkAllDead()}}
+if(aliveMonsters().length===0){updateUI();return}
+const alive=aliveSummons();
+if(alive.length>0&&S.battleTick%3===0&&aliveMonsters().length>0){const sAB=1+skB('summonAtk')/100,dB=1+skB('lordDomain')/100;animateSummonAtk();alive.forEach(u=>{const st=SUMMON_TYPES[u.type];const dmg=st?Math.floor(totalAtk()*st.atkMult*sAB*dB):0;
+if(st&&st.isHealer){const hL=skLv('queen_heal'),hP=hL>0?(2+hL*1.5):3;const heal=Math.floor(eMaxHp()*hP/100);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+heal);aliveSummons().forEach(su=>{if(su!==u)su.hp=Math.min(su.maxHp,su.hp+Math.floor(su.maxHp*(hL>0?3+hL*2:5)/100))});addBL('👸 治愈+'+heal+'HP','grt');const sL=skLv('queen_shield'),sCh=sL>0?(10+sL*5):15,sV=sL>0?(15+sL*8):20,sCap=sV*3;if(Math.random()*100<sCh){S._queenShield=Math.min(sCap,(S._queenShield||0)+sV);S._queenShieldTicks=6;aliveSummons().forEach(su=>{su._shield=Math.min(sCap,(su._shield||0)+Math.floor(sV*0.6));su._shieldTicks=6});addBL('👸 壁垒！全军防+'+sV,'pt')}const smL=skLv('queen_summon'),smCh=smL>0?(8+smL*5):10,smCap=smL>0?(8+smL*2):10;if(Math.random()*100<smCh&&S.summonUnits.length<smCap){S.summonUnits.push({type:'skeleton',hp:Math.floor(eMaxHp()*0.15*dB),maxHp:Math.floor(eMaxHp()*0.15*dB),alive:true});addBL('👸 召唤骷髅兵！','pt');renderAllySide()}updateSummonHp()
+}else if(u.type==='lord'){const tgt=firstAliveMonster();if(tgt){tgt.hp-=dmg;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}addBL('👑 君主→'+tgt.name+' '+dmg,'pt')}const sL=skLv('lord_sword');if(sL>0&&S.battleTick%5===0){const t2=firstAliveMonster();if(t2){const sd=Math.floor(totalAtk()*(150+sL*50)/100);t2.hp-=sd;showSkillFlash('⚔️ 黑暗大剑！','necro-flash');addBL('⚔️ 黑暗大剑 '+sd,'gt');if(t2.hp<=0){t2.hp=0;t2.alive=false}}}
+}else if(st&&st.isAoe){aliveMonsters().forEach(m=>{m.hp-=dmg;if(m.hp<=0){m.hp=0;m.alive=false}});addBL('🏹 '+st.name+' 全体'+dmg,'pt')
+}else if(u.type==='raised'){if(!u._abilityCD)u._abilityCD=0;u._abilityCD++;const role=u.raisedRole||'normal';if(role==='necro'&&u._abilityCD>=2){u._abilityCD=0;if(S.summonUnits.length<12){S.summonUnits.push({type:'skeleton',hp:Math.floor(u.maxHp*0.3),maxHp:Math.floor(u.maxHp*0.3),alive:true});addBL('🧟 '+u.raisedName+'召唤骷髅！','grt');renderAllySide()}}else if(role==='shaman'&&u._abilityCD>=2){u._abilityCD=0;const r=Math.random();if(r<0.4){const h=Math.floor(eMaxHp()*0.08);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+h);addBL('🧟 '+u.raisedName+'治愈+'+h,'grt')}else if(r<0.7){S._queenShield=Math.min(60,(S._queenShield||0)+15);S._queenShieldTicks=5;addBL('🧟 '+u.raisedName+'护盾+15','grt')}else{const ld=Math.floor(u.raisedAtk*1.2);aliveMonsters().forEach(em=>{em.hp-=ld;if(em.hp<=0){em.hp=0;em.alive=false}});addBL('🧟 '+u.raisedName+'闪电链 '+ld,'grt')}}const tgt=firstAliveMonster();if(tgt){const rd=Math.floor(u.raisedAtk*(0.8+Math.random()*0.4));tgt.hp-=rd;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}addBL('🧟 '+u.raisedName+'→'+tgt.name+' '+rd,'pt')}
+}else{const tgt=firstAliveMonster();if(tgt){tgt.hp-=dmg;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}addBL('🗡️ '+(st?st.name:'?')+'→'+tgt.name+' '+dmg,'pt')}}});checkAllDead()}
+if(skLv('plague')>0&&aliveMonsters().length>0){aliveMonsters().forEach(m=>{const pd=Math.floor(m.maxHp*skB('plague')/100);m.hp-=pd;if(m.hp<=0){m.hp=0;m.alive=false}});if(S.battleTick%4===0)addBL('☣️ 瘟疫','pt');checkAllDead()}
+updateMonHpAll();renderEnemySide();updateUI()}
+
+function heroAttack(tgt){if(!tgt||!tgt.alive)return;const tDef=tgt.def+(tgt._shieldBuff||0);let dmg=Math.max(1,Math.floor((totalAtk()*(.85+Math.random()*.2))-tDef*.5));const isCrit=Math.random()*100<totalCrit();const isExec=tgt.hp/tgt.maxHp<.3&&skB('execute')>0;if(isCrit)dmg=Math.floor(dmg*2);if(isExec)dmg=Math.floor(dmg*(1+skB('execute')/100));tgt.hp-=dmg;showDmg(dmg,isCrit,true);animateHA();S.hero.combo++;const tI=S.monsters.indexOf(tgt);if(tI>=0)animateMonHit(tI);applyLifesteal(dmg);addBL('⚔️ 勇者→'+tgt.name+(isCrit?' 暴击':'')+(isExec?' 斩杀':'')+' '+dmg,isCrit?'gt':'');if(tgt.hp<=0){tgt.hp=0;tgt.alive=false;onMonsterKill(tgt)}checkAllDead()}
+
+function monsterDoAttack(m){if(!m.alive||S.hero.hp<=0)return;
+// Dragon skills
+if(m.role==='dragon'){if(!m._skCD)m._skCD=0;m._skCD++;if(m._skCD>=2){m._skCD=0;const sk=Math.floor(Math.random()*5);const ad=Math.floor(m.atk*1.3);if(sk===0){S.hero.hp-=ad;showDmg(ad,false,false);animateHeroHit();addDebuff('burn','🔥灼烧',6,{dot:3,dotSum:2});addBL('🐉 龙之烈焰 '+ad+'+灼烧','rt')}else if(sk===1){S.hero.hp-=Math.floor(m.atk*0.8);addDebuff('frost','🧊冰冻',8,{spdMult:0.5});addBL('🐉 凌冬将至+减速','rt')}else if(sk===2){addDebuff('dragonbreath','💨吐息',8,{atkMult:0.7,defMult:0.7});addBL('🐉 龙之吐息 攻防-30%','rt')}else if(sk===3){S.hero.hp-=Math.floor(m.atk);aliveSummons().forEach(su=>{su.hp-=Math.floor(m.atk*0.7);if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp();showAoeFlash();addBL('🐉 龙啸天地 AOE','rt')}else{m.hp=Math.min(m.maxHp,m.hp+Math.floor(m.maxHp*0.2));addBL('🐉 龙鳞壁障 +20%HP','rt')}if(S.hero.hp<=0){heroDie(m);return}}}
+// Demon skills
+if(m.role==='demon'){if(!m._skCD)m._skCD=0;m._skCD++;if(m._skCD>=2){m._skCD=0;const sk=Math.floor(Math.random()*5);if(sk===0){const d=Math.floor(m.atk*2);S.hero.hp-=d;addDebuff('stun','👁️眩晕',4,{spdMult:0.3});addBL('👹 深渊凝视 '+d,'rt')}else if(sk===1){addDebuff('dark','🌑暗黑领域',10,{atkMult:0.6,defMult:0.6,spdMult:0.7});addBL('👹 暗黑领域 全属性降','rt')}else if(sk===2){const d=Math.floor(m.atk*1.5);S.hero.hp-=d;aliveSummons().forEach(su=>{su.hp-=d;if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp();showAoeFlash();addBL('👹 毁灭陨石 '+d,'rt')}else if(sk===3){const als=aliveSummons();if(als.length>0){const t=als[Math.floor(Math.random()*als.length)];t.hp=0;t.alive=false;updateSummonHp();addBL('👹 亡者之手！','rt')}else{S.hero.hp-=Math.floor(m.atk*1.8);addBL('👹 亡者之手→勇者','rt')}}else{m.hp=Math.min(m.maxHp,m.hp+Math.floor(m.maxHp*0.3));m.atk=Math.floor(m.atk*1.15);addBL('👹 鲜血祭礼 回复+强化','rt')}if(S.hero.hp<=0){heroDie(m);return}}}
+// Shaman skills
+if(m.role==='shaman'){if(!m._shieldCD)m._shieldCD=0;m._shieldCD++;if(m._shieldCD>=2){m._shieldCD=0;const r=Math.random();if(r<0.35){aliveMonsters().forEach(am=>{am.hp=Math.min(am.maxHp,am.hp+Math.floor(am.maxHp*0.15))});addBL('🧿 '+m.name+' 治愈术','rt')}else if(r<0.65){aliveMonsters().forEach(am=>{am._shieldBuff=(am._shieldBuff||0)+Math.floor(am.def*0.3);am._shieldTicks=4});addBL('🧿 '+m.name+' 守护盾','rt')}else{const ld=Math.floor(m.atk*1.2);S.hero.hp-=ld;animateHeroHit();aliveSummons().forEach(su=>{su.hp-=Math.floor(ld*0.5);if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp();addBL('🧿 '+m.name+' 闪电链 '+ld,'rt');if(S.hero.hp<=0){heroDie(m);return}}}}
+// Necro skills
+if(m.role==='necro'){if(!m._summonCD)m._summonCD=0;m._summonCD++;if(m._summonCD>=2){m._summonCD=0;const existing=S.monsters.filter(x=>x._summoned&&x.alive).length;if(existing<2){const mhp=Math.floor(m.maxHp*0.4);S.monsters.push({name:'亡灵小兵',icon:'💀',hp:mhp,maxHp:mhp,atk:Math.floor(m.atk*0.5),def:Math.floor(m.def*0.3),level:m.level,exp:Math.floor(m.exp*0.2),gold:Math.floor(m.gold*0.2),isBoss:false,isElite:false,alive:true,ac:0,_eL:false,role:'normal',_summoned:true,_summonCD:0,_shieldCD:0,spd:3,_atkOffset:S.monsters.length,trait:'',_traitCD:0,_skCD:0,color:'#9966bb'});addBL('🕯️ '+m.name+' 召唤亡灵小兵','rt');renderEnemySide();return}}}
+// Normal attack
+const mIdx=S.monsters.indexOf(m);const als=aliveSummons();const heroHitCh=Math.max(0.33,1-als.length*0.09);
+if(als.length>0&&Math.random()>heroHitCh){const tgt=als[Math.floor(Math.random()*als.length)];const dR=skB('lordDomain')/100;let dmg=Math.max(1,Math.floor(m.atk*(.5+Math.random()*.3)*(1-dR)));if(tgt._shield>0)dmg=Math.max(1,Math.floor(dmg*0.6));tgt.hp-=dmg;animateMonAtk(mIdx);const tN=tgt.type==='raised'?tgt.raisedName:(SUMMON_TYPES[tgt.type]?SUMMON_TYPES[tgt.type].name:'?');if(tgt.hp<=0){tgt.hp=0;tgt.alive=false;addBL('👹 '+m.name+'消灭'+tN,'rt')}else addBL('👹 '+m.name+'→'+tN+' '+dmg,'');updateSummonHp();return}
+if(Math.random()*100<skB('block')){addBL('🛡️ 格挡！','grt');return}
+const def=totalDef();const enrage=(m.hp/m.maxHp<0.3)?1.4:1;const monCrit=Math.random()*100<(m.isBoss?18:8);let dmg=Math.max(1,Math.floor(m.atk*(.8+Math.random()*.4)*enrage-def*.4));if(monCrit)dmg=Math.floor(dmg*1.8);
+if(m.isBoss){m.ac=(m.ac||0)+1;if(m.ac%5===0){dmg=Math.max(1,Math.floor(m.atk*1.6*enrage-def*.15));showSkillFlash('💀 毁灭重击！','')}}
+if(m.isBoss&&Math.random()<0.2&&als.length>0){const ad=Math.floor(dmg*0.5);als.forEach(u=>{u.hp-=ad;if(u.hp<=0){u.hp=0;u.alive=false}});updateSummonHp();showAoeFlash()}
+if(skB('thorns')>0){const td=Math.floor(dmg*skB('thorns')/100);m.hp-=td;if(m.hp<=0){m.hp=0;m.alive=false;onMonsterKill(m);return}}
+S.hero.hp-=dmg;showDmg(dmg,monCrit,false);animateMonAtk(mIdx);animateHeroHit();
+addBL('👹 '+m.name+(monCrit?' 暴击':'')+' '+dmg,'');
+// Trait on-hit
+if(m.trait==='bleed')addDebuff('bleed','🩸撕裂',6,{dot:2});
+if(m.trait==='steal'){const st=Math.floor(S.hero.gold*0.05);if(st>0){S.hero.gold-=st;addBL('👺 偷走'+st+'金','rt')}}
+if(m.trait==='curse'&&Math.random()<0.3)addDebuff('curse','🕯️诅咒',8,{atkMult:0.85,defMult:0.85});
+if(m.trait==='spellstorm'&&Math.random()<0.25){const sd=Math.floor(m.atk*0.6);aliveSummons().forEach(su=>{su.hp-=sd;if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp();showAoeFlash()}
+if(m.trait==='harden'&&!m._hardenUsed&&m.hp<m.maxHp*0.5){m._hardenUsed=true;m.def=Math.floor(m.def*1.8);addBL('🗿 石化强化！','rt')}
+if(m.trait==='dragonfear'&&Math.random()<0.15)addDebuff('fear','😱龙威',5,{atkMult:0.7,spdMult:0.6});
+if(m.trait==='dominate'&&Math.random()<0.1&&als.length>0){const t=als[Math.floor(Math.random()*als.length)];if(t.type!=='lord'&&t.type!=='queen'){t.hp=0;t.alive=false;updateSummonHp();renderAllySide();addBL('👹 支配！','rt')}}
+if(m.trait==='purge'&&Math.random()<0.2&&(S._queenShield||0)>0){S._queenShield=0;S._queenShieldTicks=0}
+if(m.trait==='reassemble'&&Math.random()<0.2)m.hp=Math.min(m.maxHp,m.hp+Math.floor(m.maxHp*0.1));
+if(S.hero.hp<=0)heroDie(m)}
+
+function heroDie(m){if(Math.random()*100<skB('undying')){S.hero.hp=1;addBL('🔥 不死之身！','gt');return}S.hero.hp=0;S.hero.combo=0;S.deathStreak++;const noL=S.shopBought.includes('revival_charm');const gL=noL?0:Math.floor(S.hero.gold*0.08);S.hero.gold-=gL;addBL('💔 被击败！'+(gL>0?'-'+gL+'g ':'')+'复活中','rt');addLog('💔 被击败 复活','rt');S.hero.hp=eMaxHp();S.monsters=[];renderEnemySide();setTimeout(()=>spawnWave(),1500)}
+
+function onMonsterKill(m){S.hero.kills++;S.deathStreak=Math.max(0,S.deathStreak-1);if(!S.bestiaryFound)S.bestiaryFound=[];const bK=m.isBoss?('boss_'+(m.bossName||m.name)):m.isElite?m.name:m.name;if(!S.bestiaryFound.includes(bK))S.bestiaryFound.push(bK);
+const eg=Math.floor(m.exp*(1+skB('expBonus')/100)),gg=Math.floor(m.gold*(1+skB('goldBonus')/100));S.hero.exp+=eg;S.hero.gold+=gg;
+if(skB('soulDrain')>0){const h=Math.floor(eMaxHp()*skB('soulDrain')/100);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+h)}
+// Trait on-death
+if(m.trait==='split'&&!m._isSplit){for(let i=0;i<2;i++){const mhp=Math.floor(m.maxHp*0.35);S.monsters.push({name:'小史莱姆',icon:'🟢',hp:mhp,maxHp:mhp,atk:Math.floor(m.atk*0.4),def:Math.floor(m.def*0.3),level:m.level,exp:Math.floor(m.exp*0.3),gold:Math.floor(m.gold*0.3),isBoss:false,isElite:false,alive:true,ac:0,_eL:false,role:'normal',trait:'',_summonCD:0,_shieldCD:0,_traitCD:0,_isSplit:true,spd:2,_atkOffset:S.monsters.length,color:'#55cc55',_skCD:0})}addBL('🟢 分裂！','rt');renderEnemySide();if(m.isBoss){for(let i=0;i<3;i++){const shp=Math.floor(m.maxHp*0.25);S.monsters.push({name:'史莱姆从者',icon:'🟢',hp:shp,maxHp:shp,atk:Math.floor(m.atk*0.3),def:Math.floor(m.def*0.2),level:m.level,exp:Math.floor(m.exp*0.15),gold:Math.floor(m.gold*0.15),isBoss:false,isElite:false,alive:true,ac:0,_eL:false,role:'normal',trait:'',_summonCD:0,_shieldCD:0,_traitCD:0,_isSplit:true,spd:2,_atkOffset:S.monsters.length,color:'#55cc55',_skCD:0})}addBL('👑 军团！','rt');renderEnemySide()}}
+if(m.trait==='reassemble'&&!m._reassembled&&Math.random()<0.3){m._reassembled=true;m.hp=Math.floor(m.maxHp*0.4);m.alive=true;addBL('💀 重组复活！','rt');renderEnemySide();return}
+// Lord raise
+const rL=skLv('lord_raise');if(rL>0){const rCh=10+rL*8,rP=(40+rL*10)/100,rCap=rL;if(!S._raisedEnemies)S._raisedEnemies=[];const cR=S.summonUnits.filter(u=>u.type==='raised'&&u.alive).length;if(Math.random()*100<rCh&&cR<rCap){const raised={type:'raised',hp:Math.floor(m.maxHp*rP),maxHp:Math.floor(m.maxHp*rP),alive:true,raisedName:m.name,raisedAtk:Math.floor(m.atk*rP),raisedDef:Math.floor(m.def*rP),raisedIcon:m.icon,raisedColor:m.color,raisedRole:m.role||'normal',_abilityCD:0};S.summonUnits.push(raised);S._raisedEnemies.push(raised);addBL('🧟 站起来！'+m.name,'gt');renderAllySide()}}
+if(skB('corpseExplode')>0){const cd=Math.floor(totalAtk()*skB('corpseExplode')/100);aliveMonsters().forEach(om=>{om.hp-=cd;if(om.hp<=0){om.hp=0;om.alive=false;onMonsterKill(om)}});if(cd>0)addBL('💥 尸爆 '+cd,'pt')}
+addBL('✨ 击败'+m.name+' +'+eg+'exp +'+gg+'g','gt');while(S.hero.exp>=S.hero.maxExp)levelUp();
+const hasMap=S.shopBought.includes('treasure_map');const dc=Math.min(90,15+S.focusSeconds/30+skB('dropRate')+(hasMap?10:0));if(Math.random()*100<dc){let q=getDropQ();if(skB('qualityUp')>0&&Math.random()*100<15)q=Math.min(5,q+Math.min(skVal('quality_up'),2));grantItem(q);if(Math.random()*100<skB('doubleDrop'))grantItem(q)}}
+function checkAllDead(){if(aliveMonsters().length===0&&S.focusing){renderEnemySide();setTimeout(()=>{if(S.focusing)spawnWave()},600)}}
+function getDropQ(){const m=S.focusSeconds/60,r=Math.random()*100;if(m>=45&&r<5)return 5;if(m>=25&&r<10)return 4;if(m>=15&&r<20)return 3;if(m>=8&&r<35)return 2;if(m>=3&&r<55)return 1;return 0}
+function levelUp(){S.hero.exp-=S.hero.maxExp;S.hero.level++;S.hero.maxExp=Math.floor(100*Math.pow(1.12,S.hero.level-1));S.hero.maxHp+=20;S.hero.hp=eMaxHp();S.hero.maxMp+=5;S.hero.mp=S.hero.maxMp;S.hero.atk+=3;S.hero.def+=1;S.hero.spd+=1;S.hero.crit=Math.min(80,S.hero.crit+0.3);if(S.hero.level%2===0){S.hero.skillPoints++;addLog('🌟 +1技能点','pt')}addLog('🎉 Lv.'+S.hero.level+'!','gt');addBL('⬆ Lv.'+S.hero.level,'gt');showLU()}
+
+// ====== ITEMS with lifesteal ======
+function itemPower(i){return i?Object.values(i.stats).reduce((a,b)=>a+b,0):0}
+function qualityRank(i){return i?QUALITIES.findIndex(q=>q.key===i.quality.key):-1}
+function grantItem(qIdx){const quality=QUALITIES[qIdx],slotIdx=Math.floor(Math.random()*4),slot=ESLOTS[slotIdx];const names=[W_N,A_N,H_N,C_N][slotIdx],nameIdx=Math.min(qIdx+Math.floor(Math.random()*2),names.length-1),name=names[nameIdx];const multi=quality.multi*(1+S.hero.level*.05),stats={};let sT='';
+if(slot.key==='weapon'){stats.atk=Math.floor(7*multi);stats.crit=Math.floor(2*quality.multi);stats.lifesteal=Math.floor(quality.multi);sT='攻击<span>+'+stats.atk+'</span><br>暴击<span>+'+stats.crit+'%</span><br>🩸吸血<span>+'+stats.lifesteal+'%</span>'}
+else if(slot.key==='armor'){stats.def=Math.floor(3*multi);stats.atk=Math.floor(2*multi);sT='防御<span>+'+stats.def+'</span><br>攻击<span>+'+stats.atk+'</span>'}
+else if(slot.key==='helmet'){stats.def=Math.floor(2*multi);stats.crit=Math.floor(1*quality.multi);sT='防御<span>+'+stats.def+'</span><br>暴击<span>+'+stats.crit+'%</span>'}
+else{stats.atk=Math.floor(2*multi);stats.def=Math.floor(2*multi);stats.lifesteal=Math.floor(quality.multi*0.8);sT='攻击<span>+'+stats.atk+'</span><br>防御<span>+'+stats.def+'</span><br>🩸吸血<span>+'+stats.lifesteal+'%</span>'}
+const item={name,icon:slot.icon,quality,slot:slot.key,stats,statsText:sT};const cur=S.hero.equipment[slot.key],curQ=qualityRank(cur),newQ=qualityRank(item);const should=!cur||newQ>curQ||(newQ===curQ&&itemPower(item)>itemPower(cur));if(should){S.hero.equipment[slot.key]=item;showItemPopup(item,cur);addLog('✨ ['+quality.name+']'+name,'pt')}else addLog('📦 ['+quality.name+']'+name+'(弱)','');renderEquipGrid()}
+
+// ====== UI ======
+function showDmg(d,crit,isHero,isHeal){const sc=document.getElementById('battleScene'),el=document.createElement('div');el.className='damage-num'+(crit?' crit':'')+(isHeal?' heal':'');el.textContent=(isHeal?'+':'')+d;if(isHero)el.style.right=(40+Math.random()*50)+'px';else{el.style.left=(40+Math.random()*50)+'px';if(!crit&&!isHeal)el.style.color='#ff4444'}el.style.bottom=(110+Math.random()*30)+'px';sc.appendChild(el);setTimeout(()=>el.remove(),800)}
+function showSkillFlash(text,cls){const sc=document.getElementById('battleScene'),el=document.createElement('div');el.className='skill-flash '+(cls||'');el.textContent=text;sc.appendChild(el);setTimeout(()=>el.remove(),900)}
+function animateHA(){const c=document.getElementById('heroCanvas');c.classList.remove('hero-sprite');c.classList.add('attacking');setTimeout(()=>{c.classList.remove('attacking');c.classList.add('hero-sprite')},300)}
+function animateMonAtk(i){const c=document.getElementById('monC'+i);if(!c)return;c.classList.remove('monster-sprite');c.classList.add('mon-atk');setTimeout(()=>{if(c){c.classList.remove('mon-atk');c.classList.add('monster-sprite')}},300)}
+function animateHeroHit(){const c=document.getElementById('heroCanvas');c.classList.remove('hero-sprite');c.classList.add('hero-hit');setTimeout(()=>{c.classList.remove('hero-hit');c.classList.add('hero-sprite')},250)}
+function animateMonHit(i){const c=document.getElementById('monC'+i);if(!c)return;c.classList.remove('monster-sprite');c.classList.add('hit');setTimeout(()=>{if(c){c.classList.remove('hit');c.classList.add('monster-sprite')}},300)}
+function showLU(){const el=document.getElementById('levelupFlash');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1500)}
+function showItemPopup(item,old){document.getElementById('popupIcon').textContent=item.icon;document.getElementById('popupName').style.color=item.quality.color;document.getElementById('popupName').innerHTML='['+item.quality.name+']'+item.name;document.getElementById('popupStats').innerHTML=item.statsText;document.getElementById('itemPopup').style.borderColor=item.quality.color;const cmp=document.getElementById('popupCompare');if(old){let h='<div style="font-size:8px;color:'+old.quality.color+'">替换['+old.quality.name+']'+old.name+'</div>';['atk','def','crit','lifesteal'].forEach(s=>{const lb={atk:'攻',def:'防',crit:'暴',lifesteal:'吸血'};const ov=old.stats[s]||0,nv=item.stats[s]||0;if(ov||nv){const d=nv-ov;h+=lb[s]+':'+ov+'→'+nv+'<span class="'+(d>0?'better':d<0?'worse':'')+'">('+(d>0?'+':'')+d+')</span> '}});cmp.innerHTML=h;cmp.style.display='block'}else cmp.style.display='none';document.getElementById('popupTitle').textContent='✨';document.getElementById('itemPopup').classList.add('show');document.getElementById('popupOverlay').classList.add('show');clearTimeout(S._pt);S._pt=setTimeout(closePopup,3000)}
+function closePopup(){clearTimeout(S._pt);document.getElementById('itemPopup').classList.remove('show');document.getElementById('popupOverlay').classList.remove('show')}
+function addBL(t,c){const o=document.getElementById('battleLogOverlay'),l=document.createElement('div');l.className='ll '+c;l.textContent=t;o.appendChild(l);if(o.children.length>5)o.children[0].remove()}
+function addLog(t,c){const ct=document.getElementById('logContent'),e=document.createElement('div');e.className='le '+c;e.innerHTML='<span class="time">['+fmtT(S.focusSeconds)+']</span>'+t;ct.insertBefore(e,ct.firstChild);if(ct.children.length>50)ct.lastChild.remove()}
+function updateUI(){const h=S.hero,em=eMaxHp();document.getElementById('statusName').textContent=h.name;document.getElementById('statusLevel').textContent='Lv.'+h.level;document.getElementById('heroLevelLabel').textContent='Lv.'+h.level;document.getElementById('hpBar').style.width=(h.hp/em)*100+'%';document.getElementById('hpText').textContent=h.hp+'/'+em;document.getElementById('heroHpMini').style.width=(h.hp/em)*100+'%';document.getElementById('mpBar').style.width=(h.mp/h.maxMp)*100+'%';document.getElementById('mpText').textContent=h.mp+'/'+h.maxMp;document.getElementById('expBar').style.width=(h.exp/h.maxExp)*100+'%';document.getElementById('expText').textContent=h.exp+'/'+h.maxExp;document.getElementById('sAtk').textContent=totalAtk();document.getElementById('sDef').textContent=totalDef();document.getElementById('sSpd').textContent=h.spd;document.getElementById('sCrit').textContent=totalCrit().toFixed(1)+'%';document.getElementById('sLifesteal').textContent=totalLifesteal()+'%';document.getElementById('sGold').textContent=h.gold;document.getElementById('sKills').textContent=h.kills;document.getElementById('sSummon').textContent=aliveSummons().length+'/'+S.summonUnits.length;document.getElementById('skPD').textContent=h.skillPoints}
+
+genStars();drawHero();renderAll();
+try{const raw=localStorage.getItem('idle_rpg_save');if(raw){const d=JSON.parse(raw);if(d&&d.hero&&typeof d.hero.level==='number'){Object.assign(S,d);S.monsters=[];S.focusing=false;S.achievedMilestones=d.achievedMilestones||[];S.shopBought=d.shopBought||[];S.shopBuyCount=d.shopBuyCount||{};S.shopRefreshes=d.shopRefreshes||0;S._shopSlots=d._shopSlots||[];S.bestiaryFound=d.bestiaryFound||[];S.skills=d.skills||{};S.summonUnits=d.summonUnits||[];S._debuffs=[];if(!S.hero.lifesteal)S.hero.lifesteal=0;initSkills();drawHero();renderAll();document.getElementById('timerDisplay').textContent=fmtT(S.focusSeconds);addLog('📂 自动读档','gt')}}}catch(e){localStorage.removeItem('idle_rpg_save')}
+</script>
+</body>
+</html>

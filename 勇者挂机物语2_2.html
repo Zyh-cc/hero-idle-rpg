@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔️ 勇者挂机物语</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#1a1a2e;--mid:#16213e;--gold:#f5c542;--hpr:#e74c3c;--mpb:#3498db;--expg:#2ecc71}
+body{background:var(--bg);color:#e0e0e0;font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;image-rendering:pixelated}
+.pb{border:3px solid #555;border-top-color:#888;border-left-color:#888;border-right-color:#333;border-bottom-color:#333;background:var(--mid);padding:10px}
+.pbi{border:3px solid #555;border-top-color:#333;border-left-color:#333;border-right-color:#888;border-bottom-color:#888;background:rgba(0,0,0,.3);padding:8px}
+.gc{max-width:1200px;margin:0 auto;padding:8px;display:flex;flex-direction:column;gap:6px}
+.header{text-align:center;padding:8px}.header h1{font-family:'Press Start 2P',monospace;font-size:22px;color:var(--gold);text-shadow:3px 3px 0 #000;letter-spacing:2px;margin-bottom:3px}.header .sub{font-size:12px;color:#888;font-family:'Press Start 2P',monospace}
+.timer-sec{text-align:center;padding:6px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.timer-d{font-family:'Press Start 2P',monospace;font-size:32px;color:var(--gold);text-shadow:2px 2px 0 #000}
+.fbtn{font-family:'Press Start 2P',monospace;font-size:13px;padding:10px 22px;cursor:pointer;border:3px solid #888;border-bottom-color:#333;border-right-color:#333;background:linear-gradient(180deg,#4a6fa5,#2d4a7a);color:#fff;text-shadow:1px 1px 0 #000}
+.fbtn:hover{background:linear-gradient(180deg,#5a7fb5,#3d5a8a)}.fbtn:active,.fbtn.active{border-top-color:#333;border-left-color:#333;border-bottom-color:#888;border-right-color:#888}.fbtn.active{background:linear-gradient(180deg,#7a2d2d,#a54a4a);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.8}}
+.save-btns{display:flex;gap:4px;justify-content:center;margin-top:3px;flex-wrap:wrap}
+.save-btn{font-family:'Press Start 2P',monospace;font-size:9px;padding:6px 10px;cursor:pointer;border:2px solid #666;border-bottom-color:#333;border-right-color:#333;background:#333;color:#aaa}.save-btn:hover{color:#fff;background:#444}
+.tab-bar{display:flex;gap:2px;flex-wrap:wrap}.tab-btn{font-family:'Press Start 2P',monospace;font-size:10px;padding:8px 14px;cursor:pointer;border:2px solid #555;border-bottom:none;background:#1a1a2e;color:#888}.tab-btn:hover{color:#ccc}.tab-btn.active{background:var(--mid);color:var(--gold);border-top-color:#888;border-left-color:#888;border-right-color:#333;z-index:2}
+.tab-content{display:none}.tab-content.active{display:block}
+.main-area{display:flex;flex-direction:column;gap:6px}.status-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.battle-scene{position:relative;height:380px;overflow:hidden;background:#111}
+.scene-bg{position:absolute;inset:0}.scene-bg .ground{position:absolute;bottom:0;width:100%;height:60px;background:repeating-linear-gradient(90deg,#2d5a1e 0px,#3a6b2a 8px,#2d5a1e 16px)}.scene-bg .sky{position:absolute;top:0;width:100%;height:calc(100% - 60px);background:linear-gradient(180deg,#0a0a2a,#1a1a4a 60%,#2a3a2a)}
+.stars{position:absolute;top:0;width:100%;height:60%}.star{position:absolute;width:2px;height:2px;background:#fff;animation:twinkle 2s infinite}@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.2}}
+.battle-entities{position:absolute;bottom:100px;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 15px}
+.ally-side{display:flex;flex-wrap:wrap;gap:3px;align-items:flex-end;max-width:44%;align-content:flex-end}.enemy-side{display:flex;flex-direction:row-reverse;flex-wrap:wrap;gap:3px;align-items:flex-end;max-width:44%;align-content:flex-end}
+.sprite-container{display:flex;flex-direction:column;align-items:center;gap:2px}
+.sprite{width:48px;height:48px;image-rendering:pixelated}.sprite-sm{width:34px;height:34px;image-rendering:pixelated}
+.hero-sprite{animation:hi .8s steps(2) infinite}@keyframes hi{0%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.attacking{animation:ha .5s ease-in-out !important}@keyframes ha{0%{transform:translateX(0) scale(1);filter:brightness(1)}25%{transform:translateX(20px) scale(1.12);filter:brightness(1.8)}50%{transform:translateX(12px) scale(1.05);filter:brightness(1.3)}75%{transform:translateX(-3px) scale(0.97);filter:brightness(1)}100%{transform:translateX(0) scale(1);filter:brightness(1)}}
+.hero-hit{animation:hh .25s ease-out !important}@keyframes hh{0%{filter:brightness(1)}20%{filter:brightness(2.5);transform:translateX(-4px)}100%{filter:brightness(1);transform:translateX(0)}}
+.monster-sprite{animation:mi2 1s steps(2) infinite}@keyframes mi2{0%{transform:translateY(0) scaleX(-1)}50%{transform:translateY(-2px) scaleX(-1)}}
+.mon-atk{animation:ma .5s ease-in-out !important}@keyframes ma{0%{transform:scaleX(-1);filter:brightness(1)}25%{transform:scaleX(-1.15) translateX(-18px);filter:brightness(1.8)}50%{transform:scaleX(-1.08) translateX(-10px);filter:brightness(1.3)}75%{transform:scaleX(-0.97) translateX(3px);filter:brightness(1)}100%{transform:scaleX(-1);filter:brightness(1)}}
+.hit{animation:mh .3s ease-out !important}@keyframes mh{0%{transform:scaleX(-1)}25%{transform:scaleX(-1) translateX(8px);filter:brightness(3)}100%{transform:scaleX(-1)}}
+.dying{animation:md .5s ease-out forwards !important}@keyframes md{0%{transform:scaleX(-1);opacity:1}50%{transform:scaleX(-1) rotate(20deg);opacity:.5}100%{transform:scaleX(-1) rotate(45deg) translateY(20px);opacity:0}}
+.hp-bm{width:46px;height:5px;background:#333;border:1px solid #555}.hp-bm-f{height:100%;background:var(--hpr);transition:width .2s}.hp-bm-f.elite{background:linear-gradient(90deg,#ffaa00,#ff6600)}.hp-bm-f.boss{background:linear-gradient(90deg,#ff2222,#ff0066)}
+.en{font-family:'Press Start 2P',monospace;font-size:9px;color:#fff;text-shadow:1px 1px 0 #000}.el{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--gold);text-shadow:1px 1px 0 #000}
+.damage-num{position:absolute;font-family:'Press Start 2P',monospace;font-size:16px;color:#ff4444;text-shadow:1px 1px 0 #000;pointer-events:none;animation:dmg .8s ease-out forwards;z-index:10}.damage-num.crit{font-size:22px;color:var(--gold)}.damage-num.heal{color:#55ff55;font-size:14px}
+@keyframes dmg{0%{opacity:1;transform:translateY(0) scale(1)}20%{transform:translateY(-12px) scale(1.15)}100%{opacity:0;transform:translateY(-40px) scale(.8)}}
+.blo{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.65) 0%,rgba(0,0,0,.4) 70%,transparent 100%);padding:3px 8px 4px;max-height:90px;overflow:hidden;pointer-events:none}
+.blo .ll{font-family:'Noto Sans SC',sans-serif;font-size:12px;color:#eee;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:1px 1px 2px #000}
+.blo .ll.gt{color:var(--gold)}.blo .ll.rt{color:#f66}.blo .ll.grt{color:#6f6}.blo .ll.pt{color:#c8f}
+.battle-scene::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.06) 2px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:5}
+.skill-flash{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:14px;color:#55ccff;text-shadow:0 0 8px rgba(85,204,255,.8),2px 2px 0 #000;pointer-events:none;animation:skfl .9s ease-out forwards;z-index:12;white-space:nowrap}
+.skill-flash.necro-flash{color:#aa55ff;text-shadow:0 0 8px rgba(170,85,255,.8),2px 2px 0 #000}
+@keyframes skfl{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}30%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+.summon-unit{display:flex;flex-direction:column;align-items:center;transition:opacity .3s}.summon-unit.dead{opacity:.15;filter:grayscale(1)}
+.summon-unit canvas{animation:su-bob 1.2s infinite}@keyframes su-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}@keyframes su-atk{0%{transform:translateX(0) scale(1)}30%{transform:translateX(18px) scale(1.15);filter:brightness(2)}70%{transform:translateX(-4px) scale(0.95)}100%{transform:translateX(0) scale(1);filter:brightness(1)}}
+.su-hp{width:30px;height:4px;background:#333;border:1px solid #444;margin-top:1px}.su-hp-f{height:100%;background:#aa55ff;transition:width .2s}
+.su-label{font-family:'Press Start 2P',monospace;font-size:8px;color:#aa55ff;text-shadow:1px 1px 0 #000}
+.aoe-flash{position:absolute;inset:0;background:rgba(255,100,50,.15);pointer-events:none;animation:aoefl .4s ease-out forwards;z-index:11}@keyframes aoefl{0%{opacity:1}100%{opacity:0}}
+.wave-ind{position:absolute;top:4px;right:6px;font-family:'Press Start 2P',monospace;font-size:9px;color:#888;text-shadow:1px 1px 0 #000;z-index:8}.wave-ind .mon-count{color:var(--gold)}
+.hi2{padding:8px}.hi2 .ir{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}.hi2 .hn{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--gold)}.hi2 .hl{font-family:'Press Start 2P',monospace;font-size:11px;color:#ccc}
+.sb{height:16px;background:#222;border:2px solid #444;margin:2px 0;position:relative;overflow:hidden}.sbf{height:100%;transition:width .3s}.sbf.hp{background:linear-gradient(180deg,#e74c3c,#c0392b)}.sbf.mp{background:linear-gradient(180deg,#3498db,#2980b9)}.sbf.exp{background:linear-gradient(180deg,#2ecc71,#27ae60)}
+.sbt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:8px;color:#fff;text-shadow:1px 1px 0 #000;white-space:nowrap}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;padding:6px;font-size:12px}.sg .si{display:flex;justify-content:space-between;padding:1px 0}.sg .sl{color:#999}.sg .sv{color:#fff;font-weight:700}
+.es{padding:8px}.es h3{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.auto-label{font-family:'Press Start 2P',monospace;font-size:8px;color:#888;display:flex;align-items:center;gap:3px;font-weight:normal}
+.auto-toggle{width:28px;height:14px;background:#333;border:2px solid #555;display:inline-block;position:relative;cursor:pointer}.auto-toggle.on{background:#2a6a2a;border-color:#4a4}.auto-toggle::after{content:'';position:absolute;top:1px;left:1px;width:8px;height:8px;background:#888;transition:left .15s}.auto-toggle.on::after{left:15px;background:#5f5}
+.eg{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.esl{aspect-ratio:1;border:2px solid #555;background:rgba(0,0,0,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:default;font-size:18px;min-height:55px}
+.esl .sll{font-family:'Press Start 2P',monospace;font-size:6px;color:#666;margin-top:1px}
+.esl.q-common{border-color:#aaa}.esl.q-uncommon{border-color:#55cc55}.esl.q-rare{border-color:#5555ff}.esl.q-epic{border-color:#aa55ff}.esl.q-legendary{border-color:#ffaa00}.esl.q-mythic{border-color:#ff5555}
+.esl.q-ancient{border-color:#ff9944;box-shadow:0 0 6px #ff994466}
+.esl.q-abyss{border-color:#cc00ff;box-shadow:0 0 8px #cc00ff88;animation:abyss-pulse 2s infinite}
+.esl.q-primordial{border-color:#00eeff;box-shadow:0 0 10px #00eeff99;animation:primordial-pulse 1.8s infinite}
+.esl.q-chaos{border-color:#ff44aa;box-shadow:0 0 12px #ff44aaaa;animation:chaos-pulse 1.5s infinite}
+.esl.q-genesis{border-color:#fff;box-shadow:0 0 16px #ffffffcc,0 0 32px #ffffff55;animation:genesis-pulse 1.2s infinite}
+@keyframes abyss-pulse{0%,100%{box-shadow:0 0 8px #cc00ff88}50%{box-shadow:0 0 14px #cc00ffcc}}
+@keyframes primordial-pulse{0%,100%{box-shadow:0 0 10px #00eeff99}50%{box-shadow:0 0 18px #00eeffdd}}
+@keyframes chaos-pulse{0%,100%{border-color:#ff44aa;box-shadow:0 0 12px #ff44aaaa}50%{border-color:#ff88cc;box-shadow:0 0 20px #ff88cccc}}
+@keyframes genesis-pulse{0%,100%{box-shadow:0 0 16px #ffffffcc,0 0 32px #ffffff55}50%{box-shadow:0 0 24px #ffffffff,0 0 48px #ffffffaa}}
+.ett{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#111;border:2px solid #666;padding:6px;z-index:100;min-width:150px;pointer-events:none}.esl:hover .ett{display:block}.ett .tn{font-family:'Press Start 2P',monospace;font-size:10px;margin-bottom:3px}.ett .ts{font-size:12px;color:#aaa;line-height:1.4}.ett .ts span{color:#5f5}
+.shop-panel{padding:8px}.shop-h{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--gold);margin-bottom:3px}.shop-gold{font-family:'Press Start 2P',monospace;font-size:11px;color:#ccc;margin-bottom:8px}.shop-gold span{color:var(--gold)}
+.shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.shop-item{border:2px solid #444;background:rgba(0,0,0,.3);padding:8px;cursor:pointer;transition:all .15s}.shop-item:hover{border-color:#888}.shop-item.bought{opacity:.4;cursor:not-allowed}
+.shop-item .si-icon{font-size:26px;display:block;text-align:center;margin-bottom:3px}.shop-item .si-name{font-family:'Press Start 2P',monospace;font-size:9px;color:#ddd;text-align:center;display:block;margin-bottom:2px}.shop-item .si-desc{font-size:11px;color:#888;text-align:center;line-height:1.3;display:block;margin-bottom:3px}.shop-item .si-cost{font-family:'Press Start 2P',monospace;font-size:9px;color:var(--gold);text-align:center;display:block}
+.skill-tree-panel{padding:8px}.sk-h3{font-family:'Press Start 2P',monospace;font-size:13px;color:var(--gold);margin-bottom:6px}.sk-points{font-family:'Press Start 2P',monospace;font-size:11px;color:#ccc;margin-bottom:8px}.sk-points span{color:var(--gold)}
+.sk-branches{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.sk-branch{padding:5px}.sk-branch-title{font-family:'Press Start 2P',monospace;font-size:9px;text-align:center;margin-bottom:6px;padding-bottom:3px;border-bottom:2px solid #333}
+.sk-branch-title.atk-t{color:#ff6644;border-color:#442211}.sk-branch-title.def-t{color:#44aaff;border-color:#112244}.sk-branch-title.util-t{color:#44ff88;border-color:#114422}.sk-branch-title.necro-t{color:#aa55ff;border-color:#331144}
+.sk-nodes{display:flex;flex-direction:column;gap:3px}.sk-node{border:2px solid #444;background:rgba(0,0,0,.3);padding:5px;cursor:pointer;transition:all .15s}.sk-node:hover:not(.locked){border-color:#888}.sk-node.unlocked{border-color:#5a5;background:rgba(50,120,50,.15)}.sk-node.maxed{border-color:var(--gold);background:rgba(120,100,30,.15)}.sk-node.locked{opacity:.35;cursor:not-allowed}
+.sk-node .sk-row{display:flex;justify-content:space-between;align-items:center}.sk-node .sk-icon{font-size:16px;margin-right:2px}.sk-node .sk-name{font-family:'Press Start 2P',monospace;font-size:8px;color:#ddd}.sk-node .sk-lvl{font-family:'Press Start 2P',monospace;font-size:7px;color:#aaa}.sk-node .sk-desc{font-size:11px;color:#888;margin-top:2px;line-height:1.2}.sk-node .sk-cost{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--gold);margin-top:1px}
+.sk-node.unlocked .sk-name{color:#7f7}.sk-node.maxed .sk-name{color:var(--gold)}.sk-arrow{text-align:center;color:#444;font-size:10px;line-height:1;padding:0}
+.bs{display:grid;grid-template-columns:1fr 1fr;gap:6px}.lp{padding:5px;max-height:130px}.lp h3{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold);margin-bottom:4px}
+.lc{max-height:95px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#555 #222}.le{font-size:12px;padding:1px 0;color:#aaa;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.03)}.le .time{color:#666;margin-right:3px}.le.gt{color:var(--gold)}.le.grt{color:#6f6}.le.rt{color:#f66}.le.pt{color:#c8f}
+.mp2{padding:5px}.mp2 h3{font-family:'Press Start 2P',monospace;font-size:11px;color:var(--gold);margin-bottom:4px}.ml{max-height:95px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#555 #222}
+.mi{display:flex;align-items:center;gap:4px;padding:2px 0;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03)}.mi .ms-i{font-size:12px}.mi .ms-t{flex:1;color:#ccc}.mi .ms-r{color:#666;font-size:10px}.mi.locked{opacity:.4}.mi.achieved .ms-t{color:var(--gold)}
+.ip{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;background:#111;border:3px solid var(--gold);padding:16px;text-align:center;animation:popin .3s ease-out;min-width:220px}@keyframes popin{0%{transform:translate(-50%,-50%) scale(.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.ip.show{display:block}.po{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199}.po.show{display:block}
+.ip .pt2{font-family:'Press Start 2P',monospace;font-size:12px;color:var(--gold);margin-bottom:8px}.ip .pi2{font-size:40px;margin:4px 0}.ip .pn2{font-family:'Press Start 2P',monospace;font-size:11px;margin:4px 0}.ip .ps2{font-size:13px;color:#aaa;line-height:1.6}.ip .ps2 span{color:#5f5}
+.ip .compare{margin-top:6px;padding-top:6px;border-top:1px solid #444;font-size:12px;color:#999;line-height:1.5}.ip .compare .better{color:#5f5}.ip .compare .worse{color:#f55}
+.pc{font-family:'Press Start 2P',monospace;font-size:10px;margin-top:10px;padding:6px 16px;cursor:pointer;border:2px solid #888;border-bottom-color:#333;border-right-color:#333;background:#444;color:#fff}
+.luf{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:32px;color:var(--gold);text-shadow:3px 3px 0 #000,0 0 16px rgba(245,197,66,.8);z-index:150;pointer-events:none}.luf.show{display:block;animation:lu 1.5s ease-out forwards}
+@keyframes lu{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}20%{transform:translate(-50%,-50%) scale(1.3);opacity:1}40%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{transform:translate(-50%,-70%) scale(1);opacity:0}}
+.auto-equip-notif{position:fixed;top:16px;right:16px;background:#1a3a1a;border:2px solid #4a4;padding:8px 12px;font-family:'Press Start 2P',monospace;font-size:9px;color:#5f5;z-index:180;animation:ns .4s ease-out;pointer-events:none;max-width:250px;line-height:1.5}@keyframes ns{0%{transform:translateX(120%);opacity:0}100%{transform:translateX(0);opacity:1}}
+.rl-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:400;align-items:center;justify-content:center}.rl-overlay.show{display:flex}
+.rl-modal{background:#0d0d1e;border:3px solid #aa55ff;padding:18px;max-width:520px;width:95%;animation:popin .3s ease-out;max-height:90vh;overflow-y:auto}
+.rl-title{font-family:'Press Start 2P',monospace;font-size:13px;color:#aa55ff;text-align:center;margin-bottom:4px;text-shadow:0 0 8px rgba(170,85,255,.6)}
+.rl-subtitle{font-family:'Press Start 2P',monospace;font-size:8px;color:#666;text-align:center;margin-bottom:14px}
+.rl-event-box{border:2px solid #333;background:rgba(255,255,255,.03);padding:12px;margin-bottom:14px}
+.rl-event-icon{font-size:32px;text-align:center;margin-bottom:6px}
+.rl-event-name{font-family:'Press Start 2P',monospace;font-size:11px;color:#eee;text-align:center;margin-bottom:6px}
+.rl-event-desc{font-size:13px;color:#aaa;text-align:center;line-height:1.6;margin-bottom:10px}
+.rl-choices{display:flex;flex-direction:column;gap:6px}
+.rl-choice{border:2px solid #444;background:rgba(0,0,0,.3);padding:8px 12px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:8px}
+.rl-choice:hover{border-color:#aa55ff;background:rgba(170,85,255,.1)}
+.rl-choice-icon{font-size:18px;flex-shrink:0}
+.rl-choice-body{flex:1}
+.rl-choice-name{font-family:'Press Start 2P',monospace;font-size:9px;color:#ddd;margin-bottom:2px}
+.rl-choice-desc{font-size:12px;color:#888;line-height:1.4}
+.rl-choice-effect{font-size:11px;color:#5cf;margin-top:2px}
+.rl-divider{border:none;border-top:1px solid #2a2a4a;margin:12px 0}
+.rl-talent-title{font-family:'Press Start 2P',monospace;font-size:10px;color:#f5c542;margin-bottom:8px;text-align:center}
+.rl-talent-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.rl-talent-card{border:2px solid #444;background:rgba(0,0,0,.4);padding:8px;cursor:pointer;transition:all .15s;text-align:center}
+.rl-talent-card:hover{border-color:#f5c542;background:rgba(245,197,66,.08)}
+.rl-talent-card .rtc-icon{font-size:22px;margin-bottom:4px}
+.rl-talent-card .rtc-name{font-family:'Press Start 2P',monospace;font-size:8px;color:#ddd;margin-bottom:3px;line-height:1.3}
+.rl-talent-card .rtc-desc{font-size:11px;color:#888;line-height:1.3}
+.rl-talent-card .rtc-rarity{font-family:'Press Start 2P',monospace;font-size:7px;margin-top:3px}
+.rl-talent-card.rare{border-color:#5577ff}.rl-talent-card.rare:hover{border-color:#88aaff;background:rgba(85,119,255,.08)}
+.rl-talent-card.epic{border-color:#aa55ff}.rl-talent-card.epic:hover{border-color:#cc88ff;background:rgba(170,85,255,.08)}
+.rl-talent-card.legendary{border-color:#ffaa00}.rl-talent-card.legendary:hover{border-color:#ffcc44;background:rgba(255,170,0,.08)}
+.rl-talents-display{display:flex;flex-wrap:wrap;gap:3px;padding:4px 0}
+.rl-talent-tag{font-size:11px;background:rgba(170,85,255,.15);border:1px solid #aa55ff44;padding:2px 6px;color:#cc88ff}
+.rl-skip{font-family:'Press Start 2P',monospace;font-size:8px;color:#555;cursor:pointer;text-align:center;margin-top:10px;padding:4px}.rl-skip:hover{color:#888}
+@media(max-width:640px){.status-row,.bs{grid-template-columns:1fr}.header h1{font-size:12px}.timer-d{font-size:18px}.battle-scene{height:240px}.sk-branches,.shop-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="gc">
+<div class="header pb"><h1>⚔️ 勇者挂机物语</h1><div class="sub">专注越久 · 勇者越强</div></div>
+<div class="timer-sec pb"><div><div style="font-size:10px;color:#999;margin-bottom:2px">⏱ 专注时间</div><div class="timer-d" id="timerDisplay">00:00:00</div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button class="fbtn" id="focusBtn" onclick="toggleFocus()">▶ 开始专注</button><button class="fbtn" id="speedBtn" onclick="cycleSpeed()" style="font-size:10px;padding:8px 12px;background:linear-gradient(180deg,#5a4a2a,#3a3a1a)">⚡x1</button></div><div class="save-btns"><button class="save-btn" onclick="saveGame()">💾存档</button><button class="save-btn" onclick="loadGame()">📂读档</button><button class="save-btn" onclick="confirmRestart()" style="color:#f66">🔄重开</button><button class="save-btn" onclick="confirmRebirth()" style="color:#ff0">🔄转生</button><button class="save-btn" onclick="exportLog()" style="color:#5cf">📋日志</button></div>
+<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:center">
+<span style="font-size:10px;color:#888">元素:</span>
+<button class="save-btn" onclick="setElement('none')" id="elNone" style="color:#fff">⚪无</button>
+<button class="save-btn" onclick="setElement('fire')" id="elFire" style="color:#f44">🔥火</button>
+<button class="save-btn" onclick="setElement('ice')" id="elIce" style="color:#4cf">🧊冰</button>
+<button class="save-btn" onclick="setElement('lightning')" id="elLight" style="color:#ff0">⚡雷</button>
+<button class="save-btn" onclick="setElement('dark')" id="elDark" style="color:#c6f">🌑暗</button>
+<span style="font-size:9px;color:#555" id="rebirthLabel"></span>
+</div></div>
+<div class="tab-bar"><div class="tab-btn active" onclick="switchTab('battle')">⚔️ 战斗</div><div class="tab-btn" onclick="switchTab('skills')">🌟 技能树</div><div class="tab-btn" onclick="switchTab('shop')">🏪 商店</div><div class="tab-btn" onclick="switchTab('pets')">🐾 宠物</div><div class="tab-btn" onclick="switchTab('dungeon')">🏰 地下城</div><div class="tab-btn" onclick="switchTab('bestiary')">📖 图鉴</div></div>
+<div class="tab-content active" id="tab-battle"><div class="main-area">
+<div class="battle-scene pbi" id="battleScene"><div class="scene-bg"><div class="sky"></div><div class="stars" id="stars"></div><div class="ground"></div></div><div class="wave-ind" id="waveInd">怪物: <span class="mon-count" id="monCount">0</span></div>
+<div class="battle-entities"><div class="ally-side" id="allySide"><div class="sprite-container"><div class="en" id="heroNameLabel">勇者</div><div class="el" id="heroLevelLabel">Lv.1</div><canvas class="sprite hero-sprite" id="heroCanvas" width="48" height="48"></canvas><div class="hp-bm"><div class="hp-bm-f" id="heroHpMini" style="width:100%"></div></div></div></div><div class="enemy-side" id="enemySide"></div></div>
+<div class="blo" id="battleLogOverlay"><div class="ll" style="color:#888">点击「开始专注」出发冒险...</div></div></div>
+<div class="status-row"><div class="hi2 pb"><div class="ir"><span class="hn" id="statusName">勇者</span><span class="hl" id="statusLevel">Lv.1</span></div>
+<div class="sb"><div class="sbf hp" id="hpBar" style="width:100%"></div><div class="sbt" id="hpText">100/100</div></div>
+<div class="sb"><div class="sbf mp" id="mpBar" style="width:100%"></div><div class="sbt" id="mpText">30/30</div></div>
+<div class="sb"><div class="sbf exp" id="expBar" style="width:0%"></div><div class="sbt" id="expText">0/100</div></div>
+<div class="sg"><div class="si"><span class="sl">⚔攻击</span><span class="sv" id="sAtk">10</span></div><div class="si"><span class="sl">🛡防御</span><span class="sv" id="sDef">5</span></div><div class="si"><span class="sl">💨速度</span><span class="sv" id="sSpd">8</span></div><div class="si"><span class="sl">🍀暴击</span><span class="sv" id="sCrit">5%</span></div><div class="si"><span class="sl">🩸吸血</span><span class="sv" id="sLifesteal">0%</span></div><div class="si"><span class="sl">💰金币</span><span class="sv" id="sGold">100</span></div><div class="si"><span class="sl">💀击杀</span><span class="sv" id="sKills">0</span></div><div class="si"><span class="sl">☠️军团</span><span class="sv" id="sSummon">0/0</span></div></div></div>
+<div class="es pb"><h3><span>🎒 装备</span><span class="auto-label">自动 <span class="auto-toggle on" id="autoEquipToggle" onclick="toggleAutoEquip()"></span></span></h3><div class="eg" id="equipGrid"></div></div></div></div></div>
+<div class="tab-content" id="tab-skills"><div class="skill-tree-panel pb"><div class="sk-h3">🌟 技能树</div><div class="sk-points">技能点: <span id="skPD">0</span></div><div class="sk-branches" id="skillBranches"></div></div></div>
+<div class="tab-content" id="tab-shop"><div class="shop-panel pb"><div class="shop-h">🏪 商店 <button class="save-btn" onclick="refreshShop()" style="margin-left:8px;color:#5cf">🔄 刷新</button></div><div class="shop-gold">金币: <span id="shopGold">0</span> | <span style="color:#888" id="shopRefreshCost">刷新:50g</span></div><div class="shop-grid" id="shopGrid"></div></div></div>
+<div class="tab-content" id="tab-pets"><div class="pb" style="padding:10px">
+<div style="font-family:Press Start 2P,monospace;font-size:12px;color:var(--gold);margin-bottom:8px">🐾 宠物系统</div>
+<div style="font-size:12px;color:#888;margin-bottom:6px">击败Boss/精英有概率捕获 | 已收集: <span id="petCount" style="color:var(--gold)">0</span> | 出战: <span id="petActive" style="color:#5f5">0</span>/3</div>
+<div style="font-size:11px;color:#adf;margin-bottom:10px;padding:4px 8px;background:rgba(100,150,255,.08);border-left:3px solid #48c">💡 宠物提供被动加成，最多出战3只。点击切换出战/休息。</div>
+<div id="petGrid" style="display:flex;flex-direction:column;gap:6px"></div>
+<div style="margin-top:12px;padding-top:8px;border-top:2px solid #333">
+<div style="font-family:Press Start 2P,monospace;font-size:10px;color:#888;margin-bottom:6px">📊 宠物加成总计</div>
+<div id="petBonusDisplay" style="font-size:12px;color:#aaa"></div>
+</div>
+</div></div>
+<div class="tab-content" id="tab-dungeon"><div class="pb" style="padding:10px">
+<div style="font-family:Press Start 2P,monospace;font-size:12px;color:var(--gold);margin-bottom:8px">🏰 地下城</div>
+<div style="font-size:12px;color:#888;margin-bottom:6px">当前层: <span id="dgFloor" style="color:var(--gold)">0</span>/10 | 最深: <span id="dgBest" style="color:#fa0">0</span>层</div>
+<div id="dgStatus" style="font-size:12px;color:#adf;margin-bottom:10px;padding:6px 8px;background:rgba(100,150,255,.08);border-left:3px solid #48c"></div>
+<div id="dgContent" style="display:flex;flex-direction:column;gap:6px"></div>
+<div style="margin-top:10px;display:flex;gap:6px" id="dgButtons"></div>
+</div></div>
+<div class="tab-content" id="tab-bestiary"><div class="pb" style="padding:10px">
+<div style="display:flex;gap:4px;margin-bottom:10px">
+  <button class="save-btn active" id="bTab-monster" onclick="switchBTab('monster')" style="font-size:9px;padding:6px 12px;color:var(--gold);border-color:#888">👾 怪物</button>
+  <button class="save-btn" id="bTab-equip" onclick="switchBTab('equip')" style="font-size:9px;padding:6px 12px">🎒 装备</button>
+  <button class="save-btn" id="bTab-skill" onclick="switchBTab('skill')" style="font-size:9px;padding:6px 12px">🌟 技能</button>
+</div>
+<div id="bPanel-monster">
+  <div style="font-size:12px;color:#888;margin-bottom:10px">击败怪物后解锁 | 已发现: <span id="bestiaryCount" style="color:var(--gold)">0</span>/21</div>
+  <div id="bestiaryGrid" style="display:flex;flex-direction:column;gap:8px"></div>
+</div>
+<div id="bPanel-equip" style="display:none">
+  <div style="font-size:12px;color:#888;margin-bottom:10px">获得装备后记录 | 已收集: <span id="equipBookCount" style="color:var(--gold)">0</span> 件</div>
+  <div id="equipBookGrid"></div>
+</div>
+<div id="bPanel-skill" style="display:none">
+  <div style="font-size:12px;color:#888;margin-bottom:10px">全技能详解 | 共 <span id="skillBookCount" style="color:var(--gold)">0</span> 个技能</div>
+  <div id="skillBookGrid" style="display:flex;flex-direction:column;gap:10px"></div>
+</div>
+</div></div>
+<div class="bs"><div class="lp pb"><h3>📜 日志</h3><div class="lc" id="logContent"></div></div><div class="mp2 pb"><h3>🏆 成就</h3><div class="ml" id="milestoneList"></div></div></div>
+</div>
+<div class="po" id="popupOverlay"></div>
+<div class="ip" id="itemPopup"><div class="pt2" id="popupTitle">✨</div><div class="pi2" id="popupIcon"></div><div class="pn2" id="popupName"></div><div class="ps2" id="popupStats"></div><div class="compare" id="popupCompare"></div><button class="pc" onclick="closePopup()">确认</button></div>
+<div class="luf" id="levelupFlash">LEVEL UP!</div>
+<div class="rl-overlay" id="rlOverlay">
+  <div class="rl-modal" id="rlModal"></div>
+</div>
+<script>
+// This is a complete rebuild. Due to the extreme length, the JS will be compact.
+// ====== DEBUG ======
+const debugLog=[];function dlog(m){debugLog.push('['+fmtT(S?S.focusSeconds:0)+'] '+m);if(debugLog.length>2000)debugLog.shift()}
+function snapStats(){return'Lv'+S.hero.level+' HP'+S.hero.hp+'/'+eMaxHp()+' ATK'+totalAtk()+' DEF'+totalDef()+' LS'+totalLifesteal()+'%'}
+function exportLog(){let t='=== 勇者挂机物语 调试日志 ===\n'+new Date().toLocaleString()+'\n'+snapStats()+'\n\n'+debugLog.join('\n');const b=new Blob([t],{type:'text/plain'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='log_'+Date.now()+'.txt';a.click();URL.revokeObjectURL(u)}
+
+// ====== STATE ======
+let S;function defaultState(){return{focusing:false,focusSeconds:0,deathStreak:0,
+hero:{name:'勇者',level:1,hp:200,maxHp:200,mp:30,maxMp:30,exp:0,maxExp:100,atk:12,def:6,spd:8,crit:5,lifesteal:0,gold:1000,kills:0,combo:0,skillPoints:6,equipment:{weapon:null,armor:null,helmet:null,accessory:null}},
+monsters:[],battleTick:0,autoEquip:true,achievedMilestones:[],skills:{},shopBought:[],shopBuyCount:{},shopRefreshes:0,_shopSlots:[],
+summonUnits:[],summoningTurns:0,bestiaryFound:[],_debuffs:[],_queenShield:0,_queenShieldTicks:0,_lordCD:0,_queenCD:0,_raisedEnemies:[],
+rlKillCount:0,rlTalents:[],rlEventCount:0,rlNextTrigger:10,itemsFound:[],
+// New systems
+pets:[],activePets:[],// max 3 active
+dungeonFloor:0,dungeonBest:0,dungeonActive:false,
+rebirthCount:0,rebirthPoints:0,rebirthBonuses:{atk:0,def:0,hp:0,crit:0,spd:0,gold:0,drop:0},
+heroElement:'none' // current element imbue
+}}
+S=defaultState();
+
+// ====== DATA ======
+const QUALITIES=[
+{name:'普通',key:'common',color:'#aaa',multi:1},
+{name:'优秀',key:'uncommon',color:'#55cc55',multi:1.5},
+{name:'稀有',key:'rare',color:'#5577ff',multi:2.2},
+{name:'史诗',key:'epic',color:'#aa55ff',multi:3.5},
+{name:'传说',key:'legendary',color:'#ffaa00',multi:5},
+{name:'神话',key:'mythic',color:'#ff5555',multi:8},
+{name:'远古',key:'ancient',color:'#ff9944',multi:13},
+{name:'深渊',key:'abyss',color:'#cc00ff',multi:21},
+{name:'太初',key:'primordial',color:'#00eeff',multi:34},
+{name:'混沌',key:'chaos',color:'#ff44aa',multi:55},
+{name:'创世',key:'genesis',color:'#ffffff',multi:89}
+];
+const ESLOTS=[{key:'weapon',label:'武器',icon:'⚔️'},{key:'armor',label:'铠甲',icon:'🛡️'},{key:'helmet',label:'头盔',icon:'⛑️'},{key:'accessory',label:'饰品',icon:'💍'}];
+const W_N=['木剑','铁剑','钢剑','秘银剑','龙牙剑','天界剑','混沌剑','星辰刃','远古裂刃','深渊噬魂','太初之刃','混沌毁灭者','创世神剑'];
+const A_N=['布衣','皮甲','锁子甲','板甲','秘银甲','龙鳞甲','圣光铠','混沌甲','远古战铠','深渊缚链甲','太初壁障','混沌神铠','创世圣甲'];
+const H_N=['布帽','皮帽','铁盔','钢盔','秘银冠','龙角冠','圣光冕','星辰冠','远古王冠','深渊眼帘','太初天冕','混沌神冠','创世之冕'];
+const C_N=['木戒','铜环','银链','金坠','翡翠链','龙心坠','圣光戒','创世环','远古符文环','深渊魂锁','太初时轮','混沌之眼','创世核心'];
+const MONSTERS=[
+{name:'史莱姆',icon:'🟢',baseHp:90,baseAtk:9,baseDef:2,baseSpd:3,exp:22,gold:11,color:'#55cc55',trait:'split',bossName:'史莱姆之王'},
+{name:'哥布林',icon:'👺',baseHp:160,baseAtk:14,baseDef:4,baseSpd:2,exp:38,gold:18,color:'#88aa44',trait:'steal',bossName:'哥布林酋长'},
+{name:'骷髅兵',icon:'💀',baseHp:240,baseAtk:20,baseDef:6,baseSpd:3,exp:55,gold:24,color:'#ccccaa',trait:'reassemble',bossName:'骷髅将军'},
+{name:'狼人',icon:'🐺',baseHp:320,baseAtk:27,baseDef:8,baseSpd:2,exp:75,gold:33,color:'#8888aa',trait:'bleed',bossName:'狼王'},
+{name:'萨满',icon:'🧿',baseHp:360,baseAtk:25,baseDef:11,baseSpd:4,exp:88,gold:38,color:'#44ccaa',role:'shaman',trait:'purge',bossName:'大萨满'},
+{name:'石像鬼',icon:'🗿',baseHp:500,baseAtk:24,baseDef:20,baseSpd:5,exp:100,gold:44,color:'#999',trait:'harden',bossName:'远古石像'},
+{name:'亡灵祭司',icon:'🕯️',baseHp:440,baseAtk:30,baseDef:7,baseSpd:4,exp:115,gold:52,color:'#8855bb',role:'necro',trait:'curse',bossName:'大祭司'},
+{name:'暗影法师',icon:'🧙',baseHp:480,baseAtk:38,baseDef:8,baseSpd:3,exp:128,gold:60,color:'#7744bb',trait:'spellstorm',bossName:'大魔导师'},
+{name:'巨龙',icon:'🐉',baseHp:700,baseAtk:36,baseDef:14,baseSpd:4,exp:180,gold:90,color:'#cc4444',role:'dragon',trait:'dragonfear',bossName:'龙皇'},
+{name:'魔王',icon:'👹',baseHp:1600,baseAtk:46,baseDef:20,baseSpd:3,exp:350,gold:180,color:'#ff2222',role:'demon',trait:'dominate',bossName:'终焉魔王'}];
+const MILESTONES=[
+{time:60,icon:'⭐',text:'专注1分钟',reward:'经验+80'},
+{time:120,icon:'💰',text:'专注2分钟',reward:'金币+60'},
+{time:180,icon:'⚔️',text:'专注3分钟',reward:'攻击+5'},
+{time:240,icon:'🛡️',text:'专注4分钟',reward:'防御+3'},
+{time:300,icon:'🌟',text:'专注5分钟',reward:'稀有装备'},
+{time:360,icon:'💨',text:'专注6分钟',reward:'速度+3'},
+{time:420,icon:'🍀',text:'专注7分钟',reward:'暴击+3%'},
+{time:480,icon:'📖',text:'专注8分钟',reward:'+1技能点'},
+{time:540,icon:'💰',text:'专注9分钟',reward:'金币+120'},
+{time:600,icon:'💫',text:'专注10分钟',reward:'史诗装备'},
+{time:660,icon:'⚔️',text:'专注11分钟',reward:'攻击+8'},
+{time:720,icon:'❤️',text:'专注12分钟',reward:'最大HP+60'},
+{time:780,icon:'🩸',text:'专注13分钟',reward:'吸血+2%'},
+{time:840,icon:'📖',text:'专注14分钟',reward:'+2技能点'},
+{time:900,icon:'🔥',text:'专注15分钟',reward:'攻击+12,防御+6'},
+{time:960,icon:'💰',text:'专注16分钟',reward:'金币+200'},
+{time:1020,icon:'🍀',text:'专注17分钟',reward:'暴击+5%'},
+{time:1080,icon:'💨',text:'专注18分钟',reward:'速度+5'},
+{time:1140,icon:'⚔️',text:'专注19分钟',reward:'攻击+15'},
+{time:1200,icon:'🌟',text:'专注20分钟',reward:'传说装备'},
+{time:1260,icon:'🛡️',text:'专注21分钟',reward:'防御+8'},
+{time:1320,icon:'📖',text:'专注22分钟',reward:'+2技能点'},
+{time:1380,icon:'💰',text:'专注23分钟',reward:'金币+300'},
+{time:1440,icon:'❤️',text:'专注24分钟',reward:'最大HP+100'},
+{time:1500,icon:'⚡',text:'专注25分钟',reward:'攻击+20,暴击+5%'},
+{time:1560,icon:'🩸',text:'专注26分钟',reward:'吸血+3%'},
+{time:1620,icon:'💨',text:'专注27分钟',reward:'速度+6'},
+{time:1680,icon:'📖',text:'专注28分钟',reward:'+3技能点'},
+{time:1740,icon:'💰',text:'专注29分钟',reward:'金币+500'},
+{time:1800,icon:'⚡',text:'专注30分钟',reward:'传说装备+全属性+10%'},
+{time:1860,icon:'⚔️',text:'专注31分钟',reward:'攻击+25'},
+{time:1920,icon:'🛡️',text:'专注32分钟',reward:'防御+12'},
+{time:1980,icon:'🍀',text:'专注33分钟',reward:'暴击+8%'},
+{time:2040,icon:'📖',text:'专注34分钟',reward:'+3技能点'},
+{time:2100,icon:'❤️',text:'专注35分钟',reward:'最大HP+150'},
+{time:2160,icon:'💰',text:'专注36分钟',reward:'金币+800'},
+{time:2220,icon:'🩸',text:'专注37分钟',reward:'吸血+4%'},
+{time:2280,icon:'⚔️',text:'专注38分钟',reward:'攻击+30'},
+{time:2340,icon:'💨',text:'专注39分钟',reward:'速度+8'},
+{time:2400,icon:'🔥',text:'专注40分钟',reward:'神话装备+攻击+20'},
+{time:2700,icon:'⚡',text:'专注45分钟',reward:'+5技能点+金币1000'},
+{time:3000,icon:'💫',text:'专注50分钟',reward:'远古装备+全属性+15%'},
+{time:3300,icon:'🌟',text:'专注55分钟',reward:'深渊装备+攻击+50'},
+{time:3600,icon:'👑',text:'专注1小时',reward:'太初装备+全属性+25%'},
+{time:4500,icon:'🏆',text:'专注1小时15分',reward:'混沌装备+全属性x1.5'},
+{time:5400,icon:'💎',text:'专注1小时30分',reward:'创世装备+全属性x1.5'},
+{time:7200,icon:'🌈',text:'专注2小时',reward:'全属性x2+创世装备'}
+];
+
+// ====== SHOP with lifesteal potion ======
+const SHOP_ITEMS=[
+{id:'potion_hp',name:'生命药水',icon:'🧪',desc:'+30HP',baseCost:40,repeat:true,fn:()=>{S.hero.maxHp+=30;S.hero.hp=eMaxHp()}},
+{id:'potion_atk',name:'力量药水',icon:'💪',desc:'+5攻击',baseCost:80,repeat:true,fn:()=>{S.hero.atk+=5}},
+{id:'potion_def',name:'铁壁药水',icon:'🛡️',desc:'+3防御',baseCost:50,repeat:true,fn:()=>{S.hero.def+=3}},
+{id:'potion_crit',name:'锐利药水',icon:'🎯',desc:'+2%暴击',baseCost:100,repeat:true,fn:()=>{S.hero.crit+=2}},
+{id:'potion_spd',name:'疾风药水',icon:'💨',desc:'+2速度',baseCost:70,repeat:true,fn:()=>{S.hero.spd+=2}},
+{id:'potion_ls',name:'嗜血药水',icon:'🩸',desc:'+2%吸血',baseCost:120,repeat:true,fn:()=>{S.hero.lifesteal+=2}},
+{id:'potion_all',name:'万能药水',icon:'🌈',desc:'+4攻+2防+1速+10HP+1%吸血',baseCost:180,repeat:true,fn:()=>{S.hero.atk+=4;S.hero.def+=2;S.hero.spd+=1;S.hero.maxHp+=10;S.hero.lifesteal+=1;S.hero.hp=eMaxHp()}},
+{id:'sp_book',name:'技能秘籍',icon:'📖',desc:'+2技能点',baseCost:200,repeat:true,fn:()=>{S.hero.skillPoints+=2}},
+{id:'exp_scroll',name:'经验卷轴',icon:'📜',desc:'+等级x40经验',baseCost:100,repeat:true,fn:()=>{S.hero.exp+=S.hero.level*40}},
+{id:'chest_common',name:'普通宝箱',icon:'📦',desc:'随机普通装备',baseCost:30,repeat:true,fn:()=>{grantItem(0)}},
+{id:'chest_uncommon',name:'优秀宝箱',icon:'🎁',desc:'随机优秀装备',baseCost:80,repeat:true,fn:()=>{grantItem(1)}},
+{id:'chest_rare',name:'稀有宝箱',icon:'💙',desc:'随机稀有装备',baseCost:200,repeat:true,fn:()=>{grantItem(2)}},
+{id:'chest_epic',name:'史诗宝箱',icon:'💜',desc:'随机史诗装备',baseCost:500,repeat:true,fn:()=>{grantItem(3)}},
+{id:'chest_legend',name:'传说宝箱',icon:'🧡',desc:'随机传说装备',baseCost:1200,repeat:true,fn:()=>{grantItem(4)}},
+{id:'chest_mythic',name:'神话宝箱',icon:'❤️',desc:'随机神话装备',baseCost:3000,repeat:true,fn:()=>{grantItem(5)}},
+{id:'chest_ancient',name:'远古宝箱',icon:'🟠',desc:'随机远古装备',baseCost:8000,repeat:true,fn:()=>{grantItem(6)}},
+{id:'chest_abyss',name:'深渊宝箱',icon:'🟣',desc:'随机深渊装备',baseCost:20000,repeat:true,fn:()=>{grantItem(7)}},
+{id:'chest_primordial',name:'太初宝箱',icon:'🩵',desc:'随机太初装备',baseCost:50000,repeat:true,fn:()=>{grantItem(8)}},
+{id:'chest_chaos',name:'混沌宝箱',icon:'🩷',desc:'随机混沌装备',baseCost:120000,repeat:true,fn:()=>{grantItem(9)}},
+{id:'chest_genesis',name:'创世宝箱',icon:'🤍',desc:'随机创世装备',baseCost:300000,repeat:true,fn:()=>{grantItem(10)}},
+{id:'revival_charm',name:'复活护符',icon:'💎',desc:'死亡不丢金币',baseCost:400,repeat:false,fn:()=>{}},
+{id:'treasure_map',name:'藏宝图',icon:'🗺️',desc:'掉落率+10%',baseCost:350,repeat:false,fn:()=>{}}];
+function getItemCost(item){if(!item.repeat)return item.baseCost;return Math.floor(item.baseCost*Math.pow(1.2,(S.shopBuyCount[item.id]||0)))}
+
+// ====== SKILL TREE with lifesteal skill ======
+const SKILL_TREE={
+attack:{name:'⚔️ 战斗之道',css:'atk-t',skills:[
+{id:'power_strike',name:'力量打击',icon:'💥',maxLv:5,desc:'攻击+{v}%',val:i=>i*6,req:null},
+{id:'critical_edge',name:'致命锋刃',icon:'🗡️',maxLv:5,desc:'暴击+{v}%',val:i=>i*3,req:null},
+{id:'fury',name:'狂怒',icon:'😤',maxLv:3,desc:'攻速+{v}%',val:i=>i*12,req:'power_strike'},
+{id:'whirlwind',name:'旋风斩',icon:'🌀',maxLv:3,desc:'每{v}tick全体AOE(70%攻击)',val:i=>Math.max(12-i*3,5),req:'fury'},
+{id:'execute',name:'斩杀',icon:'⚡',maxLv:3,desc:'<30%血+{v}%伤害',val:i=>i*20,req:'critical_edge'},
+{id:'god_slayer',name:'弑神者',icon:'👹',maxLv:1,desc:'全伤+{v}%',val:()=>35,req:'whirlwind'}]},
+defense:{name:'🛡️ 守护之壁',css:'def-t',skills:[
+{id:'tough_skin',name:'坚韧体魄',icon:'💪',maxLv:5,desc:'防御+{v}%',val:i=>i*6,req:null},
+{id:'regen',name:'自然恢复',icon:'💚',maxLv:5,desc:'+{v}%HP/5tick',val:i=>i*1.5,req:null},
+{id:'vampiric',name:'吸血本能',icon:'🩸',maxLv:5,desc:'攻击吸血+{v}%',val:i=>i*3,req:null},
+{id:'block',name:'格挡',icon:'🛡️',maxLv:3,desc:'{v}%格挡',val:i=>i*6,req:'tough_skin'},
+{id:'thorns',name:'荆棘',icon:'🌵',maxLv:3,desc:'反弹{v}%',val:i=>i*8,req:'tough_skin'},
+{id:'undying',name:'不死之身',icon:'🔥',maxLv:3,desc:'{v}%1HP存活',val:i=>i*10,req:'block'},
+{id:'immortal',name:'永恒不灭',icon:'✨',maxLv:1,desc:'HP+{v}%',val:()=>60,req:'undying'}]},
+utility:{name:'🍀 财运天赋',css:'util-t',skills:[
+{id:'lucky',name:'幸运',icon:'🍀',maxLv:5,desc:'掉落+{v}%',val:i=>i*6,req:null},
+{id:'gold_rush',name:'黄金猎手',icon:'💰',maxLv:5,desc:'金币+{v}%',val:i=>i*10,req:null},
+{id:'exp_boost',name:'经验加速',icon:'📚',maxLv:3,desc:'经验+{v}%',val:i=>i*12,req:'gold_rush'},
+{id:'quality_up',name:'品质提升',icon:'💎',maxLv:3,desc:'品质+{v}级',val:i=>i,req:'lucky'},
+{id:'double_drop',name:'双倍掉落',icon:'🎁',maxLv:3,desc:'{v}%双倍',val:i=>i*10,req:'quality_up'},
+{id:'time_warp',name:'时间扭曲',icon:'⏰',maxLv:1,desc:'全速+{v}%',val:()=>50,req:'double_drop'}]},
+necro:{name:'☠️ 暗影军团',css:'necro-t',skills:[
+{id:'summon_art',name:'召唤术',icon:'📜',maxLv:5,desc:'开局召唤{v}个,全灭{h}次攻击重召,属性+{v}x8%',val:i=>i,req:null,healPct:i=>Math.max(2,7-i)},
+{id:'necro_revival',name:'死灵复生',icon:'♻️',maxLv:5,desc:'{v}%概率死亡复活(+{h}%HP)，复活{d}个召唤物',val:i=>[0,30,40,50,60,75][i],req:'summon_art',healPct:i=>[0,25,30,40,50,65][i],shieldDef:i=>i,chance:i=>[0,30,40,50,60,75][i]},
+{id:'raise_dead',name:'骷髅召唤',icon:'💀',maxLv:3,desc:'召唤{v}个骷髅兵',val:i=>i,req:'summon_art'},
+{id:'dark_pact',name:'暗黑契约',icon:'🩸',maxLv:5,desc:'召唤物攻+{v}%',val:i=>i*15,req:'summon_art'},
+{id:'soul_drain',name:'灵魂吸取',icon:'👻',maxLv:3,desc:'击杀回{v}%HP',val:i=>i*8,req:'raise_dead'},
+{id:'shadow_assassin',name:'暗影刺客',icon:'🗡️',maxLv:2,desc:'召唤{v}个刺客',val:i=>i,req:'raise_dead'},
+{id:'shadow_hunter',name:'暗影猎手',icon:'🏹',maxLv:2,desc:'召唤{v}个猎手(AOE)',val:i=>i,req:'dark_pact'},
+{id:'plague',name:'瘟疫',icon:'☣️',maxLv:3,desc:'全体-{v}%HP/tick',val:i=>i*1.5,req:'dark_pact'},
+{id:'corpse_explode',name:'尸爆',icon:'💥',maxLv:3,desc:'击杀AOE{v}%攻击',val:i=>i*20,req:'soul_drain'},
+{id:'shadow_lord',name:'暗影君主',icon:'👑',maxLv:1,desc:'召唤君主(需Lv10)',val:()=>1,req:'shadow_assassin',reqLv:10},
+{id:'shadow_queen',name:'暗影女皇',icon:'👸',maxLv:1,desc:'召唤女皇(需Lv15)',val:()=>1,req:'shadow_hunter',reqLv:15},
+{id:'mirror',name:'镜像',icon:'🪞',maxLv:3,desc:'生成黑暗勇者(勇者{v}%属性,需Lv20)',val:i=>[0,50,65,80][i],req:'corpse_explode',reqLv:20}]},
+lord_sub:{name:'👑 君主技能',css:'necro-t',skills:[
+{id:'lord_domain',name:'暗影领域',icon:'🌑',maxLv:5,desc:'军团攻击+{v}%，受伤减免{v}%',val:i=>i*5,req:'shadow_lord'},
+{id:'lord_sword',name:'黑暗大剑',icon:'⚔️',maxLv:5,desc:'君主每5tick重击{v}%攻击力',val:i=>150+i*50,req:'shadow_lord'},
+{id:'lord_raise',name:'站起来！',icon:'🧟',maxLv:5,desc:'击杀{v}%率复活敌人(保留{r}%属性)',val:i=>10+i*8,req:'shadow_lord',raisePct:i=>40+i*10,raiseCap:i=>i},
+{id:'lord_fear',name:'恐惧光环',icon:'😱',maxLv:3,desc:'君主存活时敌人攻击-{v}%',val:i=>i*8,req:'lord_domain'},
+{id:'lord_execute',name:'斩首',icon:'💀',maxLv:3,desc:'君主攻击<{v}%血量敌人直接处决',val:i=>i*5,req:'lord_sword'},
+{id:'lord_aoe',name:'暗影风暴',icon:'🌪️',maxLv:3,desc:'君主每8tick对全体造成{v}%攻击AOE',val:i=>40+i*20,req:'lord_fear'}]},
+queen_sub:{name:'👸 女皇技能',css:'necro-t',skills:[
+{id:'queen_heal',name:'生命潮汐',icon:'💚',maxLv:5,desc:'勇者{h}%HP/次',val:i=>i*20,req:'shadow_queen',healPct:i=>2+i*1.5},
+{id:'queen_shield',name:'暗影壁垒',icon:'🛡️',maxLv:5,desc:'{v}%率,防+{d},6回合',val:i=>10+i*5,req:'shadow_queen',shieldDef:i=>15+i*8},
+{id:'queen_summon',name:'亡灵仪式',icon:'☠️',maxLv:3,desc:'{v}%率召唤(上限{c})',val:i=>8+i*5,req:'shadow_queen',sumCap:i=>8+i*2},
+{id:'queen_cleanse',name:'净化之光',icon:'✨',maxLv:3,desc:'女皇每6tick{v}%率清除勇者debuff',val:i=>15+i*10,req:'queen_heal'},
+{id:'queen_revive',name:'复苏术',icon:'💖',maxLv:3,desc:'女皇存活时勇者死亡{v}%率满血复活',val:i=>i*12,req:'queen_shield'},
+{id:'queen_empower',name:'女皇祝福',icon:'👑',maxLv:3,desc:'女皇存活时勇者全属性+{v}%',val:i=>i*6,req:'queen_cleanse'}]},
+assassin_sub:{name:'🗡️ 刺客技能',css:'necro-t',skills:[
+{id:'assassin_crit',name:'致命暗杀',icon:'🎯',maxLv:5,desc:'刺客暴击率+{v}%，暴击伤害+{v}x20%',val:i=>i*10,req:'shadow_assassin'},
+{id:'assassin_poison',name:'淬毒之刃',icon:'☠️',maxLv:3,desc:'刺客攻击{v}%率使目标中毒(2%HP/3tick,持续6回合)',val:i=>20+i*15,req:'shadow_assassin'},
+{id:'assassin_dodge',name:'暗影闪避',icon:'💨',maxLv:3,desc:'刺客{v}%概率闪避攻击',val:i=>i*12,req:'assassin_crit'},
+{id:'assassin_combo',name:'连击',icon:'⚡',maxLv:3,desc:'刺客每次攻击{v}%率追加一次(50%伤害)',val:i=>15+i*10,req:'assassin_crit'},
+{id:'assassin_mark',name:'死亡标记',icon:'🎯',maxLv:3,desc:'刺客标记目标,全军团对其伤害+{v}%',val:i=>i*10,req:'assassin_poison'},
+{id:'assassin_execute',name:'暗影处决',icon:'💀',maxLv:1,desc:'刺客攻击<10%HP非Boss敌人直接击杀',val:()=>1,req:'assassin_combo'}]},
+hunter_sub:{name:'🏹 猎手技能',css:'necro-t',skills:[
+{id:'hunter_volley',name:'箭雨强化',icon:'🏹',maxLv:5,desc:'猎手AOE伤害+{v}%',val:i=>i*15,req:'shadow_hunter'},
+{id:'hunter_slow',name:'冰霜箭',icon:'❄️',maxLv:3,desc:'猎手攻击{v}%率使全体减速20%持续4回合',val:i=>15+i*10,req:'shadow_hunter'},
+{id:'hunter_pierce',name:'穿透射击',icon:'🔫',maxLv:3,desc:'猎手无视目标{v}%防御',val:i=>i*15,req:'hunter_volley'},
+{id:'hunter_trap',name:'陷阱',icon:'🪤',maxLv:3,desc:'猎手每10tick放置陷阱,下个攻击的敌人受{v}%攻击力伤害',val:i=>50+i*30,req:'hunter_slow'},
+{id:'hunter_multishot',name:'多重射击',icon:'🎯',maxLv:3,desc:'猎手AOE额外命中{v}次(每次60%伤害)',val:i=>i,req:'hunter_pierce'},
+{id:'hunter_snipe',name:'狙击',icon:'🎯',maxLv:1,desc:'猎手每12tick对血量最高敌人造成200%攻击单体伤害',val:()=>1,req:'hunter_multishot'}]},
+skeleton_sub:{name:'💀 骷髅军团',css:'necro-t',skills:[
+{id:'bone_armor',name:'骨甲强化',icon:'🦴',maxLv:5,desc:'骷髅HP/防+{v}%',val:i=>i*20,req:'raise_dead'},
+{id:'skeleton_cap',name:'骨海战术',icon:'💀',maxLv:3,desc:'骷髅上限+{v}个',val:i=>i*2,req:'raise_dead'},
+{id:'death_march',name:'亡者行军',icon:'⚰️',maxLv:3,desc:'骷髅攻击+{v}%',val:i=>i*25,req:'bone_armor'},
+{id:'bone_nova',name:'骨爆',icon:'💥',maxLv:3,desc:'骷髅死亡时AOE {v}%攻击',val:i=>i*30,req:'death_march'},
+{id:'death_knight',name:'死亡骑士',icon:'⚔️',maxLv:3,desc:'每3波进化骷髅为死亡骑士(上限{v}个,永久存在,需Lv8)',val:i=>i,req:'skeleton_cap',reqLv:8}]}};
+function initSkills(){Object.values(SKILL_TREE).forEach(b=>b.skills.forEach(sk=>{if(S.skills[sk.id]===undefined)S.skills[sk.id]=0}))}
+initSkills();
+function skLv(id){return S.skills[id]||0}
+function skVal(id){const lv=skLv(id);if(!lv)return 0;for(const b of Object.values(SKILL_TREE)){const sk=b.skills.find(s=>s.id===id);if(sk)return sk.val(lv)}return 0}
+function skB(stat){const m={atk:'power_strike',def:'tough_skin',crit:'critical_edge',atkSpd:['fury','time_warp'],regen:'regen',block:'block',thorns:'thorns',undying:'undying',dropRate:'lucky',goldBonus:'gold_rush',expBonus:'exp_boost',qualityUp:'quality_up',doubleDrop:'double_drop',execute:'execute',allDmg:'god_slayer',maxHpBonus:'immortal',vampiric:'vampiric',summonArt:'summon_art',summonAtk:'dark_pact',soulDrain:'soul_drain',corpseExplode:'corpse_explode',plague:'plague',lordDomain:'lord_domain',lordSword:'lord_sword',lordRaise:'lord_raise',lordFear:'lord_fear',lordExecute:'lord_execute',lordAoe:'lord_aoe',queenHeal:'queen_heal',queenShield:'queen_shield',queenSummon:'queen_summon',queenCleanse:'queen_cleanse',queenRevive:'queen_revive',queenEmpower:'queen_empower',assassinCrit:'assassin_crit',assassinPoison:'assassin_poison',assassinDodge:'assassin_dodge',assassinCombo:'assassin_combo',assassinMark:'assassin_mark',assassinExecute:'assassin_execute',hunterVolley:'hunter_volley',hunterSlow:'hunter_slow',hunterPierce:'hunter_pierce',hunterTrap:'hunter_trap',hunterMultishot:'hunter_multishot',hunterSnipe:'hunter_snipe',mirror:'mirror',boneArmor:'bone_armor',skeletonCap:'skeleton_cap',deathMarch:'death_march',boneNova:'bone_nova'};const ids=m[stat];if(!ids)return 0;if(Array.isArray(ids))return ids.reduce((s,id)=>s+skVal(id),0);return skVal(ids)}
+
+// ====== SUMMON TYPES ======
+const SUMMON_TYPES={
+death_knight:{name:'死亡骑士',color:'#4488ff',hpMult:0.8,atkMult:0.4,px:[[0,0,1,1,1,1,1,1,0,0],[0,1,2,2,4,4,2,2,1,0],[0,0,1,3,3,3,3,1,0,0],[0,0,1,4,3,4,3,1,0,0],[0,0,1,3,3,3,3,1,0,0],[0,0,0,1,4,4,1,0,0,0],[0,1,1,2,2,2,2,1,1,0],[0,0,1,2,2,2,2,1,0,0],[0,0,0,1,1,1,1,0,0,0],[0,0,1,1,0,0,1,1,0,0]],pal:{1:'#336',2:'#4488ff',3:'#aaccff',4:'#ffffff'}},
+skeleton:{name:'骷髅兵',color:'#ddd',hpMult:0.25,atkMult:0.12,px:[[0,0,0,1,1,1,0,0,0,0],[0,0,1,2,2,2,1,0,0,0],[0,0,1,3,2,3,1,0,0,0],[0,0,1,2,2,2,1,0,0,0],[0,0,0,1,4,1,0,0,0,0],[0,0,1,1,1,1,1,0,0,0],[0,1,0,1,1,1,0,1,0,0],[0,0,0,1,0,1,0,0,0,0],[0,0,0,1,0,1,0,0,0,0],[0,0,1,1,0,1,1,0,0,0]],pal:{1:'#ddd',2:'#fff',3:'#222',4:'#aaa'}},
+assassin:{name:'暗影刺客',color:'#8844aa',hpMult:0.15,atkMult:0.25,px:[[0,0,0,0,1,1,0,0,0,0],[0,0,0,1,2,2,1,0,0,0],[0,0,0,1,3,3,1,0,0,0],[0,0,1,2,2,2,2,1,0,0],[0,0,0,1,4,4,1,0,0,0],[0,0,1,4,4,4,4,1,0,0],[0,5,1,4,4,4,4,1,5,0],[0,0,0,4,4,4,4,0,0,0],[0,0,0,1,0,0,1,0,0,0],[0,0,1,1,0,0,1,1,0,0]],pal:{1:'#333',2:'#8844aa',3:'#ff4444',4:'#553388',5:'#aaa'}},
+hunter:{name:'暗影猎手',color:'#448844',hpMult:0.2,atkMult:0.1,isAoe:true,px:[[0,0,0,1,1,0,0,0,0,0],[0,0,1,2,2,1,0,0,0,0],[0,0,1,3,3,1,0,0,0,0],[0,0,1,2,2,1,0,0,0,0],[0,0,0,1,1,0,0,0,0,0],[0,4,1,1,1,1,1,4,0,0],[0,0,1,1,1,1,1,0,0,0],[0,0,0,1,0,1,0,0,0,0],[0,0,0,1,0,1,0,0,0,0],[0,0,1,1,0,1,1,0,0,0]],pal:{1:'#333',2:'#448844',3:'#55ff55',4:'#886633'}},
+lord:{name:'暗影君主',color:'#6622cc',hpMult:0.6,atkMult:0.35,px:[[0,0,1,1,1,1,1,1,0,0],[0,1,2,2,5,5,2,2,1,0],[0,0,1,3,3,3,3,1,0,0],[0,0,1,4,3,4,3,1,0,0],[0,0,1,3,3,3,3,1,0,0],[0,0,0,1,5,5,1,0,0,0],[0,1,1,2,2,2,2,1,1,0],[0,0,1,2,2,2,2,1,0,0],[0,0,0,1,0,0,1,0,0,0],[0,0,1,1,0,0,1,1,0,0]],pal:{1:'#333',2:'#6622cc',3:'#9955ff',4:'#ff4444',5:'#ffcc00'}},
+queen:{name:'暗影女皇',color:'#cc44aa',hpMult:0.4,atkMult:0.08,isHealer:true,px:[[0,0,0,5,5,5,5,0,0,0],[0,0,5,3,5,5,3,5,0,0],[0,0,1,2,2,2,2,1,0,0],[0,0,1,4,2,4,2,1,0,0],[0,0,1,2,3,3,2,1,0,0],[0,0,0,1,2,2,1,0,0,0],[0,3,1,2,2,2,2,1,3,0],[0,0,1,2,2,2,2,1,0,0],[0,0,2,2,2,2,2,2,0,0],[0,2,2,0,0,0,0,2,2,0]],pal:{1:'#333',2:'#cc44aa',3:'#ff88cc',4:'#55ffff',5:'#ffcc00'}},
+dark_hero:{name:'黑暗勇者',color:'#aa33cc',hpMult:0.5,atkMult:0.5,isDarkHero:true,px:[[0,0,0,1,1,1,1,0,0,0],[0,0,1,2,2,2,2,1,0,0],[0,0,1,3,4,4,3,1,0,0],[0,0,1,3,3,3,3,1,0,0],[0,0,0,1,5,5,1,0,0,0],[0,6,1,7,7,7,7,1,6,0],[0,0,1,7,7,7,7,1,0,0],[0,0,0,7,0,0,7,0,0,0],[0,0,0,1,0,0,1,0,0,0],[0,0,1,1,0,0,1,1,0,0]],pal:{1:'#222',2:'#6622aa',3:'#aa88cc',4:'#cc2244',5:'#ff4466',6:'#666',7:'#331155'}}};
+
+// ====== PIXEL ART ======
+function drawPx(c,px,pal){const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);const s=c.width/(px[0]?px[0].length:10);for(let y=0;y<px.length;y++)for(let x=0;x<px[y].length;x++){const v=px[y][x];if(v>0&&pal[v]){ctx.fillStyle=pal[v];ctx.fillRect(x*s,y*s,s,s)}}}
+const HPX=[[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,1,3,3,4,3,3,4,3,3,1,0,0,0],[0,0,0,1,3,3,3,3,3,3,3,3,1,0,0,0],[0,0,0,1,3,3,5,3,3,5,3,3,1,0,0,0],[0,0,0,0,1,3,3,6,6,3,3,1,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,7,7,7,7,7,7,7,7,7,7,7,7,0,0],[0,0,0,7,7,8,8,8,8,8,8,7,7,0,0,0],[0,9,0,0,7,8,8,8,8,8,8,7,0,0,9,0],[0,9,9,0,0,8,8,8,8,8,8,0,0,9,9,0],[0,0,9,0,0,3,3,0,0,3,3,0,0,9,0,0],[0,0,0,0,0,3,3,0,0,3,3,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0]];
+const HPAL={1:'#333',2:'#cc8833',3:'#ffcc99',4:'#fff',5:'#2244aa',6:'#cc5544',7:'#4466bb',8:'#3355aa',9:'#aaa'};
+function getMonPx(icon){const T={'🟢':{px:[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,1,1,2,2,1,1,2,2,1,1,0,0,0],[0,0,0,1,1,2,3,1,1,2,3,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,1,1,1,1,4,4,4,4,1,1,1,1,1,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0]],pal:{1:'#44bb44',2:'#fff',3:'#222',4:'#cc4444'}}};const def={px:[[0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,1,1,2,2,1,1,1,2,2,1,1,0,0,0],[0,0,1,1,2,3,1,1,1,2,3,1,1,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,0,0,1,1,4,4,4,4,4,1,1,0,0,0,0],[0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0],[0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],[0,1,0,0,1,1,1,1,1,1,1,0,0,1,0,0],[0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0],[0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],pal:{1:'#aa4444',2:'#ff4',3:'#222',4:'#fff'}};return T[icon]||def}
+function drawHero(){drawPx(document.getElementById('heroCanvas'),HPX,HPAL)}
+function drawMonSprite(canvas,icon,color){const t=getMonPx(icon);const p={...t.pal};if(color)p[1]=color;drawPx(canvas,t.px,p)}
+
+// ====== LIFESTEAL SYSTEM ======
+function totalLifesteal(){return Math.min(30,S.hero.lifesteal+getEquipBonus('lifesteal')+skB('vampiric'))} // cap at 30%
+function applyLifesteal(dmg){const ls=totalLifesteal();if(ls>0){const heal=Math.floor(dmg*ls/100);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+heal);if(heal>0)showDmg(heal,false,true,true)}} // green heal number
+
+// ====== DEBUFF SYSTEM ======
+function initDebuffs(){if(!S._debuffs)S._debuffs=[]}
+function addDebuff(id,name,ticks,opts){initDebuffs();const e=S._debuffs.find(d=>d.id===id);if(e){e.ticks=ticks;Object.assign(e,opts)}else S._debuffs.push({id,name,ticks,...opts});addBL('⚠️ '+name+'！'+ticks+'回合','rt')}
+function tickDebuffs(){initDebuffs();S._debuffs.forEach(d=>{if(d.dot){const dd=Math.floor(eMaxHp()*d.dot/100);S.hero.hp-=dd;if(S.hero.hp<=0)S.hero.hp=1}if(d.dotSum){aliveSummons().forEach(su=>{su.hp-=Math.floor(su.maxHp*d.dotSum/100);if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp()}});S._debuffs=S._debuffs.filter(d=>{d.ticks--;return d.ticks>0})}
+function debuffMult(stat){initDebuffs();let m=1;S._debuffs.forEach(d=>{if(d[stat])m*=d[stat]});return m}
+
+// ====== COMBAT STATS ======
+function getEquipBonus(stat){let b=0;Object.values(S.hero.equipment).forEach(i=>{if(i&&i.stats[stat])b+=i.stats[stat]});return b}
+function totalAtk(){const qe=aliveSummons().some(u=>u.type==='queen')?1+skB('queenEmpower')/100:1;return Math.floor((S.hero.atk+getEquipBonus('atk')+getPetBonus('atk'))*(1+skB('atk')/100)*(1+skB('allDmg')/100)*debuffMult('atkMult')*qe)}
+function totalDef(){const qe=aliveSummons().some(u=>u.type==='queen')?1+skB('queenEmpower')/100:1;return Math.floor(((S.hero.def+getEquipBonus('def')+getPetBonus('def'))*(1+skB('def')/100)+(S._queenShield||0))*debuffMult('defMult')*qe)}
+function totalCrit(){return Math.min(95,S.hero.crit+getEquipBonus('crit')+skB('crit')+getPetBonus('crit'))}
+function eMaxHp(){return Math.floor((S.hero.maxHp+getPetBonus('hp'))*(1+skB('maxHpBonus')/100))}
+
+// ====== SUMMON SYSTEM ======
+function buildSummonList(){const list=[];const skelCap=skVal('raise_dead')+(skLv('skeleton_cap')?skVal('skeleton_cap'):0);for(let i=0;i<skelCap;i++)list.push('skeleton');for(let i=0;i<skVal('shadow_assassin');i++)list.push('assassin');for(let i=0;i<skVal('shadow_hunter');i++)list.push('hunter');if(!S._lordCD)S._lordCD=0;if(!S._queenCD)S._queenCD=0;if(skLv('shadow_lord')>0){if(S._lordCD<=0)list.push('lord');else{S._lordCD--;addBL('👑 君主冷却('+S._lordCD+'波)','pt')}}if(skLv('shadow_queen')>0){if(S._queenCD<=0)list.push('queen');else{S._queenCD--;addBL('👸 女皇冷却('+S._queenCD+'波)','pt')}}
+if(skLv('mirror')>0)list.push('dark_hero');
+return list}
+function initSummons(){const types=buildSummonList();S.summonUnits=[];S._raisedEnemies=S._raisedEnemies||[];if(!S._persistDKs)S._persistDKs=[];
+const dB=1+skB('lordDomain')/100;const skelHpB=1+skB('boneArmor')/100,skelAtkB=1+skB('deathMarch')/100;
+const saLv=skLv('summon_art'),saBonus=1+saLv*0.08;
+// Persistent death knights first
+S._persistDKs=S._persistDKs.filter(dk=>dk.alive);
+S._persistDKs.forEach(dk=>{dk._deployed=true;dk._dL=false;S.summonUnits.push(dk)});
+// Immediately summon all units at wave start
+const dkCount=S._persistDKs.length;let skelSkip=dkCount;
+types.forEach(t=>{if(t==='skeleton'&&skelSkip>0){skelSkip--;return}
+  const st=SUMMON_TYPES[t];let hpM=st.hpMult,aM=st.atkMult;
+  if(t==='skeleton'){hpM*=skelHpB;aM*=skelAtkB}hpM*=saBonus;aM*=saBonus;
+  const hp=Math.floor((eMaxHp()*hpM+S.hero.level*3)*dB);
+  S.summonUnits.push({type:t,hp,maxHp:hp,alive:true,atkMult:aM,_deployed:true,_dL:false});
+});
+// Raised enemies
+S._raisedEnemies.forEach(re=>{if(re.alive){re._deployed=true;S.summonUnits.push(re)}});
+// Reset re-summon cooldown
+S._summonCD=0;S._summonAllDead=false;
+if(S.summonUnits.length>0)addBL('💀 召唤'+S.summonUnits.length+'个单位！','pt');
+renderAllySide()}
+function renderAllySide(){const as=document.getElementById('allySide');as.querySelectorAll('.summon-unit').forEach(e=>e.remove());S.summonUnits.forEach((u,i)=>{const isR=u.type==='raised';const st=isR?null:SUMMON_TYPES[u.type];const color=isR?'#55aa55':(st?st.color:'#ddd');const name=isR?('🧟'+u.raisedName):(st?st.name:'?');const notDeployed=u._deployed===false;const div=document.createElement('div');div.className='summon-unit'+(u.alive&&!notDeployed?'':' dead');div.id='su'+i;if(notDeployed)div.style.opacity='0.25';const c=document.createElement('canvas');c.className='sprite-sm';c.width=38;c.height=38;c.style.animationDelay=(i*0.15)+'s';c.style.filter=(u.alive&&!notDeployed)?'drop-shadow(0 0 2px '+color+')':'grayscale(1)';div.appendChild(c);const hb=document.createElement('div');hb.className='su-hp';const hf=document.createElement('div');hf.className='su-hp-f';hf.id='suhp'+i;hf.style.width=(u.alive?(u.hp/u.maxHp)*100:0)+'%';hf.style.background=color;hb.appendChild(hf);div.appendChild(hb);const lb=document.createElement('div');lb.className='su-label';lb.style.color=color;lb.textContent=notDeployed?('⏳'+name):name;div.appendChild(lb);as.appendChild(div);if(isR)drawMonSprite(c,u.raisedIcon||'💀',u.raisedColor||'#55aa55');else if(st)drawPx(c,st.px,st.pal)})}
+function updateSummonHp(){S.summonUnits.forEach((u,i)=>{const b=document.getElementById('suhp'+i);const d=document.getElementById('su'+i);if(b)b.style.width=(u.alive?(u.hp/u.maxHp)*100:0)+'%';if(d)d.classList.toggle('dead',!u.alive)});S.summonUnits.forEach(u=>{if(!u.alive&&!u._dL){u._dL=true;if((u.type==='skeleton'||u.type==='death_knight')&&skLv('bone_nova')>0){const nd=Math.floor(totalAtk()*skB('boneNova')/100);if(nd>0){aliveMonsters().forEach(m=>{m.hp-=nd;if(m.hp<=0){m.hp=0;m.alive=false}});showAoeFlash();addBL('💥 骨爆 '+nd,'pt')}}if(u.type==='death_knight'&&S._persistDKs){S._persistDKs=S._persistDKs.filter(dk=>dk.alive);addBL('⚔️ 死亡骑士阵亡！','rt')}if(u.type==='lord'){S._lordCD=3;addBL('👑 君主阵亡！3波后复归','rt')}if(u.type==='queen'){S._queenCD=3;addBL('👸 女皇阵亡！3波后复归','rt')}}})}  
+function tryEvolveDeathKnight(){if(!skLv('death_knight'))return;if(!S._persistDKs)S._persistDKs=[];const maxDK=skVal('death_knight');const curDK=S._persistDKs.filter(dk=>dk.alive).length;if(curDK>=maxDK)return;const toEvolve=maxDK-curDK;const skels=S.summonUnits.filter(u=>u.type==='skeleton'&&u.alive&&u._deployed!==false);if(!skels.length)return;const dkSt=SUMMON_TYPES['death_knight'],dB=1+skB('lordDomain')/100;const saBonus=1+skLv('summon_art')*0.08;let evolved=0;for(let i=0;i<Math.min(toEvolve,skels.length);i++){const t=skels[i];const hp=Math.floor((eMaxHp()*dkSt.hpMult*saBonus+S.hero.level*5)*dB);t.type='death_knight';t.maxHp=hp;t.hp=hp;t.atkMult=dkSt.atkMult*saBonus;S._persistDKs.push(t);evolved++}if(evolved>0){addBL('⚔️ '+evolved+'个骷髅进化！死亡骑士！('+S._persistDKs.filter(dk=>dk.alive).length+'/'+maxDK+')','gt');showSkillFlash('⚔️ 死亡骑士x'+evolved+'！','necro-flash');renderAllySide()}}
+function aliveSummons(){return S.summonUnits.filter(u=>u.alive&&u._deployed!==false)}
+function animateSummonAtk(){S.summonUnits.forEach((u,i)=>{if(!u.alive||u._deployed===false)return;const el=document.querySelector('#su'+i+' canvas');if(!el)return;el.style.animation='none';void el.offsetHeight;el.style.animation='su-atk .3s ease-out';setTimeout(()=>{if(el)el.style.animation='su-bob 1.2s infinite'},350)})}
+
+// ====== MULTI-MONSTER ======
+function renderEnemySide(){const es=document.getElementById('enemySide');es.innerHTML='';S.monsters.forEach((m,i)=>{if(!m.alive)return;const div=document.createElement('div');div.className='sprite-container';div.id='mon'+i;const mE=getMonElement(m);const eI=ELEMENTS[mE];const nm=document.createElement('div');nm.className='en';nm.textContent=(eI?eI.icon:'')+m.name;nm.style.color=m.isBoss?'#f44':m.isElite?'#fa0':'#fff';const lv=document.createElement('div');lv.className='el';lv.textContent='Lv.'+m.level;const c=document.createElement('canvas');c.className='sprite monster-sprite';c.width=42;c.height=42;c.id='monC'+i;const hpBar=document.createElement('div');hpBar.className='hp-bm';const hpF=document.createElement('div');hpF.className='hp-bm-f'+(m.isBoss?' boss':m.isElite?' elite':'');hpF.id='monHp'+i;hpF.style.width=(m.hp/m.maxHp)*100+'%';hpBar.appendChild(hpF);div.appendChild(nm);div.appendChild(lv);div.appendChild(c);div.appendChild(hpBar);es.appendChild(div);drawMonSprite(c,m.icon,m.color)});
+const mc=S.monsters.filter(m=>m.alive).length;
+const wc=S._waveCount||0;const nextBoss=10-(wc%10);const wi=document.getElementById('waveInd');
+const toFinal=450-wc;
+if(S._isBossWave)wi.innerHTML='<span style="color:#f44;font-size:10px">⚠️ BOSS战</span> | 怪物: <span class="mon-count">'+mc+'</span>';
+else{let info='W'+wc+' <span style="color:'+(nextBoss<=3?'#f44':nextBoss<=5?'#fa0':'#888')+'">Boss:'+nextBoss+'波</span>';
+if(toFinal>0&&toFinal<=50)info+=' <span style="color:#fff;text-shadow:0 0 6px #fff">最终:'+toFinal+'波</span>';
+else if(toFinal<=0)info+=' <span style="color:#5f5">已通关</span>';
+wi.innerHTML=info+' | 怪物: <span class="mon-count">'+mc+'</span>'}}
+function updateMonHpAll(){S.monsters.forEach((m,i)=>{if(!m.alive)return;const b=document.getElementById('monHp'+i);if(b)b.style.width=Math.max(0,(m.hp/m.maxHp)*100)+'%'})}
+function aliveMonsters(){return S.monsters.filter(m=>m.alive)}
+function firstAliveMonster(){return S.monsters.find(m=>m.alive)}
+
+// ====== UTIL ======
+function genStars(){const c=document.getElementById('stars');for(let i=0;i<25;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.animationDelay=Math.random()*2+'s';c.appendChild(s)}}
+function fmtT(s){return String(s/3600|0).padStart(2,'0')+':'+String((s%3600)/60|0).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function switchTab(t){const tabs=['battle','skills','shop','pets','dungeon','bestiary'];document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');if(t==='skills')renderSkillTree();if(t==='shop')renderShop();if(t==='bestiary')renderBestiary();if(t==='pets')renderPets();if(t==='dungeon')renderDungeon()}
+function toggleAutoEquip(){S.autoEquip=!S.autoEquip;document.getElementById('autoEquipToggle').classList.toggle('on',S.autoEquip)}
+function showAoeFlash(){const sc=document.getElementById('battleScene'),el=document.createElement('div');el.className='aoe-flash';sc.appendChild(el);setTimeout(()=>el.remove(),400)}
+
+
+// ====== ROGUELIKE SYSTEM ======
+const RL_KILL_INTERVAL=10;
+const RL_EVENTS=[
+{id:'merchant',icon:'🧙\u200d♂️',name:'神秘商人',desc:'一位神秘的旅行商人出现了……',choices:[
+  {icon:'💰',name:'购买力量药剂',desc:'花费50金币',effect:'攻击+8，防御+3',fn:()=>{if(S.hero.gold>=50){S.hero.gold-=50;S.hero.atk+=8;S.hero.def+=3;return true}return false},fail:'金币不足！'},
+  {icon:'📦',name:'购买神秘宝箱',desc:'花费80金币',effect:'随机稀有+装备',fn:()=>{if(S.hero.gold>=80){S.hero.gold-=80;const q=Math.floor(2+Math.random()*2);grantItem(q);return true}return false},fail:'金币不足！'},
+  {icon:'🚶',name:'礼貌拒绝',desc:'与他挥手告别',effect:'无',fn:()=>true}
+]},
+{id:'ancient_altar',icon:'🗿',name:'远古祭坛',desc:'你发现一座散发着神秘力量的祭坛……',choices:[
+  {icon:'🩸',name:'以血祭祀',desc:'消耗20%当前HP',effect:'攻击+15，暴击+5%',fn:()=>{const cost=Math.floor(S.hero.hp*0.2);S.hero.hp=Math.max(1,S.hero.hp-cost);S.hero.atk+=15;S.hero.crit+=5;return true}},
+  {icon:'💰',name:'以金奉献',desc:'消耗100金币',effect:'最大HP+50，防御+5',fn:()=>{if(S.hero.gold>=100){S.hero.gold-=100;S.hero.maxHp+=50;S.hero.hp=eMaxHp();S.hero.def+=5;return true}return false},fail:'金币不足！'},
+  {icon:'🚶',name:'绕道而行',desc:'不打扰这种神秘事物',effect:'无',fn:()=>true}
+]},
+{id:'wounded_knight',icon:'⚔️',name:'受伤的骑士',desc:'路旁躺着一位重伤的骑士……',choices:[
+  {icon:'💊',name:'救治他',desc:'使用药草救治骑士',effect:'下波怪物强度-20%，获得100金币',fn:()=>{S.hero.gold+=100;S._rlWeak=true;return true}},
+  {icon:'⚔️',name:'接过他的剑',desc:'他将秘银之剑赠予你',effect:'强制获得稀有武器',fn:()=>{grantItem(2);return true}},
+  {icon:'🚶',name:'视而不见',desc:'继续赶路',effect:'无',fn:()=>true}
+]},
+{id:'cursed_chest',icon:'📦',name:'诅咒宝箱',desc:'一只散发邪气的宝箱……',choices:[
+  {icon:'🔓',name:'强行开启',desc:'不管诅咒',effect:'50%史诗装备，50%受诅咒',fn:()=>{if(Math.random()<0.5){grantItem(3);addBL('📦 幸运！史诗装备！','gt')}else{addDebuff('rl_curse','💀宝箱诅咒',15,{atkMult:0.75,defMult:0.75});addBL('💀 中了诅咒！','rt')};return true}},
+  {icon:'🔑',name:'寻找钥匙',desc:'花费150金币',effect:'必定获得史诗装备',fn:()=>{if(S.hero.gold>=150){S.hero.gold-=150;grantItem(3);return true}return false},fail:'金币不足！'},
+  {icon:'💨',name:'快步离开',desc:'这种东西不能碰',effect:'无',fn:()=>true}
+]},
+{id:'fallen_star',icon:'⭐',name:'陨落的星辰',desc:'一颗发光的陨石砸落在你脚边……',choices:[
+  {icon:'💪',name:'吸收力量',desc:'注入攻击力量',effect:'攻击+20，最大HP-30',fn:()=>{S.hero.atk+=20;S.hero.maxHp=Math.max(50,S.hero.maxHp-30);S.hero.hp=Math.min(S.hero.hp,eMaxHp());return true}},
+  {icon:'🛡️',name:'吸收防护',desc:'注入防御力量',effect:'防御+12，速度+3，最大HP+20',fn:()=>{S.hero.def+=12;S.hero.spd+=3;S.hero.maxHp+=20;S.hero.hp=eMaxHp();return true}},
+  {icon:'💎',name:'留作他用',desc:'将陨石卖给商人',effect:'获得200金币',fn:()=>{S.hero.gold+=200;return true}}
+]},
+{id:'dark_contract',icon:'😈',name:'恶魔契约',desc:'一个恶魔出现了，它提出了一个危险的交易……',choices:[
+  {icon:'🔥',name:'签下契约',desc:'以灵魂换取力量',effect:'全属性+30%，但每波受额外10%伤害',fn:()=>{S.hero.atk=Math.floor(S.hero.atk*1.3);S.hero.def=Math.floor(S.hero.def*1.3);S.hero.maxHp=Math.floor(S.hero.maxHp*1.3);S.hero.hp=eMaxHp();S._demonContract=true;return true}},
+  {icon:'⚔️',name:'与恶魔战斗',desc:'冒险击败它',effect:'50%传说装备，50%HP-40%',fn:()=>{if(Math.random()<0.5){grantItem(4);addBL('👹 击败恶魔！','gt')}else{S.hero.hp=Math.max(1,Math.floor(S.hero.hp*0.6));addBL('👹 被恶魔重伤！','rt')};return true}},
+  {icon:'🙏',name:'驱散恶魔',desc:'用圣光驱散它',effect:'恢复30%HP',fn:()=>{S.hero.hp=Math.min(eMaxHp(),S.hero.hp+Math.floor(eMaxHp()*0.3));return true}}
+]},
+{id:'time_rift',icon:'⏳',name:'时间裂缝',desc:'眼前出现了一道时空裂缝……',choices:[
+  {icon:'⚡',name:'加速时间',desc:'进入快速时间流',effect:'下3波经验和金币+50%',fn:()=>{S._rlExpBoost=3;return true}},
+  {icon:'🔄',name:'还原时间',desc:'抹去疲惫',effect:'满血复活，所有减益清除',fn:()=>{S.hero.hp=eMaxHp();S._debuffs=[];S._demonContract=false;return true}},
+  {icon:'👁️',name:'窥探未来',desc:'预见前方的战斗',effect:'下波必定普通怪',fn:()=>{S._rlNoElite=true;return true}}
+]},
+{id:'dragon_egg',icon:'🥚',name:'巨龙之蛋',desc:'你发现了一枚神秘的蛋……',choices:[
+  {icon:'🔥',name:'孵化它',desc:'等待它破壳',effect:'暴击+10%，攻击+12',fn:()=>{S.hero.crit+=10;S.hero.atk+=12;addBL('🐉 龙蛋孵化！','gt');return true}},
+  {icon:'💰',name:'卖给收藏家',desc:'出售给神秘买家',effect:'获得300金币',fn:()=>{S.hero.gold+=300;return true}},
+  {icon:'🍳',name:'烹饪它',desc:'大快朵颐',effect:'最大HP+80，恢复满血',fn:()=>{S.hero.maxHp+=80;S.hero.hp=eMaxHp();return true}}
+]}
+];
+const RL_TALENTS=[
+{id:'rl_atk_up',rarity:'common',icon:'⚔️',name:'战士之魂',desc:'攻击力+18',apply:()=>{S.hero.atk+=18}},
+{id:'rl_def_up',rarity:'common',icon:'🛡️',name:'铁壁防御',desc:'防御+12',apply:()=>{S.hero.def+=12}},
+{id:'rl_hp_up',rarity:'common',icon:'❤️',name:'强健体魄',desc:'最大HP+60，恢复满血',apply:()=>{S.hero.maxHp+=60;S.hero.hp=eMaxHp()}},
+{id:'rl_spd_up',rarity:'common',icon:'💨',name:'疾风之足',desc:'速度+4',apply:()=>{S.hero.spd+=4}},
+{id:'rl_gold',rarity:'common',icon:'💰',name:'财运亨通',desc:'获得150金币',apply:()=>{S.hero.gold+=150}},
+{id:'rl_crit_up',rarity:'common',icon:'🎯',name:'锐利直觉',desc:'暴击率+8%',apply:()=>{S.hero.crit+=8}},
+{id:'rl_lifesteal',rarity:'rare',icon:'🩸',name:'嗜血本能',desc:'吸血+5%，攻击+8',apply:()=>{S.hero.lifesteal+=5;S.hero.atk+=8}},
+{id:'rl_combo_atk',rarity:'rare',icon:'💥',name:'连击之道',desc:'攻击+8%，速度+3，暴击+5%',apply:()=>{S.hero.atk=Math.floor(S.hero.atk*1.08);S.hero.spd+=3;S.hero.crit+=5}},
+{id:'rl_tank',rarity:'rare',icon:'🏔️',name:'山岳之躯',desc:'最大HP+100，防御+6',apply:()=>{S.hero.maxHp+=100;S.hero.hp=eMaxHp();S.hero.def+=6}},
+{id:'rl_skillpt',rarity:'rare',icon:'📖',name:'顿悟',desc:'获得3个技能点',apply:()=>{S.hero.skillPoints+=3}},
+{id:'rl_equip_rare',rarity:'rare',icon:'🎁',name:'宝物发现',desc:'强制获得一件稀有装备',apply:()=>{grantItem(2)}},
+{id:'rl_all_up',rarity:'rare',icon:'✨',name:'全面强化',desc:'攻/防/速全部+10%',apply:()=>{S.hero.atk=Math.floor(S.hero.atk*1.1);S.hero.def=Math.floor(S.hero.def*1.1);S.hero.spd=Math.floor(S.hero.spd*1.1)}},
+{id:'rl_berserker',rarity:'epic',icon:'😤',name:'狂战士',desc:'攻击x1.25，但最大HP-20%',apply:()=>{S.hero.atk=Math.floor(S.hero.atk*1.25);S.hero.maxHp=Math.floor(S.hero.maxHp*0.8);S.hero.hp=Math.min(S.hero.hp,eMaxHp())}},
+{id:'rl_guardian',rarity:'epic',icon:'🔰',name:'守护者',desc:'防御x1.3，最大HP x1.2',apply:()=>{S.hero.def=Math.floor(S.hero.def*1.3);S.hero.maxHp=Math.floor(S.hero.maxHp*1.2);S.hero.hp=eMaxHp()}},
+{id:'rl_equip_epic',rarity:'epic',icon:'💜',name:'史诗机缘',desc:'强制获得一件史诗装备',apply:()=>{grantItem(3)}},
+{id:'rl_double_gold',rarity:'epic',icon:'🪙',name:'黄金之触',desc:'当前金币x1.5，额外+200g',apply:()=>{S.hero.gold=Math.floor(S.hero.gold*1.5)+200}},
+{id:'rl_crit_dmg',rarity:'epic',icon:'🗡',name:'致命一击',desc:'暴击率+15%，攻击+15',apply:()=>{S.hero.crit+=15;S.hero.atk+=15}},
+{id:'rl_legendary_power',rarity:'legendary',icon:'👑',name:'王者之力',desc:'攻击x1.4，防御x1.2，最大HP x1.2',apply:()=>{S.hero.atk=Math.floor(S.hero.atk*1.4);S.hero.def=Math.floor(S.hero.def*1.2);S.hero.maxHp=Math.floor(S.hero.maxHp*1.2);S.hero.hp=eMaxHp()}},
+{id:'rl_equip_legend',rarity:'legendary',icon:'🧡',name:'传说降临',desc:'强制获得一件传说装备',apply:()=>{grantItem(4)}},
+{id:'rl_equip_ancient',rarity:'legendary',icon:'🟠',name:'远古觉醒',desc:'强制获得一件远古装备',apply:()=>{grantItem(6)}},
+{id:'rl_equip_abyss',rarity:'legendary',icon:'🟣',name:'深渊馈赠',desc:'强制获得一件深渊装备',apply:()=>{grantItem(7)}},
+{id:'rl_equip_genesis',rarity:'legendary',icon:'🤍',name:'创世之触',desc:'强制获得一件创世装备',apply:()=>{grantItem(10)}},
+{id:'rl_transcend',rarity:'legendary',icon:'🌟',name:'超越极限',desc:'全属性+20%，技能点+2',apply:()=>{S.hero.atk=Math.floor(S.hero.atk*1.2);S.hero.def=Math.floor(S.hero.def*1.2);S.hero.maxHp=Math.floor(S.hero.maxHp*1.2);S.hero.spd=Math.floor(S.hero.spd*1.2);S.hero.crit=Math.min(80,S.hero.crit*1.2);S.hero.hp=eMaxHp();S.hero.skillPoints+=2}}
+];
+const RL_RARITY_COLOR={common:'#aaa',rare:'#5577ff',epic:'#aa55ff',legendary:'#ffaa00'};
+const RL_RARITY_NAME={common:'普通',rare:'稀有',epic:'史诗',legendary:'传说'};
+function getRlTalentPool(){const totalEvents=S.rlEventCount||0;const epicChance=Math.min(25,5+totalEvents*1.5);const legendChance=Math.min(10,totalEvents*0.8);const rareChance=Math.min(40,15+totalEvents*1.2);function pickOne(excludeIds){const r=Math.random()*100;let rarity='common';if(r<legendChance)rarity='legendary';else if(r<legendChance+epicChance)rarity='epic';else if(r<legendChance+epicChance+rareChance)rarity='rare';let candidates=RL_TALENTS.filter(t=>t.rarity===rarity&&!excludeIds.has(t.id));if(!candidates.length)candidates=RL_TALENTS.filter(t=>!excludeIds.has(t.id));if(!candidates.length)candidates=RL_TALENTS;return candidates[Math.floor(Math.random()*candidates.length)]}const chosen=new Set();const pool=[];for(let i=0;i<3;i++){const t=pickOne(chosen);chosen.add(t.id);pool.push(t)}return pool}
+function triggerRlEvent(){if(!S.focusing)return;S.rlEventCount=(S.rlEventCount||0)+1;const wasRunning=S.focusing;clearInterval(timerInterval);if(!S._rlRecentEvents)S._rlRecentEvents=[];const pool=RL_EVENTS.filter(e=>!S._rlRecentEvents.includes(e.id));const event=pool[Math.floor(Math.random()*pool.length)];S._rlRecentEvents.push(event.id);if(S._rlRecentEvents.length>2)S._rlRecentEvents.shift();const talents=getRlTalentPool();const modal=document.getElementById('rlModal');modal.innerHTML=`<div class="rl-title">☠️ 命运节点</div><div class="rl-subtitle">第 ${S.rlEventCount} 次相遇 · 击杀 ${S.rlKillCount} 只怪物 · 下次: ${S.rlNextTrigger} 击杀</div><div class="rl-event-box"><div class="rl-event-icon">${event.icon}</div><div class="rl-event-name">${event.name}</div><div class="rl-event-desc">${event.desc}</div><div class="rl-choices" id="rlChoices"></div></div><hr class="rl-divider"><div class="rl-talent-title">✨ 选择一个天赋词条</div><div class="rl-talent-cards" id="rlTalentCards"></div>${(S.rlTalents&&S.rlTalents.length)?'<hr class="rl-divider"><div style="font-family:\'Press Start 2P\',monospace;font-size:8px;color:#666;margin-bottom:4px">已有词条</div><div class="rl-talents-display" id="rlOwnedTalents"></div>':''}<div class="rl-skip" id="rlSkip">跳过事件（不选择任何选项）</div>`;
+const choicesEl=document.getElementById('rlChoices');let _eventDone=false,_talentDone=false;function checkBothDone(){if(_eventDone&&_talentDone){clearTimeout(S._rlTimer);S._rlTimer=setTimeout(()=>closeRlModal(wasRunning),800)}}
+event.choices.forEach(ch=>{const d=document.createElement('div');d.className='rl-choice';d.innerHTML=`<div class="rl-choice-icon">${ch.icon}</div><div class="rl-choice-body"><div class="rl-choice-name">${ch.name}</div><div class="rl-choice-desc">${ch.desc}</div><div class="rl-choice-effect">→ ${ch.effect}</div></div>`;d.onclick=()=>{const ok=ch.fn();if(!ok){addBL('❌ '+ch.fail,'rt');return}addLog('🎭 [事件]'+event.name+'→'+ch.name,'pt');addBL('🎭 '+ch.name,'pt');choicesEl.querySelectorAll('.rl-choice').forEach(x=>{x.style.opacity='.3';x.style.pointerEvents='none'});d.style.opacity='1';d.style.borderColor='#aa55ff';updateUI();_eventDone=true;checkBothDone()};choicesEl.appendChild(d)});
+const talentsEl=document.getElementById('rlTalentCards');talents.forEach(t=>{const d=document.createElement('div');d.className='rl-talent-card '+t.rarity;d.innerHTML=`<div class="rtc-icon">${t.icon}</div><div class="rtc-name">${t.name}</div><div class="rtc-desc">${t.desc}</div><div class="rtc-rarity" style="color:${RL_RARITY_COLOR[t.rarity]}">${RL_RARITY_NAME[t.rarity]}</div>`;d.onclick=()=>{t.apply();if(!S.rlTalents)S.rlTalents=[];S.rlTalents.push(t.id);addLog('✨ [天赋]'+t.name+' ('+RL_RARITY_NAME[t.rarity]+')','gt');addBL('✨ 天赋：'+t.name,'gt');talentsEl.querySelectorAll('.rl-talent-card').forEach(x=>{x.style.opacity='.3';x.style.pointerEvents='none'});d.style.opacity='1';d.style.borderColor='#f5c542';updateUI();_talentDone=true;checkBothDone()};talentsEl.appendChild(d)});
+const ownedEl=document.getElementById('rlOwnedTalents');if(ownedEl&&S.rlTalents){S.rlTalents.forEach(id=>{const t=RL_TALENTS.find(x=>x.id===id);if(!t)return;const span=document.createElement('span');span.className='rl-talent-tag';span.style.borderColor=RL_RARITY_COLOR[t.rarity]+'66';span.style.color=RL_RARITY_COLOR[t.rarity];span.textContent=t.icon+t.name;ownedEl.appendChild(span)})}
+document.getElementById('rlSkip').onclick=()=>closeRlModal(wasRunning);document.getElementById('rlOverlay').classList.add('show');clearTimeout(S._rlTimer);S._rlTimer=setTimeout(()=>closeRlModal(wasRunning),15000)}
+function closeRlModal(resume){clearTimeout(S._rlTimer);document.getElementById('rlOverlay').classList.remove('show');if(resume&&S.focusing){timerInterval=setInterval(tickTimer,1000)}}
+
+// ====== SAVE/LOAD ======
+function saveGame(){try{localStorage.setItem('idle_rpg_save',JSON.stringify({...S,monsters:[],focusing:false}));addLog('💾 已保存','gt')}catch(e){}}
+function loadGame(){try{const raw=localStorage.getItem('idle_rpg_save');if(!raw)return addLog('📂 无存档','');const d=JSON.parse(raw);if(S.focusing)clearInterval(timerInterval);Object.assign(S,d);S.monsters=[];S.focusing=false;S.achievedMilestones=d.achievedMilestones||[];S.shopBought=d.shopBought||[];S.shopBuyCount=d.shopBuyCount||{};S.shopRefreshes=d.shopRefreshes||0;S._shopSlots=d._shopSlots||[];S.bestiaryFound=d.bestiaryFound||[];S.skills=d.skills||{};S.summonUnits=d.summonUnits||[];S._debuffs=[];if(!S.hero.lifesteal)S.hero.lifesteal=0;S.rlKillCount=d.rlKillCount||0;S.rlTalents=d.rlTalents||[];S.rlEventCount=d.rlEventCount||0;S.rlNextTrigger=d.rlNextTrigger||10;S._rlRecentEvents=d._rlRecentEvents||[];S.itemsFound=d.itemsFound||[];
+S.pets=d.pets||[];S.activePets=d.activePets||[];S.dungeonFloor=d.dungeonFloor||0;S.dungeonBest=d.dungeonBest||0;S.dungeonActive=false;S.rebirthCount=d.rebirthCount||0;S.rebirthPoints=d.rebirthPoints||0;S.rebirthBonuses=d.rebirthBonuses||{atk:0,def:0,hp:0,crit:0,spd:0,gold:0,drop:0};S.heroElement=d.heroElement||'none';
+initSkills();renderAll();document.getElementById('timerDisplay').textContent=fmtT(S.focusSeconds);document.getElementById('focusBtn').textContent='▶ 开始专注';document.getElementById('focusBtn').classList.remove('active');addLog('📂 读档成功','gt')}catch(e){addLog('❌ 读档失败','rt')}}
+function confirmRestart(){const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center';const box=document.createElement('div');box.style.cssText='background:#111;border:3px solid #f66;padding:16px;text-align:center;max-width:280px;font-family:Press Start 2P,monospace';box.innerHTML='<div style="font-size:10px;color:#f66;margin-bottom:10px">⚠️ 重新开始？</div><div style="display:flex;gap:8px;justify-content:center"><button class="pc" id="rstY" style="background:#622;color:#f66">确定</button><button class="pc" id="rstN">取消</button></div>';d.appendChild(box);document.body.appendChild(d);document.getElementById('rstY').onclick=()=>{d.remove();resetGame()};document.getElementById('rstN').onclick=()=>{d.remove()};d.onclick=e=>{if(e.target===d)d.remove()}}
+function resetGame(){try{if(S.focusing)clearInterval(timerInterval)}catch(e){}localStorage.removeItem('idle_rpg_save');S=defaultState();initSkills();document.getElementById('timerDisplay').textContent='00:00:00';document.getElementById('focusBtn').textContent='▶ 开始专注';document.getElementById('focusBtn').classList.remove('active');document.getElementById('enemySide').innerHTML='';document.getElementById('battleLogOverlay').innerHTML='<div class="ll" style="color:#888">点击「开始专注」...</div>';drawHero();renderAll();addLog('🔄 已重新开始','gt')}
+setInterval(()=>{if(S.focusing)try{localStorage.setItem('idle_rpg_save',JSON.stringify({...S,monsters:[],focusing:false}))}catch(e){}},30000);
+
+// ====== RENDER ======
+function renderAll(){renderEquipGrid();renderMilestones();renderSkillTree();renderShop();renderAllySide();renderPets();renderDungeon();updateUI()}
+function renderEquipGrid(){const g=document.getElementById('equipGrid');g.innerHTML='';ESLOTS.forEach(slot=>{const item=S.hero.equipment[slot.key];const d=document.createElement('div');d.className='esl'+(item?' q-'+item.quality.key:'');if(item)d.innerHTML='<span style="font-size:20px">'+item.icon+'</span><span class="sll" style="color:'+item.quality.color+'">'+item.name+'</span><div class="ett"><div class="tn" style="color:'+item.quality.color+'">['+item.quality.name+']'+item.name+'</div><div class="ts">'+item.statsText+'</div></div>';else d.innerHTML='<span style="font-size:16px;opacity:.3">'+slot.icon+'</span><span class="sll">'+slot.label+'</span>';g.appendChild(d)})}
+function renderMilestones(){const l=document.getElementById('milestoneList');l.innerHTML='';MILESTONES.forEach(m=>{const a=S.achievedMilestones.includes(m.time);const d=document.createElement('div');d.className='mi '+(a?'achieved':'locked');d.innerHTML='<span class="ms-i">'+(a?m.icon:'🔒')+'</span><span class="ms-t">'+m.text+'</span><span class="ms-r">'+m.reward+'</span>';l.appendChild(d)})}
+function renderSkillTree(){const c=document.getElementById('skillBranches');c.innerHTML='';Object.entries(SKILL_TREE).forEach(([key,branch])=>{const bd=document.createElement('div');bd.className='sk-branch pbi';let html='<div class="sk-branch-title '+branch.css+'">'+branch.name+'</div><div class="sk-nodes">';branch.skills.forEach((sk,i)=>{const lv=skLv(sk.id),maxed=lv>=sk.maxLv,reqSkMet=!sk.req||skLv(sk.req)>0,reqLvMet=!sk.reqLv||S.hero.level>=sk.reqLv,reqMet=reqSkMet&&reqLvMet,canBuy=S.hero.skillPoints>0&&!maxed&&reqMet,locked=!reqMet&&lv===0;const vN=lv<sk.maxLv?sk.val(lv+1):sk.val(sk.maxLv);let desc=lv>0?sk.desc.replaceAll('{v}',sk.val(lv)):(locked?'':sk.desc.replaceAll('{v}',vN));if(sk.raisePct)desc=desc.replaceAll('{r}',lv>0?sk.raisePct(lv):sk.raisePct(Math.min(lv+1,sk.maxLv)));if(sk.healPct)desc=desc.replaceAll('{h}',lv>0?sk.healPct(lv):sk.healPct(Math.min(lv+1,sk.maxLv)));if(sk.shieldDef)desc=desc.replaceAll('{d}',lv>0?sk.shieldDef(lv):sk.shieldDef(Math.min(lv+1,sk.maxLv)));if(sk.sumCap)desc=desc.replaceAll('{c}',lv>0?sk.sumCap(lv):sk.sumCap(Math.min(lv+1,sk.maxLv)));let lr='';if(locked){if(!reqSkMet)lr='需前置';if(!reqLvMet)lr='需Lv.'+sk.reqLv;if(!reqSkMet&&!reqLvMet)lr='需前置+Lv.'+sk.reqLv}if(i>0)html+='<div class="sk-arrow">▼</div>';html+='<div class="sk-node'+(maxed?' maxed':lv>0?' unlocked':'')+(locked?' locked':'')+'" data-id="'+sk.id+'" data-can="'+(canBuy?1:0)+'"><div class="sk-row"><div><span class="sk-icon">'+sk.icon+'</span><span class="sk-name">'+sk.name+'</span></div><span class="sk-lvl">'+lv+'/'+sk.maxLv+'</span></div><div class="sk-desc">'+(locked?lr:desc)+'</div>'+(!maxed&&!locked?'<div class="sk-cost">'+(canBuy?'▶学习':'需点数')+'</div>':'')+'</div>'});html+='</div>';bd.innerHTML=html;c.appendChild(bd);bd.querySelectorAll('.sk-node[data-can="1"]').forEach(node=>{node.onclick=()=>{const id=node.dataset.id;S.hero.skillPoints--;S.skills[id]++;const sk=branch.skills.find(s=>s.id===id);dlog('[技能] '+sk.name+' Lv'+S.skills[id]);addLog('🌟 '+sk.name+' Lv.'+S.skills[id],'pt');renderSkillTree();updateUI()}})})}
+
+// ====== BESTIARY ======
+const TRAIT_DESC={
+split:'💚 分裂：死亡时分裂为2个小史莱姆(35%HP/40%攻击)。Boss版额外召唤3个从者(25%HP/30%攻击)。',
+steal:'💰 偷窃：每次攻击偷取勇者5%当前金币。',
+reassemble:'🦴 重组：每次攻击20%概率回复10%最大HP。死亡时30%概率以40%HP复活一次。',
+bleed:'🩸 撕裂：攻击附带出血DOT，每tick造成2%最大HP伤害，持续6回合。',
+purge:'✨ 净化：20%概率清除女皇护盾(直接归零)。',
+harden:'🗿 石化：HP低于50%时永久获得+80%防御(只触发一次)。',
+curse:'🕯️ 诅咒：30%概率施加攻击力-15%、防御-15%，持续8回合。',
+spellstorm:'🌪️ 魔法风暴：25%概率对全体召唤物造成60%攻击力AOE伤害。',
+dragonfear:'😱 龙威：15%概率施加恐惧光环(攻击力-30%、攻速-40%)持续5回合。',
+dominate:'👁️ 支配：10%概率直接消灭一个召唤物(君主/女皇免疫)。'};
+const ROLE_DESC={
+shaman:'🧿 萨满技能(每2回合释放)：<br>├ 💚 治愈术(35%)：回复全体怪物15%HP<br>├ 🛡️ 守护盾(30%)：全体怪物防御+30%持续4回合<br>└ ⚡ 闪电链(35%)：120%攻击力+溅射全体召唤物50%',
+necro:'🕯️ 亡灵祭司技能(每2回合释放)：<br>├ 💀 召唤亡灵小兵(上限2个)<br>├ 小兵属性：40%祭司HP、50%祭司攻击<br>└ 小兵不会掉落经验和金币',
+dragon:'🐉 龙族秘术(每2次攻击释放1个，随机5选1)：<br>├ 🔥 龙之烈焰：130%攻击力伤害+灼烧DOT(3%HP+2%召唤物HP)持续6回合<br>├ 🧊 凌冬将至：80%攻击力+冰冻减速50%持续8回合<br>├ 💨 龙之吐息：施加攻防双降30%持续8回合(无伤害)<br>├ 🐉 龙啸天地：100%攻击力AOE(勇者+全体召唤物70%)<br>└ 🐉 龙鳞壁障：回复20%最大HP(自我治疗)',
+demon:'👹 魔王秘术(每2次攻击释放1个，随机5选1)：<br>├ 👁️ 深渊凝视：200%攻击力+眩晕(速度-70%)4回合<br>├ 🌑 暗黑领域：攻-40%防-40%速-30%持续10回合(无伤害)<br>├ ☄️ 毁灭陨石：150%攻击力AOE(勇者+全体召唤物)<br>├ ✋ 亡者之手：直接秒杀1个召唤物(无召唤物则180%攻击勇者)<br>└ 🩸 鲜血祭礼：回复30%HP+攻击力永久+15%(自我强化)'};
+function renderBestiary(){const g=document.getElementById('bestiaryGrid');g.innerHTML='';if(!S.bestiaryFound)S.bestiaryFound=[];let fc=0;MONSTERS.forEach(m=>{const nF=S.bestiaryFound.includes(m.name);const eF=S.bestiaryFound.some(b=>b.includes('⭐')&&b.includes(m.name));const bF=S.bestiaryFound.some(b=>b.includes('boss_')&&b.includes(m.bossName));const disc=nF||eF||bF;if(disc)fc++;const card=document.createElement('div');card.style.cssText='border:2px solid '+(disc?m.color:'#333')+';background:rgba(0,0,0,.4);padding:12px;'+(disc?'':'opacity:0.4');let h='<div style="display:flex;gap:12px"><div style="font-size:36px;min-width:42px;text-align:center">'+(disc?m.icon:'❓')+'</div><div style="flex:1"><div style="font-family:Press Start 2P,monospace;font-size:11px;color:'+m.color+';margin-bottom:6px">'+(disc?m.name:'???')+'</div>';if(disc){h+='<div style="font-size:12px;color:#aaa;line-height:1.8">❤️'+m.baseHp+' ⚔️'+m.baseAtk+' 🛡️'+m.baseDef+' 💨'+m.baseSpd+'tick</div>';if(m.trait&&TRAIT_DESC[m.trait])h+='<div style="font-size:11px;color:#dda;margin-top:4px;padding:3px 6px;background:rgba(255,200,50,.08);border-left:3px solid #a80">'+TRAIT_DESC[m.trait]+'</div>';if(m.role&&ROLE_DESC[m.role])h+='<div style="font-size:11px;color:#adf;margin-top:3px;padding:3px 6px;background:rgba(100,150,255,.08);border-left:3px solid #48c">'+ROLE_DESC[m.role]+'</div>';
+// Boss section
+const bLore=BOSS_LORE[m.bossName];if(bLore){h+='<div style="margin-top:8px;border:1px solid '+(bF?'#f4433666':'#33333366')+';padding:8px;background:rgba(255,50,50,.04)">';h+='<div style="font-family:Press Start 2P,monospace;font-size:10px;color:'+(bF?'#f44':'#666')+';margin-bottom:4px">💀 '+(bF?m.bossName:'??? (未遭遇)')+'</div>';
+if(bF){h+='<div style="font-size:11px;color:#ccc;line-height:1.6;margin-bottom:6px;font-style:italic;border-left:3px solid #f4433655;padding-left:6px">'+bLore.lore+'</div>';
+h+='<div style="font-size:11px;color:#aaa;margin-bottom:5px;line-height:1.6">💪 强化倍率 — HP:'+bLore.hpMult+' ATK:'+bLore.atkMult+' DEF:'+bLore.defMult+'<br>💰 奖励倍率 — EXP:'+bLore.expMult+' GOLD:'+bLore.goldMult+'</div>';
+h+='<div style="font-size:10px;color:#888;margin-bottom:2px">📋 Boss专属技能：</div>';
+bLore.skills.forEach(sk=>{h+='<div style="font-size:11px;color:#daa;line-height:1.5;padding:2px 0 2px 8px;border-left:2px solid #f4433633">'+sk+'</div>'});
+}else{h+='<div style="font-size:11px;color:#555">击败Boss后解锁详细资料</div>'}
+h+='</div>'}
+h+='<div style="margin-top:4px;font-size:10px"><span style="color:'+(eF?'#fa0':'#555')+'">⭐精英'+(eF?'✅':'🔒')+'</span> <span style="color:'+(bF?'#f44':'#555')+'">💀'+m.bossName+(bF?'✅':'🔒')+'</span></div>'}else h+='<div style="font-size:11px;color:#666">击败后解锁</div>';h+='</div></div>';card.innerHTML=h;g.appendChild(card)});
+// Boss Wave section
+const bwTitle=document.createElement('div');bwTitle.style.cssText='font-family:Press Start 2P,monospace;font-size:12px;color:#f44;margin:16px 0 8px;padding-bottom:6px;border-bottom:2px solid #f4433644';bwTitle.textContent='⚠️ Boss战 (每10波)';g.appendChild(bwTitle);
+BOSS_WAVES.forEach((bw,i)=>{
+const found=S.bestiaryFound.includes('bosswave_'+bw.name);if(found)fc++;
+const card=document.createElement('div');card.style.cssText='border:2px solid '+(found?bw.color:'#333')+';background:rgba(0,0,0,.4);padding:12px;'+(found?'':'opacity:0.4');
+let h='<div style="display:flex;gap:12px"><div style="font-size:36px;min-width:42px;text-align:center">'+(found?bw.icon:'❓')+'</div><div style="flex:1">';
+h+='<div style="font-family:Press Start 2P,monospace;font-size:11px;color:'+bw.color+';margin-bottom:6px">'+(found?bw.name:'??? (第'+(i+1)+'个Boss)')+'</div>';
+if(found){
+h+='<div style="font-size:12px;color:#aaa;line-height:1.8">❤️'+bw.baseHp+'(基础) ⚔️'+bw.baseAtk+'(×0.6) 🛡️'+bw.baseDef+' 💨'+bw.spd+'tick</div>';
+h+='<div style="font-size:11px;color:#fa0;margin-top:4px;padding:3px 6px;background:rgba(255,170,0,.08);border-left:3px solid #a80">高血量高防御，攻击力偏低，属性随等级和转生缩放</div>';
+// Phases
+bw.phases.forEach((p,pi)=>{
+const phaseLabel=['🟢 第一阶段 (100%~50%HP)','🟡 第二阶段 (50%~20%HP)','🔴 第三阶段 (<20%HP)'][pi];
+h+='<div style="margin-top:6px;padding:4px 6px;border:1px solid '+(pi===0?'#5a5':pi===1?'#aa5':'#a33')+'44;background:rgba(0,0,0,.3)">';
+h+='<div style="font-family:Press Start 2P,monospace;font-size:8px;color:'+(pi===0?'#5a5':pi===1?'#fa0':'#f44')+';margin-bottom:4px">'+phaseLabel+'</div>';
+p.skills.forEach(sk=>{h+='<div style="font-size:11px;color:#daa;line-height:1.5;padding:2px 0 2px 8px;border-left:2px solid '+(pi===0?'#5a533':pi===1?'#aa5533':'#a33333')+'">'+sk+'</div>'});
+h+='</div>'});
+h+='<div style="font-size:10px;color:#5cf;margin-top:6px">🎁 掉落品质: '+['','','','稀有','史诗','传说','神话','远古','深渊','太初','创世'][bw.dropQ||0]+'+ | 经验×'+bw.expMult+' 金币×'+bw.goldMult+'</div>';
+}else{h+='<div style="font-size:11px;color:#666">每10波出现，击败后解锁详细资料</div>'}
+h+='</div></div>';card.innerHTML=h;g.appendChild(card)});
+// Final Boss section
+const fbTitle=document.createElement('div');fbTitle.style.cssText='font-family:Press Start 2P,monospace;font-size:12px;color:#fff;margin:16px 0 8px;padding-bottom:6px;border-bottom:2px solid #ffffff44;text-shadow:0 0 10px rgba(255,255,255,.5)';fbTitle.textContent='🌌 最终BOSS (第450波)';g.appendChild(fbTitle);
+const fbFound=S.bestiaryFound.includes('bosswave_'+FINAL_BOSS.name);if(fbFound)fc++;
+const fbCard=document.createElement('div');fbCard.style.cssText='border:2px solid '+(fbFound?'#fff':'#333')+';background:'+(fbFound?'linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.4))':'rgba(0,0,0,.4)')+';padding:14px;'+(fbFound?'box-shadow:0 0 20px rgba(255,255,255,.1)':'opacity:0.4');
+let fbH='<div style="display:flex;gap:12px"><div style="font-size:40px;min-width:45px;text-align:center">'+(fbFound?'🌌':'❓')+'</div><div style="flex:1">';
+fbH+='<div style="font-family:Press Start 2P,monospace;font-size:12px;color:#fff;margin-bottom:6px;text-shadow:0 0 8px rgba(255,255,255,.5)">'+(fbFound?FINAL_BOSS.name:'??? (第400波)')+'</div>';
+if(fbFound){
+fbH+='<div style="font-size:12px;color:#ddd;line-height:1.8">❤️'+FINAL_BOSS.baseHp+'(×5缩放) ⚔️'+FINAL_BOSS.baseAtk+'(×1.5) 🛡️'+FINAL_BOSS.baseDef+'(×3) 💨'+FINAL_BOSS.spd+'tick</div>';
+fbH+='<div style="font-size:11px;color:#fff;margin-top:6px;padding:4px 8px;background:rgba(255,255,255,.05);border-left:3px solid #fff88;font-style:italic">超越一切的存在，拥有创世与毁灭的双重力量。五个阶段，每个阶段解锁更致命的秘术。击败它，即为通关。</div>';
+const phaseLabels=['🟢 第一阶段 (100%~80%HP)','🟡 第二阶段 (80%~60%HP)','🟠 第三阶段 (60%~35%HP)','🔴 第四阶段 (35%~15%HP)','💀 终末阶段 (<15%HP)'];
+const phaseColors=['#5a5','#cc8','#fa0','#f44','#f0f'];
+FINAL_BOSS.phases.forEach((p,pi)=>{
+fbH+='<div style="margin-top:6px;padding:4px 6px;border:1px solid '+phaseColors[pi]+'44;background:rgba(0,0,0,.3)">';
+fbH+='<div style="font-family:Press Start 2P,monospace;font-size:8px;color:'+phaseColors[pi]+';margin-bottom:4px">'+phaseLabels[pi]+'</div>';
+p.skills.forEach(sk=>{fbH+='<div style="font-size:11px;color:#daa;line-height:1.5;padding:2px 0 2px 8px;border-left:2px solid '+phaseColors[pi]+'55">'+sk+'</div>'});
+fbH+='</div>'});
+fbH+='<div style="font-size:10px;color:#ff0;margin-top:6px">🎁 掉落: 创世装备 | 经验×'+FINAL_BOSS.expMult+' 金币×'+FINAL_BOSS.goldMult+'</div>';
+}else{fbH+='<div style="font-size:11px;color:#666">到达第450波，击败后解锁。通关的终极挑战。</div>'}
+fbH+='</div></div>';fbCard.innerHTML=fbH;g.appendChild(fbCard);
+document.getElementById('bestiaryCount').textContent=fc}
+function renderEquipBook(){const g=document.getElementById('equipBookGrid');if(!g)return;g.innerHTML='';if(!S.itemsFound||!S.itemsFound.length){g.innerHTML='<div style="color:#555;font-size:12px;text-align:center;padding:20px">尚未获得任何装备</div>';document.getElementById('equipBookCount').textContent='0';return}document.getElementById('equipBookCount').textContent=S.itemsFound.length;const order=['genesis','chaos','primordial','abyss','ancient','mythic','legendary','epic','rare','uncommon','common'];const groups={};order.forEach(q=>{groups[q]=[]});S.itemsFound.forEach(item=>{if(groups[item.qualityKey])groups[item.qualityKey].push(item)});order.forEach(qKey=>{const items=groups[qKey];if(!items.length)return;const qData=QUALITIES.find(q=>q.key===qKey);const titleDiv=document.createElement('div');titleDiv.style.cssText='font-family:Press Start 2P,monospace;font-size:10px;color:'+qData.color+';margin:10px 0 6px;padding-bottom:4px;border-bottom:2px solid '+qData.color+'44';titleDiv.textContent='['+qData.name+'] x'+items.length;g.appendChild(titleDiv);const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:4px';items.slice().reverse().forEach(item=>{const card=document.createElement('div');card.style.cssText='border:2px solid '+item.qualityColor+'66;background:rgba(0,0,0,.4);padding:8px;transition:border-color .15s';card.onmouseenter=()=>card.style.borderColor=item.qualityColor;card.onmouseleave=()=>card.style.borderColor=item.qualityColor+'66';const slotLabel={weapon:'武器',armor:'铠甲',helmet:'头盔',accessory:'饰品'}[item.slotKey]||item.slotLabel;card.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:20px">'+item.icon+'</span><div><div style="font-family:Press Start 2P,monospace;font-size:8px;color:'+item.qualityColor+';line-height:1.4">'+item.name+'</div><div style="font-size:10px;color:#555">'+slotLabel+'</div></div></div><div style="font-size:11px;color:#888;line-height:1.6;border-top:1px solid #222;padding-top:5px">'+item.statsText+'</div><div style="font-size:9px;color:#444;margin-top:4px">'+fmtT(item.obtainedAt||0)+'获得</div>';grid.appendChild(card)});g.appendChild(grid)})}
+function switchBTab(tab){
+const tabs=['monster','equip','skill'];
+tabs.forEach(t=>{
+  document.getElementById('bPanel-'+t).style.display=t===tab?'block':'none';
+  const btn=document.getElementById('bTab-'+t);
+  if(btn){btn.style.color=t===tab?'var(--gold)':'#aaa';btn.style.borderColor=t===tab?'#888':'#666'}
+});
+if(tab==='equip')renderEquipBook();
+if(tab==='skill')renderSkillBook();
+}
+
+// ====== SKILL GUIDE DATA ======
+const SKILL_GUIDE={
+power_strike:{detail:'每级提升6%攻击力加成，乘算应用于基础攻击+装备攻击之和。5级满时提供30%攻击力提升，是前期最核心的输出技能。',tip:'优先满级，性价比最高的输出技能。'},
+critical_edge:{detail:'每级提升3%暴击率，5级满时暴击率+15%。暴击造成2倍伤害，与斩杀效果可以叠加。',tip:'搭配高攻击力效果更佳，暴击上限95%。'},
+fury:{detail:'每级提升12%攻击速度，减少勇者攻击间隔。3级满时攻速+36%，大幅提升DPS。前置技能：力量打击。',tip:'攻速影响每秒输出次数，吸血流必点。'},
+whirlwind:{detail:'每级降低触发间隔(Lv1=9tick, Lv2=6tick, Lv3=5tick)，对全体怪物造成70%攻击力的AOE伤害。前置技能：狂怒。',tip:'多怪战斗的核心清场技能，越早点出越好。'},
+execute:{detail:'当怪物HP低于30%时，每级增加20%额外伤害(3级满+60%)。与暴击可同时触发。前置技能：致命锋刃。',tip:'Boss战利器，低血量时一锤定音。'},
+god_slayer:{detail:'全部伤害+35%，包括普攻、旋风斩、召唤物等所有伤害来源。终极攻击天赋。前置技能：旋风斩。',tip:'最强输出天赋，对所有伤害生效。'},
+tough_skin:{detail:'每级提升6%防御加成，5级满时防御+30%。防御用于减少受到的物理伤害。',tip:'坦度核心技能，长期挂机必备。'},
+regen:{detail:'每5个tick恢复基于最大HP百分比的生命值。基础恢复2%，每级额外+1.5%，5级满时每5tick恢复9.5%最大HP。',tip:'持续回复保障续航，搭配高血量更强。'},
+vampiric:{detail:'每级提升3%吸血率，5级满时+15%。攻击造成伤害时按吸血比例回复HP。吸血上限30%。',tip:'攻速越快吸血越多，狂怒+吸血是经典搭配。'},
+block:{detail:'每级提供6%格挡概率(3级满18%)。格挡时完全免疫本次攻击伤害。前置技能：坚韧体魄。',tip:'概率性但能完全免疫一次攻击，运气好时救命。'},
+thorns:{detail:'每级反弹受到伤害的8%(3级满24%)。反弹伤害可直接击杀怪物。前置技能：坚韧体魄。',tip:'搭配高防御减少自身伤害的同时反弹更多。'},
+undying:{detail:'每级提供10%概率(3级满30%)在致命伤害时以1HP存活。前置技能：格挡。',tip:'Boss战保命核心，30%概率续命非常可靠。'},
+immortal:{detail:'最大HP永久提升60%。作用于所有HP相关的计算基数。前置技能：不死之身。',tip:'终极坦度天赋，60%血量提升极其强大。'},
+lucky:{detail:'每级提升6%装备掉落概率(5级满+30%)。掉落判定在击杀怪物时进行。',tip:'早期投资回报高，越早点越多装备。'},
+gold_rush:{detail:'每级提升10%金币获取(5级满+50%)。影响所有怪物掉落金币。',tip:'商店消耗大，金币加成非常实用。'},
+exp_boost:{detail:'每级提升12%经验获取(3级满+36%)。影响所有怪物掉落经验。前置技能：黄金猎手。',tip:'加速升级节奏，越早点越有效。'},
+quality_up:{detail:'每级提升掉落装备品质1级(3级满+3级)。15%概率触发品质提升。前置技能：幸运。',tip:'大幅提高高品质装备概率，中后期核心。'},
+double_drop:{detail:'每级提供10%概率(3级满30%)击杀时获得双倍掉落。前置技能：品质提升。',tip:'概率叠加品质提升效果极佳。'},
+time_warp:{detail:'全速度+50%，影响攻击速度和战斗节奏。终极效率天赋。前置技能：双倍掉落。',tip:'最强效率天赋，加速一切战斗行为。'},
+summon_art:{detail:'暗影军团的基础技能，学习后才能解锁所有召唤系技能。每波开始时立即召唤全部召唤物。当所有召唤物阵亡后进入冷却，勇者攻击(7-等级)次后重新施展召唤术，召唤(等级)个单位，优先高品质(女皇→君主→猎手→刺客→骷髅)。Lv1：开局1个，全灭后6次攻击重召1个。Lv5：开局5个，2次重召5个。每级+8%召唤物HP和攻击力(满级+40%)。',tip:'开局即满编！全灭后攻速越快恢复越快，搭配狂怒加速重召。'},
+raise_dead:{detail:'每级召唤1个骷髅兵(3级满3个)。骷髅兵拥有勇者25%HP和12%攻击力。每波战斗开始时重新召唤。前置技能：召唤术。',tip:'暗影军团的起点，开启召唤流玩法。'},
+dark_pact:{detail:'每级提升15%召唤物攻击力(5级满+75%)。影响所有召唤单位。前置技能：召唤术。',tip:'全体召唤物增伤，军团核心强化。'},
+soul_drain:{detail:'每级击杀回复8%最大HP(3级满24%)。击杀任何怪物均可触发。前置技能：骷髅召唤。',tip:'多怪战斗中回复极快，续航保障。'},
+shadow_assassin:{detail:'每级召唤1个暗影刺客(2级满2个)。刺客拥有15%HP但25%攻击力，高攻低血。前置技能：骷髅召唤。',tip:'玻璃大炮型召唤物，输出极高。'},
+shadow_hunter:{detail:'每级召唤1个暗影猎手(2级满2个)。猎手拥有20%HP和10%攻击力，攻击全体敌人(AOE)。前置技能：暗黑契约。',tip:'全体AOE输出，清场利器。'},
+assassin_crit:{detail:'每级提升10%刺客暴击率，同时每级增加20%暴击伤害倍率。5级满时暴击率+50%，暴击伤害3倍→4倍。前置技能：暗影刺客。',tip:'刺客的核心输出强化，暴击伤害极其恐怖。'},
+assassin_poison:{detail:'刺客攻击有(20+等级×15)%概率使目标中毒，每3tick造成2%最大HP伤害，持续6回合。3级满65%。前置技能：暗影刺客。',tip:'百分比DoT对高血量Boss非常有效。'},
+assassin_dodge:{detail:'刺客被攻击时有(等级×12)%概率完全闪避。3级满36%。前置技能：致命暗杀。',tip:'让脆皮刺客不再一碰就死，大幅提升存活率。'},
+assassin_combo:{detail:'刺客每次攻击有(15+等级×10)%概率追加一次攻击(50%伤害)。3级满45%。前置技能：致命暗杀。',tip:'接近一半概率连击，DPS翻倍。'},
+assassin_mark:{detail:'刺客攻击时标记目标，全军团(包括勇者)对被标记目标伤害+(等级×10)%。3级满+30%。前置技能：淬毒之刃。',tip:'团队增伤的核心debuff，标记后全军集火效果拔群。'},
+assassin_execute:{detail:'刺客攻击HP低于10%的非Boss敌人直接击杀。前置技能：连击。',tip:'配合连击+暴击，快速清残。'},
+hunter_volley:{detail:'每级提升15%猎手AOE伤害(5级满+75%)。前置技能：暗影猎手。',tip:'猎手的核心输出强化，AOE伤害大幅提升。'},
+hunter_slow:{detail:'猎手攻击有(15+等级×10)%概率使全体敌人减速20%持续4回合。3级满45%。前置技能：暗影猎手。',tip:'群体减速，降低敌人攻击频率。'},
+hunter_pierce:{detail:'猎手无视目标(等级×15)%防御。3级满45%。前置技能：箭雨强化。',tip:'对高防怪物效果显著，穿甲箭矢。'},
+hunter_trap:{detail:'猎手每10tick放置陷阱，对第一个敌人造成(50+等级×30)%攻击力伤害。3级满140%。前置技能：冰霜箭。',tip:'额外的定时伤害，不占攻击回合。'},
+hunter_multishot:{detail:'猎手AOE额外命中(等级)次，每次60%伤害。3级满共4次命中(1+3)。前置技能：穿透射击。',tip:'AOE伤害翻数倍，多怪战斗核心。'},
+hunter_snipe:{detail:'猎手每12tick对血量最高的敌人造成200%攻击力单体伤害。前置技能：多重射击。',tip:'自动瞄准血最厚的敌人，Boss克星。'},
+plague:{detail:'每tick对全体存活怪物造成最大HP百分比伤害。每级1.5%(3级满4.5%/tick)。前置技能：暗黑契约。',tip:'持续百分比伤害，对高血量Boss极有效。'},
+corpse_explode:{detail:'击杀怪物时对全体存活怪物造成AOE伤害，基于勇者攻击力百分比。每级20%(3级满60%)。前置技能：灵魂吸取。',tip:'连锁爆炸清场，怪越多越强。'},
+shadow_lord:{detail:'召唤暗影君主，拥有60%HP和35%攻击力的强力单位。阵亡后需冷却3波。需要角色Lv10。前置技能：暗影刺客。',tip:'军团最强战斗单位，可学习专属技能树。'},
+shadow_queen:{detail:'召唤暗影女皇，治疗型单位。每回合治愈勇者和军团，有几率施放护盾和召唤骷髅。阵亡后冷却3波。需Lv15。前置技能：暗影猎手。',tip:'军团治疗核心，大幅提升团队续航。'},
+lord_domain:{detail:'每级提升5%军团攻击力和受伤减免(5级满25%)。影响所有召唤单位的攻击和HP。前置技能：暗影君主。',tip:'全军团增益，质量和数量双重提升。'},
+lord_sword:{detail:'君主每5tick释放一次重击，造成(150+等级×50)%攻击力伤害。5级满350%。前置技能：暗影君主。',tip:'君主专属爆发技能，单体伤害极高。'},
+lord_raise:{detail:'击杀敌人后有(10+等级×8)%概率复活为己方单位，保留(40+等级×10)%属性。复活上限由等级决定。前置技能：暗影君主。',tip:'把敌人变为盟友，越强的敌人复活后越强。'},
+lord_fear:{detail:'被动光环。君主存活时，所有敌人攻击力降低(等级×8)%。3级满时敌人攻击-24%，大幅降低团队受到的伤害。前置技能：暗影领域。',tip:'全场减伤光环，君主存活越久收益越大。'},
+lord_execute:{detail:'君主攻击HP低于(等级×5)%的非Boss敌人时直接处决。3级满15%血以下即死。前置技能：黑暗大剑。',tip:'清残利器，配合君主高攻击力快速击杀低血怪。'},
+lord_aoe:{detail:'君主每8tick对全体敌人造成(40+等级×20)%攻击力AOE伤害。3级满100%。前置技能：恐惧光环。',tip:'君主的AOE清场技能，多怪战斗极其强力。'},
+queen_heal:{detail:'女皇每回合治愈勇者(2+等级×1.5)%最大HP，同时治愈其他召唤物。5级满时治愈勇者9.5%HP。前置技能：暗影女皇。',tip:'核心回复手段，军团续航保障。'},
+queen_shield:{detail:'每回合有(10+等级×5)%概率为全军施加防御护盾+(15+等级×8)，持续6回合。前置技能：暗影女皇。',tip:'概率触发团队护盾，减伤效果显著。'},
+queen_summon:{detail:'每回合有(8+等级×5)%概率额外召唤骷髅兵，上限(8+等级×2)个。前置技能：暗影女皇。',tip:'持续扩充军团，战斗越久越强。'},
+queen_cleanse:{detail:'女皇每6tick有(15+等级×10)%概率清除勇者身上一个debuff。3级满45%概率。前置技能：生命潮汐。',tip:'克制各种负面效果，对战龙/魔王/萨满时极其有用。'},
+queen_revive:{detail:'女皇存活时，勇者死亡有(等级×12)%概率满血复活(每波限1次)。3级满36%。前置技能：暗影壁垒。',tip:'又一重保命机制！和不死之身/死灵复生叠加更安全。'},
+queen_empower:{detail:'被动光环。女皇存活时，勇者全属性(攻击+防御)+{v}%。3级满+18%。前置技能：净化之光。',tip:'女皇最强被动！全属性加成让勇者战力飙升。'},
+bone_armor:{detail:'每级提升20%骷髅兵HP和防御(5级满+100%)。前置技能：骷髅召唤。',tip:'让骷髅不再脆皮，大幅提升存活率。'},
+skeleton_cap:{detail:'每级增加2个骷髅上限(3级满+6个)。前置技能：骷髅召唤。',tip:'数量就是力量，配合死亡行军威力巨大。'},
+death_march:{detail:'每级提升25%骷髅攻击力(3级满+75%)。前置技能：骨甲强化。',tip:'骷髅输出核心，让海量骷髅都变成输出机器。'},
+bone_nova:{detail:'骷髅死亡时对全体怪物造成(等级×30)%攻击力AOE伤害。3级满90%。前置技能：亡者行军。',tip:'骷髅越多爆炸越猛，死亡也是输出。'},
+death_knight:{detail:'每3波战斗自动将骷髅兵进化为死亡骑士，直到达到上限或没有骷髅可进化。死亡骑士拥有80%HP、40%攻击力(含召唤术加成)，每3tick释放250%伤害的死亡打击并顺劈第二个目标(40%伤害)。死亡骑士跨波永久存在，直到被击杀。每级上限+1(Lv1:1个, Lv2:2个, Lv3:3个)。需Lv8。前置技能：骨海战术。',tip:'军团最强永久单位！每3波自动进化骷髅，高攻高血，死亡打击+顺劈。'},
+necro_revival:{detail:'被动技能。勇者死亡时有概率直接原地复活，同时复活已阵亡的召唤物(优先复活高价值单位)。每波战斗只能触发一次。Lv1: 30%概率+25%HP+复活1个，Lv2: 40%+30%HP+2个，Lv3: 50%+40%HP+3个，Lv4: 60%+50%HP+4个，Lv5: 75%+65%HP+5个。触发优先级低于不死之身。前置技能：召唤术。',tip:'召唤流的保命核心！概率越高越可靠，还能拉起阵亡的军团继续战斗。'},
+mirror:{detail:'生成勇者的暗影复制品"黑暗勇者"，继承勇者的所有战斗能力。Lv1保留50%属性，Lv2保留65%，Lv3保留80%。黑暗勇者会使用勇者的普通攻击(含暴击/元素/斩杀/死亡标记)、吸血、旋风斩(每6tick)。黑暗勇者的HP=勇者50%，受召唤术属性加成影响。需要角色Lv20。前置技能：尸爆。',tip:'召唤流的终极技能！相当于多了半个勇者在战斗，输出直接翻倍。'}
+};
+
+// ====== BOSS LORE DATA ======
+const BOSS_LORE={
+'史莱姆之王':{icon:'🟢',color:'#55cc55',lore:'由无数史莱姆融合而成的巨大个体，拥有强大的分裂能力。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次，伤害160%攻击力，无视大部分防御','🌊 AOE波动：20%概率攻击全体召唤物(50%伤害)','💚 Boss分裂：死亡时分裂为2个小史莱姆+3个从者，军团规模远超普通版','⚡ 暴击率18%(普通怪仅8%)','🔥 低于30%HP时进入狂暴，攻击力x1.4']},
+'哥布林酋长':{icon:'👺',color:'#88aa44',lore:'统率整个哥布林部落的狡猾首领，擅长偷袭和劫掠。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','💰 强化偷窃：攻击偷取5%金币','🌊 AOE波动：20%概率溅射全体召唤物','⚡ Boss暴击率18%','🔥 低血量狂暴x1.4']},
+'骷髅将军':{icon:'💀',color:'#ccccaa',lore:'远古战场上不朽的将领，即使被击碎也能重新组装。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','🦴 强化重组：20%概率每次攻击回复10%HP','💀 死后30%概率以40%HP复活一次','🌊 AOE波动：20%概率溅射全体召唤物','⚡ Boss暴击率18%']},
+'狼王':{icon:'🐺',color:'#8888aa',lore:'月夜中嚎叫的群狼之王，獠牙所过之处鲜血淋漓。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','🩸 撕裂出血：攻击附带DOT(2%HP/tick)持续6回合','🌊 AOE波动：20%概率溅射全体召唤物','⚡ Boss暴击率18%','🔥 低血量狂暴x1.4']},
+'大萨满':{icon:'🧿',color:'#44ccaa',lore:'通晓天地元素之力的萨满长老，能治愈、护盾、和操控闪电。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','🧿 治愈术(35%)：全体怪物回复15%HP','🧿 守护盾(30%)：全体怪物防御+30%持续4回合','🧿 闪电链(35%)：120%攻击力伤害+溅射召唤物','✨ 净化：20%概率清除女皇护盾']},
+'远古石像':{icon:'🗿',color:'#999',lore:'千年岁月中沉睡的石像，被唤醒后坚不可摧。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','🗿 石化强化：HP<50%时防御+80%(永久)','🌊 AOE波动：20%概率溅射全体召唤物','⚡ Boss暴击率18%','🔥 低血量狂暴x1.4']},
+'大祭司':{icon:'🕯️',color:'#8855bb',lore:'掌控亡灵大军的黑暗祭司，不断从虚空中召唤死者。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','🕯️ 召唤亡灵：每2回合召唤小兵(上限2个，40%HP/50%攻击)','🕯️ 诅咒：30%概率施加攻防-15%持续8回合','🌊 AOE波动：20%概率溅射全体召唤物']},
+'大魔导师':{icon:'🧙',color:'#7744bb',lore:'精通黑暗魔法的法师之首，法术风暴可席卷整个战场。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','🌪️ 魔法风暴：25%概率对全体召唤物AOE(60%攻击力)','🌊 AOE波动：20%概率溅射全体召唤物','⚡ Boss暴击率18%','🔥 低血量狂暴x1.4']},
+'龙皇':{icon:'🐉',color:'#cc4444',lore:'统治天空万年的龙族帝王，拥有五种毁灭性的龙族秘术。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','🔥 龙之烈焰：130%攻击力+灼烧DOT(3%HP,2%召唤物HP)6回合','🧊 凌冬将至：80%攻击力+冰冻减速50%持续8回合','💨 龙之吐息：攻防双降30%持续8回合','🐉 龙啸天地：对勇者+全体召唤物AOE','🐉 龙鳞壁障：回复20%最大HP','😱 龙威光环：15%概率攻击力-30%攻速-40%持续5回合']},
+'终焉魔王':{icon:'👹',color:'#ff2222',lore:'来自深渊的终极魔王，掌控毁灭、支配、暗黑等一切黑暗力量。全游戏最强Boss。',hpMult:'1.4~3.0x',atkMult:'1.2~2.2x',defMult:'1.1~1.8x',expMult:'4x',goldMult:'5x',
+skills:['💀 毁灭重击：每5次攻击释放一次','👁️ 深渊凝视：200%攻击力+眩晕(速度-70%)4回合','🌑 暗黑领域：攻-40%防-40%速-30%持续10回合','☄️ 毁灭陨石：150%攻击力AOE(勇者+全体召唤物)','✋ 亡者之手：直接秒杀一个召唤物(无召唤物则180%攻击勇者)','🩸 鲜血祭礼：回复30%HP+攻击力永久+15%','👁️ 支配：10%概率直接消灭一个召唤物']}
+};
+
+// ====== ELEMENT SYSTEM ======
+const ELEMENTS={none:{name:'无',icon:'⚪',color:'#fff'},fire:{name:'火',icon:'🔥',color:'#f44'},ice:{name:'冰',icon:'🧊',color:'#4cf'},lightning:{name:'雷',icon:'⚡',color:'#ff0'},dark:{name:'暗',icon:'🌑',color:'#c6f'}};
+const ELEM_WEAK={fire:'ice',ice:'lightning',lightning:'dark',dark:'fire'};
+const MON_ELEMENTS=['fire','ice','lightning','dark'];
+function getMonElement(m){if(!m._element)m._element=MON_ELEMENTS[Math.floor(Math.random()*MON_ELEMENTS.length)];return m._element}
+function elemDmgMult(atkE,defE){if(atkE==='none'||!atkE)return 1;if(ELEM_WEAK[atkE]===defE)return 1.5;if(ELEM_WEAK[defE]===atkE)return 0.75;return 1}
+function setElement(e){S.heroElement=e;['None','Fire','Ice','Light','Dark'].forEach((n,i)=>{const el=document.getElementById('el'+n);if(el)el.style.borderColor=['none','fire','ice','lightning','dark'][i]===e?ELEMENTS[e].color:'#666'});addBL(ELEMENTS[e].icon+' 元素: '+ELEMENTS[e].name,'gt')}
+
+// ====== PET SYSTEM ======
+const PET_BONUSES=[{stat:'atk',name:'攻击',icon:'⚔️',base:3},{stat:'def',name:'防御',icon:'🛡️',base:2},{stat:'hp',name:'HP',icon:'❤️',base:20},{stat:'crit',name:'暴击',icon:'🍀',base:1},{stat:'spd',name:'速度',icon:'💨',base:1},{stat:'lifesteal',name:'吸血',icon:'🩸',base:1},{stat:'gold',name:'金币%',icon:'💰',base:3},{stat:'drop',name:'掉落%',icon:'🎁',base:2}];
+function tryCapturePet(m){if(!S.pets)S.pets=[];const chance=m.isBoss?25:m.isElite?8:0;if(Math.random()*100>=chance)return;
+const existing=S.pets.find(p=>p.baseName===(m.isBoss?m.bossName:m.name));
+if(existing){existing.level++;existing.bonuses.forEach(b=>{b.value=Math.floor(b.base*(1+existing.level*0.3))});addBL('🐾 '+existing.name+' Lv.'+existing.level+'！','gt');return}
+const name=m.isBoss?(m.bossName||m.name):m.name;const rarity=m.isBoss?'legendary':'rare';
+const numB=m.isBoss?3:2;const bonuses=[];const pool=[...PET_BONUSES];
+for(let i=0;i<numB;i++){const idx=Math.floor(Math.random()*pool.length);const b=pool.splice(idx,1)[0];bonuses.push({...b,value:Math.floor(b.base*(m.isBoss?2.5:1.5))})}
+S.pets.push({name,baseName:name,icon:m.icon,color:m.color,rarity,level:1,exp:0,maxExp:50,bonuses,active:false});
+addBL('🐾 捕获！'+m.icon+name,'gt');addLog('🐾 新宠物！'+name,'gt');showSkillFlash('🐾 '+name+'！','')}
+function getPetBonus(stat){if(!S.pets)return 0;return S.pets.filter(p=>p.active).reduce((s,p)=>{const b=p.bonuses.find(x=>x.stat===stat);return s+(b?b.value:0)},0)}
+function togglePet(idx){const p=S.pets[idx];if(p.active){p.active=false}else{if(S.pets.filter(x=>x.active).length>=3){addBL('❌ 最多3只','rt');return}p.active=true}renderPets();updateUI()}
+function petGainExp(expAmt){if(!S.pets)return;S.pets.filter(p=>p.active).forEach(p=>{
+  if(!p.exp)p.exp=0;if(!p.maxExp)p.maxExp=50;
+  p.exp+=expAmt;
+  while(p.exp>=p.maxExp){p.exp-=p.maxExp;p.level++;p.maxExp=Math.floor(50*Math.pow(1.15,p.level-1));
+  // Increase bonuses on level up
+  p.bonuses.forEach(b=>{b.value=Math.floor(b.base*(1+p.level*0.3))});
+  addBL('🐾 '+p.icon+p.name+' Lv.'+p.level+'！','gt')}})}
+function renderPets(){const g=document.getElementById('petGrid');if(!g)return;g.innerHTML='';if(!S.pets)S.pets=[];
+document.getElementById('petCount').textContent=S.pets.length;document.getElementById('petActive').textContent=S.pets.filter(p=>p.active).length;
+if(!S.pets.length){g.innerHTML='<div style="color:#555;text-align:center;padding:20px;font-size:12px">击败Boss/精英有概率捕获宠物！</div>';document.getElementById('petBonusDisplay').innerHTML='';return}
+const rc={common:'#aaa',rare:'#5577ff',legendary:'#ffaa00'};
+S.pets.forEach((p,i)=>{const d=document.createElement('div');d.style.cssText='border:2px solid '+(p.active?rc[p.rarity]:'#333')+';background:rgba(0,0,0,.3);padding:10px;cursor:pointer';d.onclick=()=>togglePet(i);
+const pExp=p.exp||0;const pMaxExp=p.maxExp||50;const expPct=Math.floor(pExp/pMaxExp*100);
+d.innerHTML='<div style="display:flex;gap:10px;align-items:center"><span style="font-size:28px">'+p.icon+'</span><div style="flex:1"><div style="font-family:Press Start 2P,monospace;font-size:10px;color:'+(rc[p.rarity]||'#aaa')+'">'+p.name+' Lv.'+p.level+(p.active?' <span style="color:#5f5">⚔出战</span>':'')+'</div><div style="font-size:11px;color:#aaa;margin-top:3px">'+p.bonuses.map(b=>b.icon+b.name+'+'+b.value).join(' ')+'</div>'+(p.active?'<div style="margin-top:4px;height:6px;background:#222;border:1px solid #444;position:relative"><div style="height:100%;background:linear-gradient(90deg,#aa55ff,#cc88ff);width:'+expPct+'%"></div><div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);font-size:8px;color:#ccc;font-family:Press Start 2P,monospace">'+pExp+'/'+pMaxExp+'</div></div>':'')+'</div></div>';g.appendChild(d)});
+const bd=document.getElementById('petBonusDisplay');const t={};S.pets.filter(p=>p.active).forEach(p=>{p.bonuses.forEach(b=>{t[b.stat]=(t[b.stat]||0)+b.value})});
+bd.innerHTML=Object.keys(t).length?Object.entries(t).map(([k,v])=>{const b=PET_BONUSES.find(x=>x.stat===k);return b?b.icon+b.name+'+'+v:''}).join(' '):'<span style="color:#555">无出战宠物</span>'}
+
+// ====== DUNGEON SYSTEM ======
+const DG_FLOORS=[
+{name:'幽暗洞穴',mod:'普通',icon:'🕳️',hpS:1.5,atkS:1.3,reward:'金币+300',fn:()=>{S.hero.gold+=300}},
+{name:'毒蛇沼泽',mod:'中毒2%/3tick',icon:'🐍',hpS:1.8,atkS:1.5,reward:'攻击+10',fn:()=>{S.hero.atk+=10},sp:'poison'},
+{name:'冰霜峡谷',mod:'攻速-30%',icon:'❄️',hpS:2,atkS:1.6,reward:'稀有装备',fn:()=>{grantItem(2)},sp:'slow'},
+{name:'烈焰熔炉',mod:'灼烧3%/5tick',icon:'🌋',hpS:2.3,atkS:1.8,reward:'+2技能点',fn:()=>{S.hero.skillPoints+=2},sp:'burn'},
+{name:'暗影迷宫',mod:'暴击-50%',icon:'🌑',hpS:2.5,atkS:2,reward:'史诗装备',fn:()=>{grantItem(3)},sp:'nocrit'},
+{name:'巨龙巢穴',mod:'Boss×2',icon:'🐉',hpS:3,atkS:2.2,reward:'传说+攻+20',fn:()=>{grantItem(4);S.hero.atk+=20},sp:'douboss'},
+{name:'亡灵墓地',mod:'禁止回血',icon:'💀',hpS:3.5,atkS:2.5,reward:'神话装备',fn:()=>{grantItem(5)},sp:'noheal'},
+{name:'深渊裂隙',mod:'防御无效',icon:'🕳️',hpS:4,atkS:3,reward:'远古+属性8%',fn:()=>{grantItem(6);S.hero.atk=Math.floor(S.hero.atk*1.08);S.hero.def=Math.floor(S.hero.def*1.08)},sp:'nodef'},
+{name:'混沌领域',mod:'随机debuff',icon:'🌀',hpS:5,atkS:3.5,reward:'深渊+5SP',fn:()=>{grantItem(7);S.hero.skillPoints+=5},sp:'chaos'},
+{name:'终焉之门',mod:'全debuff+Boss×3',icon:'👹',hpS:7,atkS:5,reward:'创世+全×1.5',fn:()=>{grantItem(10);S.hero.atk=Math.floor(S.hero.atk*1.5);S.hero.def=Math.floor(S.hero.def*1.5);S.hero.maxHp=Math.floor(S.hero.maxHp*1.5);S.hero.hp=eMaxHp()},sp:'hell'}];
+function renderDungeon(){const c=document.getElementById('dgContent'),st=document.getElementById('dgStatus');if(!c)return;c.innerHTML='';
+document.getElementById('dgFloor').textContent=S.dungeonFloor||0;document.getElementById('dgBest').textContent=S.dungeonBest||0;
+if(S.dungeonActive){st.innerHTML='⚔️ 地下城进行中！击败当前波怪物即通关。';return}
+st.innerHTML='选择层数挑战(需Lv5+)。每层有特殊效果。'+(S.rebirthCount?'<br>🔄 转生×'+S.rebirthCount:'');
+DG_FLOORS.forEach((f,i)=>{const cl=S.dungeonBest>i;const av=S.hero.level>=5&&(i===0||S.dungeonBest>=i);
+const d=document.createElement('div');d.style.cssText='border:2px solid '+(cl?'#5a5':av?'#555':'#333')+';background:rgba(0,0,0,.3);padding:8px;'+(av&&!cl?'cursor:pointer':'opacity:'+(cl?1:0.4));
+d.innerHTML='<div style="display:flex;gap:8px;align-items:center"><span style="font-size:22px">'+(cl?'✅':f.icon)+'</span><div style="flex:1"><div style="font-family:Press Start 2P,monospace;font-size:9px;color:'+(cl?'#5a5':'#ccc')+'">F'+(i+1)+' '+f.name+'</div><div style="font-size:10px;color:#f88">⚠ '+f.mod+'</div><div style="font-size:10px;color:#5cf">🎁 '+f.reward+'</div></div></div>';
+if(av&&!cl)d.onclick=()=>{S.dungeonFloor=i;S.dungeonActive=true;S._dgSpecial=f.sp;addLog('🏰 进入F'+(i+1)+': '+f.name,'gt');switchTab('battle');if(!S.focusing)toggleFocus();renderDungeon()};
+c.appendChild(d)})}
+function completeDungeon(){const f=DG_FLOORS[S.dungeonFloor];f.fn();S.dungeonBest=Math.max(S.dungeonBest||0,(S.dungeonFloor||0)+1);S.dungeonActive=false;S._dgSpecial=null;
+addLog('🏰 通关F'+((S.dungeonFloor||0)+1)+'！','gt');addBL('🏰 通关！'+f.reward,'gt');showSkillFlash('🏰 通关！','');renderDungeon();updateUI()}
+
+// ====== REBIRTH SYSTEM ======
+function canRebirth(){return S.hero.level>=Math.floor(20+S.rebirthCount*10)}
+function calcRebirthPts(){return Math.floor(S.hero.level/5)+Math.floor(S.hero.kills/100)+(S.dungeonBest||0)*2+S.rebirthCount*3}
+function confirmRebirth(){if(!canRebirth()){addBL('❌ 需Lv.'+Math.floor(20+S.rebirthCount*10)+'转生','rt');return}
+const pts=calcRebirthPts();const d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:center;justify-content:center';
+const b=document.createElement('div');b.style.cssText='background:#111;border:3px solid #ff0;padding:20px;text-align:center;max-width:320px';
+b.innerHTML='<div style="font-family:Press Start 2P,monospace;font-size:14px;color:#ff0;margin-bottom:10px">🔄 转生</div><div style="font-size:12px;color:#5f5;margin-bottom:6px">获得 '+pts+' 转生点数</div><div style="font-size:11px;color:#888;line-height:1.6;margin-bottom:8px">保留: 宠物、地下城、转生加成<br>重置: 等级/装备/技能/金币</div><div style="font-size:10px;color:#aaa;margin-bottom:10px">每点随机+3攻/+2防/+15HP/+0.5暴/+1速/+5%金/+3%掉落</div><div style="display:flex;gap:8px;justify-content:center"><button class="pc" style="background:#553;color:#ff0" onclick="this.parentElement.parentElement.parentElement.remove();doRebirth('+pts+')">确定转生</button><button class="pc" onclick="this.parentElement.parentElement.parentElement.remove()">取消</button></div>';
+d.appendChild(b);document.body.appendChild(d)}
+function doRebirth(pts){S.rebirthCount=(S.rebirthCount||0)+1;S.rebirthPoints=(S.rebirthPoints||0)+pts;
+if(!S.rebirthBonuses)S.rebirthBonuses={atk:0,def:0,hp:0,crit:0,spd:0,gold:0,drop:0};
+const ws=[{k:'atk',v:3},{k:'def',v:2},{k:'hp',v:15},{k:'crit',v:0.5},{k:'spd',v:1},{k:'gold',v:5},{k:'drop',v:3}];
+for(let i=0;i<pts;i++){const w=ws[Math.floor(Math.random()*ws.length)];S.rebirthBonuses[w.k]=(S.rebirthBonuses[w.k]||0)+w.v}
+const keep={pets:S.pets||[],activePets:(S.pets||[]).filter(p=>p.active).map(p=>p.name),dungeonBest:S.dungeonBest||0,rebirthCount:S.rebirthCount,rebirthPoints:S.rebirthPoints,rebirthBonuses:S.rebirthBonuses,bestiaryFound:S.bestiaryFound||[],itemsFound:S.itemsFound||[]};
+if(S.focusing){clearInterval(timerInterval);S.focusing=false}
+S=defaultState();Object.assign(S,keep);
+S.hero.atk+=Math.floor(S.rebirthBonuses.atk||0);S.hero.def+=Math.floor(S.rebirthBonuses.def||0);S.hero.maxHp+=Math.floor(S.rebirthBonuses.hp||0);S.hero.hp=S.hero.maxHp;S.hero.crit+=S.rebirthBonuses.crit||0;S.hero.spd+=Math.floor(S.rebirthBonuses.spd||0);
+S.pets.forEach(p=>{p.active=keep.activePets.includes(p.name)});
+initSkills();document.getElementById('timerDisplay').textContent='00:00:00';document.getElementById('focusBtn').textContent='▶ 开始专注';document.getElementById('focusBtn').classList.remove('active');document.getElementById('enemySide').innerHTML='';drawHero();renderAll();updateUI();
+addLog('🔄 转生#'+S.rebirthCount+'！+'+pts+'点','gt');showSkillFlash('🔄 转生！','')}
+
+function renderSkillBook(){
+const g=document.getElementById('skillBookGrid');g.innerHTML='';let count=0;
+const branchColors={attack:'#ff6644',defense:'#44aaff',utility:'#44ff88',necro:'#aa55ff',lord_sub:'#6622cc',queen_sub:'#cc44aa',assassin_sub:'#8844aa',hunter_sub:'#448844',skeleton_sub:'#ddd'};
+Object.entries(SKILL_TREE).forEach(([key,branch])=>{
+const sec=document.createElement('div');
+sec.style.cssText='border:2px solid '+((branchColors[key]||'#888'))+'44;background:rgba(0,0,0,.3);padding:10px';
+let h='<div style="font-family:Press Start 2P,monospace;font-size:11px;color:'+(branchColors[key]||'#888')+';margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid '+(branchColors[key]||'#888')+'33">'+branch.name+'</div>';
+branch.skills.forEach(sk=>{
+count++;
+const lv=skLv(sk.id);
+const guide=SKILL_GUIDE[sk.id]||{detail:'暂无详细说明。',tip:''};
+const isLearned=lv>0;
+const maxed=lv>=sk.maxLv;
+const curVal=lv>0?sk.val(lv):'—';
+const maxVal=sk.val(sk.maxLv);
+h+='<div style="margin:6px 0;padding:8px;border:1px solid '+(maxed?'var(--gold)':isLearned?'#5a5':'#444')+';background:rgba(0,0,0,.3);border-radius:2px">';
+h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+h+='<div><span style="font-size:16px;margin-right:4px">'+sk.icon+'</span><span style="font-family:Press Start 2P,monospace;font-size:10px;color:'+(maxed?'var(--gold)':isLearned?'#7f7':'#ccc')+'">'+sk.name+'</span></div>';
+h+='<span style="font-family:Press Start 2P,monospace;font-size:8px;color:'+(maxed?'var(--gold)':'#888')+'">'+lv+'/'+sk.maxLv+'</span>';
+h+='</div>';
+// Base desc
+h+='<div style="font-size:12px;color:#bbb;margin-bottom:4px;line-height:1.5">'+sk.desc.replaceAll('{v}',maxVal).replaceAll('{r}',sk.raisePct?sk.raisePct(sk.maxLv):'').replaceAll('{h}',sk.healPct?sk.healPct(sk.maxLv):'').replaceAll('{d}',sk.shieldDef?sk.shieldDef(sk.maxLv):'').replaceAll('{c}',sk.sumCap?sk.sumCap(sk.maxLv):'')+'</div>';
+// Detailed desc
+h+='<div style="font-size:11px;color:#999;line-height:1.6;padding:5px 8px;background:rgba(255,255,255,.03);border-left:3px solid '+(branchColors[key]||'#888')+'88;margin-bottom:3px">'+guide.detail+'</div>';
+// Tip
+if(guide.tip)h+='<div style="font-size:11px;color:#dda;margin-top:3px">💡 '+guide.tip+'</div>';
+// Current status
+if(isLearned){h+='<div style="font-size:10px;color:#5a5;margin-top:3px">✅ 当前等级效果：'+sk.desc.replaceAll('{v}',curVal).replaceAll('{r}',sk.raisePct?sk.raisePct(lv):'').replaceAll('{h}',sk.healPct?sk.healPct(lv):'').replaceAll('{d}',sk.shieldDef?sk.shieldDef(lv):'').replaceAll('{c}',sk.sumCap?sk.sumCap(lv):'')+'</div>'}
+// Prereq info
+if(sk.req){const reqSk=Object.values(SKILL_TREE).flatMap(b=>b.skills).find(s=>s.id===sk.req);if(reqSk)h+='<div style="font-size:10px;color:#666;margin-top:2px">🔗 前置：'+reqSk.icon+' '+reqSk.name+'</div>'}
+if(sk.reqLv)h+='<div style="font-size:10px;color:#666;margin-top:1px">📊 需要角色等级：Lv.'+sk.reqLv+'</div>';
+h+='</div>';
+});
+sec.innerHTML=h;g.appendChild(sec);
+});
+document.getElementById('skillBookCount').textContent=count;
+}
+
+// ====== SHOP ======
+function getRefreshCost(){return Math.floor(50*Math.pow(1.3,S.shopRefreshes||0))}
+function refreshShop(){const cost=getRefreshCost();if(S.hero.gold<cost){addBL('金币不足','rt');return}S.hero.gold-=cost;S.shopRefreshes=(S.shopRefreshes||0)+1;S._shopSlots=[];const pool=[...SHOP_ITEMS];for(let i=0;i<Math.min(8,pool.length);i++){const idx=Math.floor(Math.random()*pool.length);S._shopSlots.push(pool.splice(idx,1)[0])}addLog('🔄 商店刷新','gt');renderShop();updateUI()}
+function getShopItems(){
+  if(!S._shopSlots||!S._shopSlots.length){S._shopSlots=SHOP_ITEMS.slice(0,8);return S._shopSlots}
+  S._shopSlots=S._shopSlots.map(slot=>{
+    if(typeof slot.fn==='function')return slot;
+    const full=SHOP_ITEMS.find(i=>i.id===slot.id);
+    return full||slot;
+  }).filter(Boolean);
+  return S._shopSlots
+}
+function renderShop(){const g=document.getElementById('shopGrid');g.innerHTML='';document.getElementById('shopGold').textContent=S.hero.gold;document.getElementById('shopRefreshCost').textContent='刷新:'+getRefreshCost()+'g';if(!S.shopBuyCount)S.shopBuyCount={};getShopItems().forEach(item=>{const bought=!item.repeat&&S.shopBought.includes(item.id);const cost=getItemCost(item);const canBuy=S.hero.gold>=cost&&!bought;const bc=S.shopBuyCount[item.id]||0;const d=document.createElement('div');d.className='shop-item'+(bought?' bought':'');d.innerHTML='<span class="si-icon">'+item.icon+'</span><span class="si-name">'+item.name+'</span><span class="si-desc">'+item.desc+'</span><span class="si-cost">'+(bought?'已购':'💰'+cost)+(item.repeat&&bc>0?' (x'+bc+')':'')+'</span>';if(canBuy)d.onclick=()=>{const ac=getItemCost(item);if(S.hero.gold<ac)return;S.hero.gold-=ac;item.fn();if(!item.repeat)S.shopBought.push(item.id);S.shopBuyCount[item.id]=(S.shopBuyCount[item.id]||0)+1;addLog('🏪 '+item.name+' -'+ac+'g','gt');renderShop();updateUI();while(S.hero.exp>=S.hero.maxExp)levelUp()};g.appendChild(d)})}
+
+// ====== TIMER ======
+let timerInterval=null;const SPEEDS=[1,2,3,5];let battleSpeed=1;
+function cycleSpeed(){battleSpeed=SPEEDS[(SPEEDS.indexOf(battleSpeed)+1)%SPEEDS.length];document.getElementById('speedBtn').textContent='⚡x'+battleSpeed;if(S.focusing){clearInterval(timerInterval);timerInterval=setInterval(tickTimer,1000)}addBL('⚡ 速度x'+battleSpeed,'gt')}
+function toggleFocus(){const btn=document.getElementById('focusBtn');if(!S.focusing){S.focusing=true;btn.textContent='⏸ 停止';btn.classList.add('active');addLog('🚀 出发！','grt');spawnWave();timerInterval=setInterval(tickTimer,1000)}else{S.focusing=false;btn.textContent='▶ 开始专注';btn.classList.remove('active');clearInterval(timerInterval)}}
+function tickTimer(){S.focusSeconds++;document.getElementById('timerDisplay').textContent=fmtT(S.focusSeconds);checkMS();const idleExp=Math.floor(S.hero.maxExp*0.01);S.hero.exp+=idleExp;while(S.hero.exp>=S.hero.maxExp)levelUp();for(let i=0;i<battleSpeed;i++){battleTick();if(!S.focusing)break}
+// Anti-stall watchdog: if monsters alive but no damage dealt for 30 seconds, force kill weakest
+if(!S._lastKillTick)S._lastKillTick=S.focusSeconds;
+if(aliveMonsters().length>0&&S.hero.hp>0){
+  if(S.focusSeconds-S._lastKillTick>30){
+    const weakest=aliveMonsters().reduce((a,b)=>a.hp<b.hp?a:b);
+    weakest.hp=0;weakest.alive=false;weakest._killProcessed=true;onMonsterKill(weakest);
+    addBL('⏳ 战斗超时！击破'+weakest.name,'gt');S._lastKillTick=S.focusSeconds;checkAllDead()}}
+}
+function checkMS(){MILESTONES.forEach(m=>{if(S.focusSeconds>=m.time&&!S.achievedMilestones.includes(m.time)){S.achievedMilestones.push(m.time);handleMR(m);renderMilestones()}})}
+function handleMR(m){addLog('🏆 '+m.text+' → '+m.reward,'gt');addBL('🏆 '+m.reward,'gt');const t=m.time;
+// Minutes 1-10
+if(t===60){S.hero.exp+=80}
+if(t===120){S.hero.gold+=60}
+if(t===180){S.hero.atk+=5}
+if(t===240){S.hero.def+=3}
+if(t===300){grantItem(2)}
+if(t===360){S.hero.spd+=3}
+if(t===420){S.hero.crit+=3}
+if(t===480){S.hero.skillPoints+=1}
+if(t===540){S.hero.gold+=120}
+if(t===600){grantItem(3)}
+// Minutes 11-20
+if(t===660){S.hero.atk+=8}
+if(t===720){S.hero.maxHp+=60;S.hero.hp=eMaxHp()}
+if(t===780){S.hero.lifesteal+=2}
+if(t===840){S.hero.skillPoints+=2}
+if(t===900){S.hero.atk+=12;S.hero.def+=6}
+if(t===960){S.hero.gold+=200}
+if(t===1020){S.hero.crit+=5}
+if(t===1080){S.hero.spd+=5}
+if(t===1140){S.hero.atk+=15}
+if(t===1200){grantItem(4)}
+// Minutes 21-30
+if(t===1260){S.hero.def+=8}
+if(t===1320){S.hero.skillPoints+=2}
+if(t===1380){S.hero.gold+=300}
+if(t===1440){S.hero.maxHp+=100;S.hero.hp=eMaxHp()}
+if(t===1500){S.hero.atk+=20;S.hero.crit+=5}
+if(t===1560){S.hero.lifesteal+=3}
+if(t===1620){S.hero.spd+=6}
+if(t===1680){S.hero.skillPoints+=3}
+if(t===1740){S.hero.gold+=500}
+if(t===1800){grantItem(4);S.hero.atk=Math.floor(S.hero.atk*1.1);S.hero.def=Math.floor(S.hero.def*1.1);S.hero.spd=Math.floor(S.hero.spd*1.1);S.hero.maxHp=Math.floor(S.hero.maxHp*1.1);S.hero.hp=eMaxHp()}
+// Minutes 31-40
+if(t===1860){S.hero.atk+=25}
+if(t===1920){S.hero.def+=12}
+if(t===1980){S.hero.crit+=8}
+if(t===2040){S.hero.skillPoints+=3}
+if(t===2100){S.hero.maxHp+=150;S.hero.hp=eMaxHp()}
+if(t===2160){S.hero.gold+=800}
+if(t===2220){S.hero.lifesteal+=4}
+if(t===2280){S.hero.atk+=30}
+if(t===2340){S.hero.spd+=8}
+if(t===2400){grantItem(5);S.hero.atk+=20}
+// 45min+
+if(t===2700){S.hero.skillPoints+=5;S.hero.gold+=1000}
+if(t===3000){grantItem(6);S.hero.atk=Math.floor(S.hero.atk*1.15);S.hero.def=Math.floor(S.hero.def*1.15);S.hero.spd=Math.floor(S.hero.spd*1.15);S.hero.maxHp=Math.floor(S.hero.maxHp*1.15);S.hero.hp=eMaxHp()}
+if(t===3300){grantItem(7);S.hero.atk+=50}
+if(t===3600){grantItem(8);S.hero.atk=Math.floor(S.hero.atk*1.25);S.hero.def=Math.floor(S.hero.def*1.25);S.hero.spd=Math.floor(S.hero.spd*1.25);S.hero.maxHp=Math.floor(S.hero.maxHp*1.25);S.hero.hp=eMaxHp()}
+if(t===4500){grantItem(9);S.hero.atk=Math.floor(S.hero.atk*1.5);S.hero.def=Math.floor(S.hero.def*1.5);S.hero.spd=Math.floor(S.hero.spd*1.5);S.hero.maxHp=Math.floor(S.hero.maxHp*1.5);S.hero.hp=eMaxHp()}
+if(t===5400){grantItem(10);S.hero.atk=Math.floor(S.hero.atk*1.5);S.hero.def=Math.floor(S.hero.def*1.5);S.hero.spd=Math.floor(S.hero.spd*1.5);S.hero.maxHp=Math.floor(S.hero.maxHp*1.5);S.hero.hp=eMaxHp()}
+if(t===7200){S.hero.atk*=2;S.hero.def*=2;S.hero.spd*=2;S.hero.maxHp*=2;S.hero.hp=eMaxHp();grantItem(10)}
+while(S.hero.exp>=S.hero.maxExp)levelUp();updateUI()}
+
+// ====== SPAWN ======
+function getMonTier(){const m=S.focusSeconds/60;if(m<1)return 0;if(m<3)return 1;if(m<5)return 2;if(m<8)return 3;if(m<11)return 4;if(m<15)return 5;if(m<20)return 6;if(m<28)return 7;if(m<38)return 8;return 9}
+// ====== BOSS WAVE SYSTEM ======
+const BOSS_WAVES=[
+{name:'🌿 森林守护者',icon:'🌳',color:'#44aa44',baseHp:800,baseAtk:8,baseDef:25,spd:5,
+ phases:[
+  {threshold:1,skills:['🌿 藤蔓缠绕：攻速-40%持续8回合','🍃 落叶飞舞：全体15%攻击AOE']},
+  {threshold:0.5,skills:['🌲 树根爆裂：30%攻击+击退(跳过1回合)','🌿 自然回复：回3%HP/5tick']},
+  {threshold:0.2,skills:['🌸 花粉爆发：攻防-25%持续10回合','🌲 森林之怒：攻击力+50%']}
+ ],expMult:8,goldMult:10,dropQ:3},
+{name:'🔥 熔岩巨像',icon:'🌋',color:'#ff4400',baseHp:1200,baseAtk:12,baseDef:35,spd:6,
+ phases:[
+  {threshold:1,skills:['🔥 熔岩喷射：25%攻击+灼烧3%HP/3tick','🛡️ 熔岩铠甲：防御+50%持续6回合']},
+  {threshold:0.5,skills:['🌋 火山爆发：全体40%攻击AOE','🔥 熔化：敌方防御-40%持续8回合']},
+  {threshold:0.2,skills:['💀 终焉之火：全体80%攻击+灼烧5%/3tick','🔥 浴火重生：回15%HP']}
+ ],expMult:10,goldMult:12,dropQ:4},
+{name:'❄️ 冰霜女王',icon:'👸',color:'#88ccff',baseHp:1500,baseAtk:10,baseDef:30,spd:5,
+ phases:[
+  {threshold:1,skills:['❄️ 寒冰箭：20%攻击+冻结(攻速-50%6回合)','🛡️ 冰盾：防御+80%持续4回合']},
+  {threshold:0.5,skills:['🌨️ 暴风雪：全体25%攻击+攻速-30%8回合','❄️ 冰棺：冻结1个召唤物3回合']},
+  {threshold:0.2,skills:['💎 绝对零度：全体60%攻击+攻防-40%10回合','❄️ 冰晶重塑：回10%HP+防+100%4回合']}
+ ],expMult:12,goldMult:15,dropQ:5},
+{name:'⚡ 雷霆泰坦',icon:'⚡',color:'#ffcc00',baseHp:2000,baseAtk:14,baseDef:40,spd:4,
+ phases:[
+  {threshold:1,skills:['⚡ 雷击：35%攻击+麻痹(攻速-60%4回合)','🛡️ 电磁护盾：反弹15%伤害']},
+  {threshold:0.5,skills:['⚡ 连锁闪电：全体30%攻击+全体召唤物20%攻击','🔋 充能：下次攻击+100%']},
+  {threshold:0.2,skills:['💀 天罚：全体100%攻击','⚡ 雷暴领域：攻防速-30%持续12回合']}
+ ],expMult:15,goldMult:20,dropQ:6},
+{name:'🌑 虚空领主',icon:'🕳️',color:'#9933ff',baseHp:3000,baseAtk:16,baseDef:50,spd:4,
+ phases:[
+  {threshold:1,skills:['🌑 虚空撕裂：40%攻击+吸取2%最大HP','🛡️ 虚空壁障：无敌2回合']},
+  {threshold:0.5,skills:['🕳️ 次元切割：全体50%攻击+秒杀1个召唤物','🌑 暗影吞噬：偷取20%攻防8回合']},
+  {threshold:0.2,skills:['💀 虚空崩塌：全体120%攻击+全debuff','🌑 虚空重生：回20%HP+全属性+30%']}
+ ],expMult:20,goldMult:30,dropQ:8},
+{name:'🦠 瘟疫之母',icon:'🦠',color:'#88cc00',baseHp:2500,baseAtk:10,baseDef:35,spd:5,
+ phases:[
+  {threshold:1,skills:['🦠 腐蚀之触：20%攻击+攻防-20%持续10回合','🧪 毒雾扩散：全体15%攻击+中毒3%HP/3tick']},
+  {threshold:0.5,skills:['🦠 寄生虫：秒杀1个召唤物并回复10%HP','🧪 剧毒爆发：全体35%攻击+攻防速-25%持续8回合']},
+  {threshold:0.2,skills:['💀 瘟疫终焉：全体60%攻击+全debuff+中毒5%HP/3tick','🦠 腐朽重生：回25%HP+攻击力+40%']}
+ ],expMult:18,goldMult:25,dropQ:7},
+{name:'🌊 深海利维坦',icon:'🌊',color:'#2288cc',baseHp:3500,baseAtk:12,baseDef:45,spd:5,
+ phases:[
+  {threshold:1,skills:['🌊 潮汐冲击：30%攻击+攻速-30%持续6回合','🛡️ 水之壁障：防御+60%持续5回合']},
+  {threshold:0.5,skills:['🌊 海啸：全体45%攻击+攻速-40%持续8回合','🐙 触手缠绕：秒杀2个召唤物']},
+  {threshold:0.2,skills:['💀 深渊吞噬：全体90%攻击+偷取25%攻防10回合','🌊 潮汐回复：回15%HP+防御+80%持续6回合']}
+ ],expMult:22,goldMult:35,dropQ:8},
+{name:'🎭 幻影魔术师',icon:'🎭',color:'#cc66ff',baseHp:2000,baseAtk:15,baseDef:25,spd:3,
+ phases:[
+  {threshold:1,skills:['🎭 幻影分身：无敌2回合+攻击力+30%','✨ 魔力弹幕：全体20%攻击AOE']},
+  {threshold:0.5,skills:['🎭 镜像欺诈：反弹25%伤害+攻防-30%持续6回合','🌀 精神干扰：攻速-50%持续8回合']},
+  {threshold:0.2,skills:['💀 终幕：全体80%攻击+秒杀1个召唤物+无敌1回合','🎭 最终欺诈：回30%HP+攻击力+60%']}
+ ],expMult:20,goldMult:28,dropQ:7},
+{name:'☀️ 太阳神鸟',icon:'☀️',color:'#ffaa00',baseHp:2800,baseAtk:13,baseDef:30,spd:4,
+ phases:[
+  {threshold:1,skills:['☀️ 圣光灼烧：25%攻击+灼烧4%HP/3tick持续8回合','✨ 光之壁障：防御+70%持续4回合+回5%HP']},
+  {threshold:0.5,skills:['☀️ 日炎风暴：全体40%攻击+灼烧3%/3tick','🔥 涅槃之焰：回20%HP+攻击力+25%']},
+  {threshold:0.2,skills:['💀 审判之光：全体100%攻击+攻防-35%持续10回合','☀️ 凤凰涅槃：回35%HP+无敌2回合']}
+ ],expMult:25,goldMult:32,dropQ:8},
+{name:'💀 不死君王',icon:'💀',color:'#aaaadd',baseHp:4000,baseAtk:11,baseDef:55,spd:5,
+ phases:[
+  {threshold:1,skills:['💀 亡灵之握：30%攻击+攻速-40%持续6回合','🛡️ 骨墙：防御+100%持续3回合']},
+  {threshold:0.5,skills:['💀 死亡召唤：秒杀2个召唤物+回15%HP','☠️ 腐朽领域：攻防-30%持续10回合+偷取15%攻防8回合']},
+  {threshold:0.2,skills:['💀 终焉审判：全体110%攻击+秒杀1个召唤物+攻防速-35%12回合','💀 不朽意志：回30%HP+防御+120%持续5回合+无敌1回合']}
+ ],expMult:30,goldMult:40,dropQ:9}
+];
+function getBossWaveIdx(){const wc=S._waveCount||0;const bossNum=Math.floor(wc/10);return bossNum%BOSS_WAVES.length}
+function spawnBossWave(){
+const bw=BOSS_WAVES[getBossWaveIdx()];const timeMin=S.focusSeconds/60;
+// Use the same scaling as regular monsters
+const logPart=Math.log2(1+timeMin)*0.5;
+const expPart=Math.pow(timeMin/10,1.45)*0.3;
+const tier=getMonTier();
+let scale=(1+logPart+expPart)*(1+tier*0.25);
+const baseAtkRef=16+S.hero.level*5,baseDefRef=8+S.hero.level*2,baseHpRef=100+S.hero.level*20,baseSpdRef=8+S.hero.level*0.5;
+const heroAtkRatio=totalAtk()/Math.max(1,baseAtkRef);
+const heroDefRatio=totalDef()/Math.max(1,baseDefRef);
+const heroHpRatio=eMaxHp()/Math.max(1,baseHpRef);
+const heroSpdRatio=S.hero.spd/Math.max(1,baseSpdRef);
+const mirrorRaw=(heroAtkRatio*0.4+heroDefRatio*0.25+heroHpRatio*0.25+heroSpdRatio*0.1);
+const mirrorOverflow=Math.max(0,mirrorRaw-1);
+const mirrorScale=1+Math.pow(mirrorOverflow,1.2)*0.33;
+scale*=mirrorScale;
+const rbScale=1+S.rebirthCount*0.2;
+// Boss wave multiplier: high HP, high def, low atk
+const bossHpMult=3.5;const bossDefMult=2.5;const bossAtkMult=1.0;
+// Cycle scaling: bosses get stronger each full cycle
+const cycleNum=Math.floor((S._waveCount||0)/10/BOSS_WAVES.length);
+const cycleMult=1+cycleNum*0.5;
+const hp=Math.floor(bw.baseHp*scale*bossHpMult*rbScale*cycleMult);
+const atk=Math.floor(bw.baseAtk*scale*bossAtkMult*rbScale*cycleMult);
+const def=Math.floor(bw.baseDef*scale*bossDefMult*rbScale*cycleMult);
+S.monsters=[{
+  name:bw.name+(cycleNum>0?' ×'+(cycleNum+1):''),icon:bw.icon,color:bw.color,
+  hp,maxHp:hp,atk,def,
+  level:S.hero.level+5+cycleNum*3,
+  exp:Math.floor(50*scale*bw.expMult*cycleMult),
+  gold:Math.floor(30*scale*bw.goldMult*cycleMult),
+  isBoss:true,isElite:false,alive:true,ac:0,_eL:false,
+  spd:bw.spd,_atkOffset:0,
+  role:'boss_wave',trait:'',
+  _summonCD:0,_shieldCD:0,_traitCD:0,_skCD:0,
+  _bwIdx:getBossWaveIdx(),_phase:0,_phaseCD:0,
+  _invincible:0,_chargeNext:false,_reflectPct:0,
+  baseAtk:atk,baseDef:def
+}];
+S._isBossWave=true;
+renderEnemySide();
+addBL('⚠️ BOSS战！'+bw.name+'！','rt');addLog('⚠️ Boss战: '+bw.name,'rt');
+showSkillFlash('⚠️ '+bw.name+'！','');
+initSummons()
+}
+
+function bossWaveAI(m){
+if(m.role!=='boss_wave')return false;
+const isFinal=m._isFinalBoss;
+const bw=isFinal?FINAL_BOSS:BOSS_WAVES[m._bwIdx||0];if(!bw)return false;
+const hpRatio=m.hp/m.maxHp;
+// Phase transitions
+let curPhase=0;
+bw.phases.forEach((p,i)=>{if(hpRatio<=p.threshold)curPhase=i});
+if(curPhase>m._phase){m._phase=curPhase;
+  addBL('⚠️ '+m.name+' 进入第'+(curPhase+1)+'阶段！','rt');
+  showSkillFlash('⚠️ 阶段'+(curPhase+1)+'！','');
+  m.hp=Math.min(m.maxHp,m.hp+Math.floor(m.maxHp*0.05));
+  m.def=Math.floor(m.baseDef*(1+curPhase*0.2));
+  m._mirrorUsed=false;// Reset dark mirror for new phase
+  // Final boss: auto-cast dark mirror on phase 3+ entry
+  if(isFinal&&curPhase>=2&&!m._mirrorUsed){
+    m._mirrorUsed=true;
+    const mirrorPct=0.75;const newMons=[];
+    const dhHp=Math.floor(eMaxHp()*mirrorPct);const dhAtk=Math.floor(totalAtk()*mirrorPct);const dhDef=Math.floor(totalDef()*mirrorPct);
+    newMons.push({name:'🪞黑暗勇者',icon:'👤',hp:dhHp,maxHp:dhHp,atk:dhAtk,def:dhDef,level:S.hero.level,exp:Math.floor(S.hero.level*10),gold:Math.floor(S.hero.level*5),isBoss:false,isElite:true,alive:true,ac:0,_eL:false,spd:3,_atkOffset:S.monsters.length,role:'normal',trait:'',_summonCD:0,_shieldCD:0,_traitCD:0,_skCD:0,color:'#aa33cc',_killProcessed:false});
+    aliveSummons().forEach((su,idx)=>{
+      const st=SUMMON_TYPES[su.type];if(!st)return;
+      const suHp=Math.floor(su.maxHp*mirrorPct);const suAtk=Math.floor(totalAtk()*(su.atkMult||st.atkMult)*mirrorPct);
+      newMons.push({name:'🪞暗影'+st.name,icon:'💀',hp:suHp,maxHp:suHp,atk:suAtk,def:Math.floor(dhDef*0.3),level:S.hero.level,exp:Math.floor(S.hero.level*3),gold:Math.floor(S.hero.level*2),isBoss:false,isElite:false,alive:true,ac:0,_eL:false,spd:3,_atkOffset:S.monsters.length+idx+1,role:'normal',trait:'',_summonCD:0,_shieldCD:0,_traitCD:0,_skCD:0,color:'#8833aa',_killProcessed:false});
+    });
+    newMons.forEach(nm=>S.monsters.push(nm));
+    showSkillFlash('🪞 黑暗镜像！复制'+newMons.length+'个！','');showAoeFlash();
+    addBL('🪞 阶段转换！黑暗镜像！复制勇者+'+Math.max(0,newMons.length-1)+'个召唤物！','rt');
+    renderEnemySide();
+  }
+}
+if(m._invincible>0){m._invincible--;addBL('🛡️ '+m.name+' 无敌中('+m._invincible+')','rt');return true}
+m._phaseCD=(m._phaseCD||0)+1;
+if(m._phaseCD<2)return false;
+m._phaseCD=0;
+const phase=bw.phases[curPhase];
+const skIdx=Math.floor(Math.random()*phase.skills.length);
+const skName=phase.skills[skIdx];
+const als=aliveSummons();
+// 50/50 target routing helper - returns true if hit summon
+function bossDmgTarget(d,label){
+  if(als.length>0&&Math.random()<0.5){
+    const t=als[Math.floor(Math.random()*als.length)];
+    t.hp-=d;if(t.hp<=0){t.hp=0;t.alive=false}
+    updateSummonHp();
+    const tN=SUMMON_TYPES[t.type]?SUMMON_TYPES[t.type].name:(t.raisedName||'?');
+    addBL(label+'→'+tN+' '+d,'rt');return true
+  }else{
+    S.hero.hp-=d;showDmg(d,false,false);animateHeroHit();
+    addBL(label+'→勇者 '+d,'rt');
+    if(S.hero.hp<=0){heroDie(m)}return false
+  }
+}
+// Execute skill effects
+if(skName.includes('AOE')||skName.includes('全体')){
+  const pctMatch=skName.match(/(\d+)%/);const pct=pctMatch?parseInt(pctMatch[1]):30;
+  const d=Math.floor(m.atk*pct/100*(m._chargeNext?2:1));m._chargeNext=false;
+  S.hero.hp-=Math.floor(d*0.7);als.forEach(su=>{su.hp-=Math.floor(d*0.5);if(su.hp<=0){su.hp=0;su.alive=false}});
+  updateSummonHp();showAoeFlash();addBL(skName.split('：')[0]+' AOE '+d,'rt');
+  if(S.hero.hp<=0){heroDie(m);return true}
+}else if(skName.includes('防御+')||skName.includes('防+')){
+  const pctMatch=skName.match(/(\d+)%/);const pct=pctMatch?parseInt(pctMatch[1]):50;
+  const dur=skName.match(/(\d+)回合/);const ticks=dur?parseInt(dur[1]):4;
+  m._shieldBuff=(m._shieldBuff||0)+Math.floor(m.baseDef*pct/100);m._shieldTicks=ticks;
+  addBL(skName.split('：')[0]+' 防御强化！','rt');
+}else if(skName.includes('回')&&skName.includes('%HP')){
+  const pctMatch=skName.match(/回(\d+)%/);const pct=pctMatch?parseInt(pctMatch[1]):5;
+  const heal=Math.floor(m.maxHp*pct/100);m.hp=Math.min(m.maxHp,m.hp+heal);
+  addBL(skName.split('：')[0]+' +'+heal+'HP','rt');
+}else if(skName.includes('无敌')){
+  const dur=skName.match(/(\d+)回合/);m._invincible=dur?parseInt(dur[1]):2;
+  addBL(skName.split('：')[0]+' 无敌'+m._invincible+'回合！','rt');
+}else if(skName.includes('充能')){
+  m._chargeNext=true;addBL('🔋 充能！下次攻击×2！','rt');
+}else if(skName.includes('反弹')){
+  const pctMatch=skName.match(/(\d+)%/);m._reflectPct=pctMatch?parseInt(pctMatch[1]):15;
+  addBL(skName.split('：')[0]+' 反弹'+m._reflectPct+'%！','rt');
+}else if(skName.includes('黑暗镜像')){
+  // Dark Mirror: copy hero + summons as enemy monsters at 75% stats
+  if(!m._mirrorUsed){m._mirrorUsed=true;
+  const mirrorPct=0.75;const newMons=[];
+  // Copy hero as dark hero monster
+  const dhHp=Math.floor(eMaxHp()*mirrorPct);const dhAtk=Math.floor(totalAtk()*mirrorPct);const dhDef=Math.floor(totalDef()*mirrorPct);
+  newMons.push({name:'🪞黑暗勇者',icon:'👤',hp:dhHp,maxHp:dhHp,atk:dhAtk,def:dhDef,level:S.hero.level,exp:Math.floor(S.hero.level*10),gold:Math.floor(S.hero.level*5),isBoss:false,isElite:true,alive:true,ac:0,_eL:false,spd:3,_atkOffset:S.monsters.length,role:'normal',trait:'',_summonCD:0,_shieldCD:0,_traitCD:0,_skCD:0,color:'#aa33cc',_killProcessed:false});
+  // Copy alive summons as dark versions
+  aliveSummons().forEach((su,idx)=>{
+    const st=SUMMON_TYPES[su.type];if(!st)return;
+    const suHp=Math.floor(su.maxHp*mirrorPct);const suAtk=Math.floor(totalAtk()*(su.atkMult||st.atkMult)*mirrorPct);
+    const suName='🪞暗影'+st.name;
+    newMons.push({name:suName,icon:st.isDarkHero?'👤':'💀',hp:suHp,maxHp:suHp,atk:suAtk,def:Math.floor(dhDef*0.3),level:S.hero.level,exp:Math.floor(S.hero.level*3),gold:Math.floor(S.hero.level*2),isBoss:false,isElite:false,alive:true,ac:0,_eL:false,spd:3,_atkOffset:S.monsters.length+idx+1,role:'normal',trait:'',_summonCD:0,_shieldCD:0,_traitCD:0,_skCD:0,color:'#8833aa',_killProcessed:false});
+  });
+  newMons.forEach(nm=>S.monsters.push(nm));
+  showSkillFlash('🪞 黑暗镜像！','');showAoeFlash();
+  addBL('🪞 黑暗镜像！复制了勇者+'+Math.max(0,newMons.length-1)+'个召唤物！','rt');
+  renderEnemySide()}
+  else{// Already used mirror this fight, do a big attack instead
+    const d=Math.floor(m.atk*0.8);bossDmgTarget(d,'🪞 残影打击');if(S.hero.hp<=0)return true}
+}else if(skName.includes('秒杀')&&als.length>0){
+  const t=als[Math.floor(Math.random()*als.length)];
+  if(t.type!=='lord'&&t.type!=='queen'){t.hp=0;t.alive=false;updateSummonHp();renderAllySide();addBL(skName.split('：')[0]+' 秒杀召唤物！','rt')}
+  else{const d=Math.floor(m.atk*0.5);t.hp-=d;if(t.hp<=0){t.hp=0;t.alive=false};updateSummonHp();addBL(skName.split('：')[0]+' →'+(SUMMON_TYPES[t.type]?SUMMON_TYPES[t.type].name:'?')+' '+d,'rt')}
+}else if(skName.includes('攻防速-')||skName.includes('攻防-')||skName.includes('debuff')){
+  const pctMatch=skName.match(/(\d+)%/);const pct=pctMatch?parseInt(pctMatch[1]):25;
+  const dur=skName.match(/(\d+)回合/);const ticks=dur?parseInt(dur[1]):8;
+  const mult=1-pct/100;addDebuff('boss_'+S.battleTick,skName.split('：')[0],ticks,{atkMult:mult,defMult:mult,spdMult:mult});
+  addBL(skName.split('：')[0]+' 属性降低！','rt');
+}else if(skName.includes('攻速-')||skName.includes('冻结')||skName.includes('麻痹')){
+  const pctMatch=skName.match(/(\d+)%/);const pct=pctMatch?parseInt(pctMatch[1]):40;
+  const dur=skName.match(/(\d+)回合/);const ticks=dur?parseInt(dur[1]):6;
+  addDebuff('boss_slow_'+S.battleTick,skName.split('：')[0],ticks,{spdMult:1-pct/100});
+  const d=Math.floor(m.atk*(m._chargeNext?2:0.3));m._chargeNext=false;
+  if(d>0){bossDmgTarget(d,skName.split('：')[0]);if(S.hero.hp<=0)return true}
+  else addBL(skName.split('：')[0]+'！','rt');
+}else if(skName.includes('偷取')||skName.includes('吸取')){
+  const pctMatch=skName.match(/(\d+)%/);const pct=pctMatch?parseInt(pctMatch[1]):20;
+  const dur=skName.match(/(\d+)回合/);const ticks=dur?parseInt(dur[1]):8;
+  addDebuff('boss_drain_'+S.battleTick,skName.split('：')[0],ticks,{atkMult:1-pct/100,defMult:1-pct/100});
+  const heal=Math.floor(m.maxHp*pct/200);m.hp=Math.min(m.maxHp,m.hp+heal);
+  addBL(skName.split('：')[0]+' 偷取属性+回'+heal+'HP','rt');
+}else if(skName.includes('攻击力+')){
+  const pctMatch=skName.match(/(\d+)%/);const pct=pctMatch?parseInt(pctMatch[1]):30;
+  m.atk=Math.floor(m.atk*(1+pct/100));addBL(skName.split('：')[0]+' 攻击强化！','rt');
+}else{
+  // Generic single-target hit with 50/50 targeting
+  const pctMatch=skName.match(/(\d+)%/);const pct=pctMatch?parseInt(pctMatch[1]):25;
+  const d=Math.floor(m.atk*pct/100*(m._chargeNext?2:1));m._chargeNext=false;
+  bossDmgTarget(d,skName.split('：')[0]);
+  if(S.hero.hp<=0)return true;
+}
+return true}
+
+// Handle boss wave reflect damage
+function bossReflect(m,dmg){if(m.role==='boss_wave'&&m._reflectPct>0){const rd=Math.floor(dmg*m._reflectPct/100);S.hero.hp-=rd;if(rd>0)addBL('⚡ 反弹 '+rd,'rt')}}
+// Handle boss wave invincibility
+function bossInvCheck(m){return m.role==='boss_wave'&&(m._invincible||0)>0}
+
+// ====== FINAL BOSS ======
+const FINAL_BOSS={name:'🌌 创世之神·混沌',icon:'🌌',color:'#ffffff',baseHp:50000,baseAtk:50,baseDef:80,spd:3,
+phases:[
+  {threshold:1,skills:['🌌 星辰之怒：全体40%攻击+攻防-20%持续8回合','🛡️ 创世壁障：防御+100%持续5回合+回3%HP']},
+  {threshold:0.8,skills:['✨ 时空裂隙：全体50%攻击+攻速-50%持续10回合','🌀 维度扭曲：反弹30%伤害+偷取20%攻防8回合']},
+  {threshold:0.6,skills:['💀 湮灭射线：全体70%攻击+秒杀2个召唤物','🌌 混沌领域：攻防速-40%持续12回合+无敌2回合','🪞 黑暗镜像：复制勇者和召唤物(75%属性)']},
+  {threshold:0.35,skills:['🔥 创世之焰：全体90%攻击+灼烧5%HP/3tick+攻防速-30%10回合','🌌 时间回溯：回20%HP+攻击力+40%+防御+60%持续8回合','🪞 黑暗镜像：复制勇者和召唤物(75%属性)']},
+  {threshold:0.15,skills:['💀 终焉审判：全体120%攻击+全debuff+秒杀2个召唤物','🌌 创世再临：回15%HP+无敌2回合+攻击力+50%','✨ 万象归一：全体100%攻击+偷取30%全属性12回合','🪞 黑暗镜像：复制勇者和召唤物(75%属性)']}
+],expMult:50,goldMult:100,dropQ:10};
+function spawnFinalBoss(){
+const timeMin=S.focusSeconds/60;
+const logPart=Math.log2(1+timeMin)*0.5;
+const expPart=Math.pow(timeMin/10,1.45)*0.3;
+const tier=getMonTier();
+let scale=(1+logPart+expPart)*(1+tier*0.25);
+const mirrorRaw=(totalAtk()/Math.max(1,16+S.hero.level*5)*0.4+totalDef()/Math.max(1,8+S.hero.level*2)*0.25+eMaxHp()/Math.max(1,100+S.hero.level*20)*0.25+S.hero.spd/Math.max(1,8+S.hero.level*0.5)*0.1);
+const mirrorScale=1+Math.pow(Math.max(0,mirrorRaw-1),1.2)*0.33;
+scale*=mirrorScale;
+const rbScale=1+S.rebirthCount*0.3;
+const fb=FINAL_BOSS;
+const hp=Math.floor(fb.baseHp*scale*5*rbScale);
+const atk=Math.floor(fb.baseAtk*scale*1.5*rbScale);
+const def=Math.floor(fb.baseDef*scale*3*rbScale);
+S.monsters=[{
+  name:fb.name,icon:fb.icon,color:fb.color,
+  hp,maxHp:hp,atk,def,
+  level:S.hero.level+10,
+  exp:Math.floor(100*scale*fb.expMult),
+  gold:Math.floor(50*scale*fb.goldMult),
+  isBoss:true,isElite:false,alive:true,ac:0,_eL:false,
+  spd:fb.spd,_atkOffset:0,
+  role:'boss_wave',trait:'',
+  _summonCD:0,_shieldCD:0,_traitCD:0,_skCD:0,
+  _bwIdx:-1,_phase:0,_phaseCD:0,
+  _invincible:0,_chargeNext:false,_reflectPct:0,
+  baseAtk:atk,baseDef:def,_isFinalBoss:true
+}];
+S._isBossWave=true;
+renderEnemySide();
+addBL('🌌 最终BOSS！创世之神·混沌降临！','rt');addLog('🌌 最终Boss: 创世之神·混沌！','rt');
+showSkillFlash('🌌 创世之神·混沌！','');
+initSummons()}
+
+function showVictoryScreen(){
+if(S.focusing){clearInterval(timerInterval);S.focusing=false;document.getElementById('focusBtn').textContent='▶ 开始专注';document.getElementById('focusBtn').classList.remove('active')}
+const time=fmtT(S.focusSeconds);const kills=S.hero.kills;const lv=S.hero.level;const rb=S.rebirthCount;const pets=S.pets?S.pets.length:0;const dg=S.dungeonBest||0;
+const overlay=document.createElement('div');overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:500;display:flex;align-items:center;justify-content:center';
+const box=document.createElement('div');box.style.cssText='background:linear-gradient(180deg,#111 0%,#0a0a2e 100%);border:3px solid #fff;padding:32px;text-align:center;max-width:450px;animation:popin .5s ease-out';
+box.innerHTML='<div style="font-size:60px;margin-bottom:12px">🏆</div>'
++'<div style="font-family:Press Start 2P,monospace;font-size:20px;color:#fff;margin-bottom:6px;text-shadow:0 0 20px rgba(255,255,255,.8)">通 关</div>'
++'<div style="font-family:Press Start 2P,monospace;font-size:12px;color:var(--gold);margin-bottom:16px">创世之神·混沌 已被击败！</div>'
++'<div style="font-size:14px;color:#ccc;line-height:2;margin-bottom:16px;text-align:left;padding:12px;border:2px solid #333;background:rgba(0,0,0,.3)">'
++'⏱ 通关时间: <span style="color:var(--gold)">'+time+'</span><br>'
++'📊 勇者等级: <span style="color:#5f5">Lv.'+lv+'</span><br>'
++'💀 总击杀: <span style="color:#f66">'+kills+'</span><br>'
++'🔄 转生次数: <span style="color:#ff0">'+rb+'</span><br>'
++'🐾 宠物收集: <span style="color:#c8f">'+pets+'只</span><br>'
++'🏰 地下城: <span style="color:#4cf">'+dg+'/10层</span><br>'
++'⚔ 最终攻击力: <span style="color:#f88">'+totalAtk()+'</span><br>'
++'🛡 最终防御力: <span style="color:#88f">'+totalDef()+'</span>'
++'</div>'
++'<div style="font-size:13px;color:#aaa;line-height:1.8;margin-bottom:16px">恭喜你完成了所有挑战！<br>你可以继续挂机，或者转生开启新的轮回。</div>'
++'<div style="display:flex;gap:8px;justify-content:center">'
++'<button style="font-family:Press Start 2P,monospace;font-size:10px;padding:10px 20px;cursor:pointer;border:2px solid #fff;background:rgba(255,255,255,.1);color:#fff" onclick="this.parentElement.parentElement.parentElement.remove()">继续冒险</button>'
++'<button style="font-family:Press Start 2P,monospace;font-size:10px;padding:10px 20px;cursor:pointer;border:2px solid #ff0;background:rgba(255,200,0,.1);color:#ff0" onclick="this.parentElement.parentElement.parentElement.remove();confirmRebirth()">转生</button>'
++'</div>';
+overlay.appendChild(box);document.body.appendChild(overlay)}
+
+function spawnWave(){S._debuffs=[];S._nrUsedThisWave=false;S._queenRevUsed=false;
+if(!S._waveCount)S._waveCount=0;
+S._isBossWave=false;
+S._waveCount++;
+// Wave 450: Final Boss
+if(S._waveCount===450){spawnFinalBoss();return}
+// Every 10 waves, trigger boss wave
+if(S._waveCount%10===0){spawnBossWave();return}
+const tier=getMonTier(),timeMin=S.focusSeconds/60;
+const logPart=Math.log2(1+timeMin)*0.5;
+const expPart=Math.pow(timeMin/10,1.45)*0.3;
+let scale=(1+logPart+expPart)*(1+tier*0.25);
+// Dungeon scaling
+if(S.dungeonActive&&DG_FLOORS[S.dungeonFloor]){const df=DG_FLOORS[S.dungeonFloor];scale*=df.hpS;}
+if(S.deathStreak>0)scale*=(1-Math.min(0.5,S.deathStreak*0.12));if(S._rlWeak){scale*=0.8;S._rlWeak=false}
+const baseAtkRef=16+S.hero.level*5,baseDefRef=8+S.hero.level*2,baseHpRef=100+S.hero.level*20,baseSpdRef=8+S.hero.level*0.5;
+const heroAtkRatio=totalAtk()/Math.max(1,baseAtkRef);
+const heroDefRatio=totalDef()/Math.max(1,baseDefRef);
+const heroHpRatio=eMaxHp()/Math.max(1,baseHpRef);
+const heroSpdRatio=S.hero.spd/Math.max(1,baseSpdRef);
+const mirrorRaw=(heroAtkRatio*0.4+heroDefRatio*0.25+heroHpRatio*0.25+heroSpdRatio*0.1);
+const mirrorOverflow=Math.max(0,mirrorRaw-1);
+const mirrorScale=1+Math.pow(mirrorOverflow,1.2)*0.33;
+scale*=mirrorScale;
+let monCount=1;const mc=Math.min(95,timeMin*5);
+if(Math.random()*100<mc)monCount=2;
+if(Math.random()*100<mc*0.65)monCount=3;
+if(timeMin>=6&&Math.random()*100<mc*0.45)monCount=4;
+if(timeMin>=12&&Math.random()*100<mc*0.32)monCount=5;
+if(timeMin>=20&&Math.random()*100<mc*0.22)monCount=6;
+if(timeMin>=32&&Math.random()*100<mc*0.14)monCount=7;// 前期大幅提升精英/Boss概率，后期趋于原来水平
+const bR=Math.min(25,18-Math.max(0,timeMin-3)*0.5),eR=Math.min(55,40-Math.max(0,timeMin-3)*0.8);
+S.monsters=[];for(let n=0;n<monCount;n++){const weights=MONSTERS.map((_,i)=>Math.max(1,Math.pow(0.5,Math.abs(i-tier))*10));const tW=weights.reduce((a,b)=>a+b,0);let rr=Math.random()*tW,pickTier=tier;for(let i=0;i<weights.length;i++){rr-=weights[i];if(rr<=0){pickTier=i;break}}const base=MONSTERS[pickTier];const tB=Math.max(1,1+(tier-pickTier)*0.3);const variance=0.85+Math.random()*0.3;const roll=Math.random()*100;
+let prefix='',hpM=1,atkM=1,defM=1,expM=1,goldM=1,isBoss=false,isElite=false;
+// Boss/精英强度随时间平滑增长，前期较弱
+const earlyScale=Math.min(1,0.45+timeMin*0.037);
+if(roll<bR&&S.deathStreak===0&&!S.monsters.some(m=>m.isBoss)&&!S._rlNoElite){prefix=base.bossName?('💀'+base.bossName):('💀BOSS·'+base.name);hpM=1.4+1.6*earlyScale;atkM=1.2+1.0*earlyScale;defM=1.1+0.7*earlyScale;expM=4;goldM=5;isBoss=true}
+else if(roll<eR&&S.deathStreak<=1&&!S._rlNoElite){prefix='⭐'+base.name;hpM=1.1+0.5*earlyScale;atkM=1.05+0.35*earlyScale;defM=1.0+0.2*earlyScale;expM=2;goldM=2;isElite=true}
+else prefix=base.name;const cs=monCount>1?(0.88-monCount*0.02):1;S.monsters.push({...base,name:prefix,hp:Math.floor(base.baseHp*scale*variance*hpM*cs*tB),maxHp:Math.floor(base.baseHp*scale*variance*hpM*cs*tB),atk:Math.floor(base.baseAtk*scale*variance*atkM*cs*tB),def:Math.floor(base.baseDef*scale*variance*defM*tB),level:Math.max(1,S.hero.level+Math.floor(Math.random()*5)-1+tier),exp:Math.floor(base.exp*scale*expM*0.6/monCount),gold:Math.floor(base.gold*scale*goldM*0.6/monCount),isBoss,isElite,alive:true,ac:0,_eL:false,spd:Math.max(1,(base.baseSpd||3)-(isBoss?1:0)),_atkOffset:n,role:base.role||'normal',trait:base.trait||'',_summonCD:0,_shieldCD:0,_traitCD:0,_skCD:0})}renderEnemySide();addBL((monCount>1?'⚔️'+monCount+'只！':'')+S.monsters.map(m=>m.name).join(', '),S.monsters.some(m=>m.isBoss)?'rt':'');S._rlNoElite=false;if(skLv('death_knight')>0&&S.hero.level>=8&&S._waveCount%3===0)setTimeout(tryEvolveDeathKnight,300);initSummons()}
+
+// ====== BATTLE TICK ======
+function battleTick(){if(aliveMonsters().length===0||!S.focusing)return;S.battleTick++;
+const spdB=1+skB('atkSpd')/100,spdD=debuffMult('spdMult');const heroInt=Math.max(1,Math.floor((4-S.hero.spd/20)/spdB/spdD));if(S.battleTick%heroInt===0){const tgt=firstAliveMonster();if(tgt)heroAttack(tgt)}
+if(aliveMonsters().length===0){updateUI();return}
+aliveMonsters().forEach(m=>{const iv=m.spd||3,off=m._atkOffset||0;if((S.battleTick+off)%iv===0)monsterDoAttack(m)});
+if(aliveMonsters().length===0){updateUI();return}
+if(S.battleTick%5===0){const dgSp=S._dgSpecial||'';const noHeal=dgSp==='noheal'||dgSp==='hell';const rp=noHeal?0:(2+skB('regen'));S.hero.hp=Math.min(eMaxHp(),S.hero.hp+Math.floor(eMaxHp()*rp/100));if(S._queenShieldTicks>0){S._queenShieldTicks--;if(S._queenShieldTicks<=0)S._queenShield=0}aliveSummons().forEach(su=>{if(su._shieldTicks>0){su._shieldTicks--;if(su._shieldTicks<=0)su._shield=0}});aliveMonsters().forEach(am=>{if(am._shieldTicks>0){am._shieldTicks--;if(am._shieldTicks<=0)am._shieldBuff=0}});
+// Dungeon burn effect
+if(dgSp==='burn'||dgSp==='hell'){const bd=Math.floor(eMaxHp()*0.03);S.hero.hp=Math.max(1,S.hero.hp-bd)}}
+// Dungeon poison (every 3 ticks)
+if(S.battleTick%3===0&&(S._dgSpecial==='poison'||S._dgSpecial==='hell')){const pd=Math.floor(eMaxHp()*0.02);S.hero.hp=Math.max(1,S.hero.hp-pd)}if(S.battleTick%2===0)tickDebuffs();
+// Queen cleanse: every 6 ticks, chance to remove debuffs
+if(S.battleTick%6===0&&skLv('queen_cleanse')>0&&aliveSummons().some(u=>u.type==='queen')){
+  const clCh=15+skLv('queen_cleanse')*10;
+  if(S._debuffs&&S._debuffs.length>0&&Math.random()*100<clCh){S._debuffs.shift();addBL('✨ 净化！清除debuff','grt')}
+}
+if(skLv('whirlwind')>0){const iv=skVal('whirlwind');if(S.battleTick%iv===0&&aliveMonsters().length>0){const d=Math.floor(totalAtk()*0.7);showSkillFlash('🌀 旋风斩！','');showAoeFlash();addBL('🌀 旋风斩 全体'+d+'伤害','pt');aliveMonsters().forEach(m=>{m.hp-=d;if(m.hp<=0){m.hp=0;m.alive=false}});applyLifesteal(d);checkAllDead()}}
+if(aliveMonsters().length===0){updateUI();return}
+const alive=aliveSummons();
+if(alive.length>0&&S.battleTick%3===0&&aliveMonsters().length>0){const sAB=1+skB('summonAtk')/100,dB=1+skB('lordDomain')/100;animateSummonAtk();alive.forEach(u=>{const st=SUMMON_TYPES[u.type];const dmg=st?Math.floor(totalAtk()*st.atkMult*sAB*dB):0;
+if(st&&st.isHealer){const hL=skLv('queen_heal'),hP=hL>0?(2+hL*1.5):3;const heal=Math.floor(eMaxHp()*hP/100);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+heal);aliveSummons().forEach(su=>{if(su!==u)su.hp=Math.min(su.maxHp,su.hp+Math.floor(su.maxHp*(hL>0?3+hL*2:5)/100))});addBL('👸 治愈+'+heal+'HP','grt');const sL=skLv('queen_shield'),sCh=sL>0?(10+sL*5):15,sV=sL>0?(15+sL*8):20,sCap=sV*3;if(Math.random()*100<sCh){S._queenShield=Math.min(sCap,(S._queenShield||0)+sV);S._queenShieldTicks=6;aliveSummons().forEach(su=>{su._shield=Math.min(sCap,(su._shield||0)+Math.floor(sV*0.6));su._shieldTicks=6});addBL('👸 壁垒！全军防+'+sV,'pt')}const smL=skLv('queen_summon'),smCh=smL>0?(8+smL*5):10,smCap=smL>0?(8+smL*2):10;if(Math.random()*100<smCh&&S.summonUnits.length<smCap){S.summonUnits.push({type:'skeleton',hp:Math.floor(eMaxHp()*0.15*dB),maxHp:Math.floor(eMaxHp()*0.15*dB),alive:true,_deployed:true});addBL('👸 召唤骷髅兵！','pt');renderAllySide()}updateSummonHp()
+}else if(u.type==='lord'){const tgt=firstAliveMonster();if(tgt){
+// Lord execute check
+const exLv=skLv('lord_execute'),exThresh=exLv>0?exLv*5:0;
+if(exThresh>0&&!tgt.isBoss&&tgt.hp/tgt.maxHp<exThresh/100){tgt.hp=0;tgt.alive=false;showSkillFlash('💀 斩首！','necro-flash');addBL('💀 君主斩首 '+tgt.name+'！','gt')}
+else{tgt.hp-=dmg;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}addBL('👑 君主→'+tgt.name+' '+dmg,'pt')}}
+// Lord sword
+const sL=skLv('lord_sword');if(sL>0&&S.battleTick%5===0){const t2=firstAliveMonster();if(t2){const sd=Math.floor(totalAtk()*(150+sL*50)/100);t2.hp-=sd;showSkillFlash('⚔️ 黑暗大剑！','necro-flash');addBL('⚔️ 黑暗大剑 '+sd,'gt');if(t2.hp<=0){t2.hp=0;t2.alive=false}}}
+// Lord AOE storm
+const aoeLv=skLv('lord_aoe');if(aoeLv>0&&S.battleTick%8===0){const aoeD=Math.floor(totalAtk()*(40+aoeLv*20)/100);aliveMonsters().forEach(em=>{em.hp-=aoeD;if(em.hp<=0){em.hp=0;em.alive=false}});showAoeFlash();addBL('🌪️ 暗影风暴 全体'+aoeD,'pt')}
+}else if(st&&st.isAoe){
+// Enhanced hunter combat
+const hunterDmgBonus=1+skB('hunterVolley')/100;
+const piercePct=skB('hunterPierce')/100;
+const multiLv=skLv('hunter_multishot');const multiHits=1+(multiLv>0?skVal('hunter_multishot'):0);
+const baseDmg=dmg;
+for(let hit=0;hit<multiHits;hit++){
+  const hitMult=hit===0?1:0.6;
+  aliveMonsters().forEach(m=>{
+    let hd=Math.floor(baseDmg*hunterDmgBonus*hitMult);
+    if(piercePct>0)hd=Math.floor(hd*(1+piercePct*0.5));// pierce adds damage
+    m.hp-=hd;if(m.hp<=0){m.hp=0;m.alive=false}
+  });
+}
+addBL('🏹 猎手 全体'+Math.floor(baseDmg*hunterDmgBonus)+(multiHits>1?' ×'+multiHits:''),'pt');
+// Hunter slow
+const slowCh=skB('hunterSlow');if(slowCh>0&&Math.random()*100<slowCh)addDebuff('hunter_slow','❄️冰霜箭',4,{spdMult:0.8});
+// Hunter trap
+if(skLv('hunter_trap')>0&&S.battleTick%10===0){const trapDmg=Math.floor(totalAtk()*(50+skLv('hunter_trap')*30)/100);const t2=firstAliveMonster();if(t2){t2.hp-=trapDmg;if(t2.hp<=0){t2.hp=0;t2.alive=false}addBL('🪤 陷阱！'+trapDmg,'pt')}}
+// Hunter snipe
+if(skLv('hunter_snipe')>0&&S.battleTick%12===0){const ams=aliveMonsters();if(ams.length>0){const top=ams.reduce((a,b)=>a.hp>b.hp?a:b);const sd=Math.floor(totalAtk()*st.atkMult*sAB*dB*2);top.hp-=sd;if(top.hp<=0){top.hp=0;top.alive=false}showSkillFlash('🎯 狙击！','');addBL('🎯 狙击→'+top.name+' '+sd,'gt')}}
+}else if(u.type==='raised'){if(!u._abilityCD)u._abilityCD=0;u._abilityCD++;const role=u.raisedRole||'normal';if(role==='necro'&&u._abilityCD>=2){u._abilityCD=0;if(S.summonUnits.length<12){S.summonUnits.push({type:'skeleton',hp:Math.floor(u.maxHp*0.3),maxHp:Math.floor(u.maxHp*0.3),alive:true,_deployed:true});addBL('🧟 '+u.raisedName+'召唤骷髅！','grt');renderAllySide()}}else if(role==='shaman'&&u._abilityCD>=2){u._abilityCD=0;const r=Math.random();if(r<0.4){const h=Math.floor(eMaxHp()*0.08);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+h);addBL('🧟 '+u.raisedName+'治愈+'+h,'grt')}else if(r<0.7){S._queenShield=Math.min(60,(S._queenShield||0)+15);S._queenShieldTicks=5;addBL('🧟 '+u.raisedName+'护盾+15','grt')}else{const ld=Math.floor(u.raisedAtk*1.2);aliveMonsters().forEach(em=>{em.hp-=ld;if(em.hp<=0){em.hp=0;em.alive=false}});addBL('🧟 '+u.raisedName+'闪电链 '+ld,'grt')}}const tgt=firstAliveMonster();if(tgt){const rd=Math.floor(u.raisedAtk*(0.8+Math.random()*0.4));tgt.hp-=rd;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}addBL('🧟 '+u.raisedName+'→'+tgt.name+' '+rd,'pt')}
+}else if(st&&st.isDarkHero){
+// Dark hero mirrors hero's combat at reduced stats
+const mirrorPct=skVal('mirror')/100;// 0.5/0.65/0.8
+const dhAtk=Math.floor(totalAtk()*mirrorPct);
+const dhCrit=totalCrit()*mirrorPct;
+const dhElem=S.heroElement||'none';
+const tgt=firstAliveMonster();
+if(tgt){
+  const tDef=tgt.def+(tgt._shieldBuff||0);
+  let dd=Math.max(1,Math.floor((dhAtk*(.75+Math.random()*.2))-tDef*.8));
+  const isCrit=Math.random()*100<dhCrit;
+  if(isCrit)dd=Math.floor(dd*2);
+  // Element
+  const mElem=getMonElement(tgt);const eMult=elemDmgMult(dhElem,mElem);dd=Math.floor(dd*eMult);
+  // Execute
+  if(tgt.hp/tgt.maxHp<0.3&&skB('execute')>0)dd=Math.floor(dd*(1+skB('execute')/100*mirrorPct));
+  // Death mark
+  if(tgt._deathMark>0)dd=Math.floor(dd*(1+tgt._deathMark/100));
+  tgt.hp-=dd;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}
+  // Lifesteal
+  const dhLs=totalLifesteal()*mirrorPct;if(dhLs>0){const heal=Math.floor(dd*dhLs/100);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+heal)}
+  addBL('🪞 黑暗勇者→'+tgt.name+(isCrit?' 暴击':'')+(eMult>1?' 克制':'')+' '+dd,isCrit?'gt':'pt');
+}
+// Dark hero whirlwind (every 6 ticks if hero has it)
+if(skLv('whirlwind')>0&&S.battleTick%6===0&&aliveMonsters().length>0){
+  const wd=Math.floor(dhAtk*0.7);
+  aliveMonsters().forEach(em=>{em.hp-=wd;if(em.hp<=0){em.hp=0;em.alive=false}});
+  addBL('🪞🌀 黑暗旋风 '+wd,'pt')}
+}else{const tgt=firstAliveMonster();if(tgt){let effDmg=st?Math.floor(totalAtk()*(u.atkMult||st.atkMult)*sAB*dB):dmg;
+// Assassin special combat
+if(u.type==='assassin'){
+  // Death mark: marked target takes more damage from all
+  const markLv=skLv('assassin_mark');if(markLv>0){tgt._deathMark=skVal('assassin_mark')}
+  // Assassin crit
+  const aCritBonus=skB('assassinCrit');
+  const aCrit=Math.random()*100<(15+aCritBonus);// base 15% + skill bonus
+  if(aCrit){const critDmgMult=2+aCritBonus*0.2;effDmg=Math.floor(effDmg*critDmgMult)}
+  // Apply mark bonus from other assassins
+  if(tgt._deathMark>0)effDmg=Math.floor(effDmg*(1+tgt._deathMark/100));
+  // Poison
+  const poisonCh=skB('assassinPoison');if(poisonCh>0&&Math.random()*100<poisonCh)addDebuff('assassin_poison_'+S.battleTick,'☠️淬毒',6,{dot:2});
+  tgt.hp-=effDmg;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}
+  addBL('🗡️ 刺客→'+tgt.name+(aCrit?' 暗杀!':'')+' '+effDmg,aCrit?'gt':'pt');
+  // Combo: chance for extra hit
+  const comboCh=skB('assassinCombo');if(comboCh>0&&Math.random()*100<comboCh&&tgt.alive){const cd=Math.floor(effDmg*0.5);tgt.hp-=cd;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}addBL('⚡ 连击 '+cd,'pt')}
+  // Execute
+  if(skLv('assassin_execute')>0&&tgt.alive&&!tgt.isBoss&&tgt.hp/tgt.maxHp<0.1){tgt.hp=0;tgt.alive=false;addBL('💀 暗影处决！','gt');showSkillFlash('💀 处决！','')}
+}else{
+  // Death mark bonus for non-assassin summons
+  if(tgt._deathMark>0)effDmg=Math.floor(effDmg*(1+tgt._deathMark/100));
+  tgt.hp-=effDmg;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}addBL('🗡️ '+(st?st.name:'?')+'→'+tgt.name+' '+effDmg,'pt');
+  if(u.type==='death_knight'&&S.battleTick%3===0&&tgt.alive){const kd=Math.floor(effDmg*2.5);tgt.hp-=kd;if(tgt.hp<=0){tgt.hp=0;tgt.alive=false}showSkillFlash('⚔️ 死亡打击！','necro-flash');addBL('⚔️ 死亡骑士重击 '+kd,'gt');const others=aliveMonsters().filter(x=>x!==tgt);if(others.length>0){const cleave=Math.floor(kd*0.4);others[0].hp-=cleave;if(others[0].hp<=0){others[0].hp=0;others[0].alive=false}addBL('⚔️ 顺劈 '+cleave,'pt')}}
+}}}});checkAllDead()}
+if(skLv('plague')>0&&aliveMonsters().length>0){aliveMonsters().forEach(m=>{const pd=Math.floor(m.maxHp*skB('plague')/100);m.hp-=pd;if(m.hp<=0){m.hp=0;m.alive=false}});if(S.battleTick%4===0)addBL('☣️ 瘟疫','pt');checkAllDead()}
+updateMonHpAll();renderEnemySide();updateUI()}
+
+function heroAttack(tgt){if(!tgt||!tgt.alive)return;
+// Boss invincibility check
+if(bossInvCheck(tgt)){addBL('🛡️ 无敌！无法造成伤害','rt');animateHA();S.hero.combo++;
+// Still count combo for summon art
+const saLv=skLv('summon_art');
+if(saLv>0){const allDead=aliveSummons().length===0;if(allDead&&!S._summonAllDead){S._summonAllDead=true;S._summonCD=0}if(S._summonAllDead){S._summonCD++;const atkNeeded=Math.max(2,7-saLv);if(S._summonCD>=atkNeeded){S._summonCD=0;S._summonAllDead=false}}}
+return}
+const tDef=tgt.def+(tgt._shieldBuff||0);let dmg=Math.max(1,Math.floor((totalAtk()*(.75+Math.random()*.2))-tDef*.8));const isCrit=Math.random()*100<totalCrit();const isExec=tgt.hp/tgt.maxHp<.3&&skB('execute')>0;if(isCrit)dmg=Math.floor(dmg*2);if(isExec)dmg=Math.floor(dmg*(1+skB('execute')/100));
+// Element damage
+const hElem=S.heroElement||'none';const mElem=getMonElement(tgt);const eMult=elemDmgMult(hElem,mElem);dmg=Math.floor(dmg*eMult);
+// Death mark bonus from assassins
+if(tgt._deathMark>0)dmg=Math.floor(dmg*(1+tgt._deathMark/100));
+const elemText=eMult>1?' '+ELEMENTS[hElem].icon+'克制!':eMult<1?' 抵抗':'';
+tgt.hp-=dmg;showDmg(dmg,isCrit||eMult>1,true);animateHA();S.hero.combo++;
+// Boss reflect
+bossReflect(tgt,dmg);const tI=S.monsters.indexOf(tgt);if(tI>=0)animateMonHit(tI);applyLifesteal(dmg);addBL('⚔️ 勇者→'+tgt.name+(isCrit?' 暴击':'')+(isExec?' 斩杀':'')+elemText+' '+dmg,isCrit||eMult>1?'gt':'');
+// Summon art: when all summons dead, count attacks then re-summon
+const saLv=skLv('summon_art');
+if(saLv>0){
+  const allDead=aliveSummons().length===0;
+  if(allDead&&!S._summonAllDead){S._summonAllDead=true;S._summonCD=0}// just died, start counting
+  if(S._summonAllDead){
+    S._summonCD++;
+    const atkNeeded=Math.max(2,7-saLv);// Lv1=6, Lv2=5, Lv3=4, Lv4=3, Lv5=2
+    if(S._summonCD>=atkNeeded){
+      S._summonCD=0;S._summonAllDead=false;
+      // Clean up dead units before re-summoning
+      S.summonUnits=S.summonUnits.filter(u=>u.alive);
+      const desired=buildSummonList();
+      const dB=1+skB('lordDomain')/100,skelHpB=1+skB('boneArmor')/100,skelAtkB=1+skB('deathMarch')/100,saBonus=1+saLv*0.08;
+      const dkAlive=(S._persistDKs||[]).filter(dk=>dk.alive).length;
+      let skelSkip=dkAlive;
+      const sumCount=saLv;// Lv1=1, Lv2=2, ..., Lv5=5
+      // Priority: queen > lord > hunter > assassin > skeleton
+      const desiredCounts={};desired.forEach(t=>{desiredCounts[t]=(desiredCounts[t]||0)+1});
+      if(desiredCounts['skeleton'])desiredCounts['skeleton']=Math.max(0,desiredCounts['skeleton']-dkAlive);
+      const summonOrder=['dark_hero','queen','lord','hunter','assassin','skeleton'];
+      let summoned=0;const names=[];
+      for(const t of summonOrder){
+        if(summoned>=sumCount)break;
+        const want=desiredCounts[t]||0;
+        const have=S.summonUnits.filter(u=>u.alive&&u.type===t).length;
+        let toAdd=Math.min(want-have,sumCount-summoned);
+        for(let j=0;j<toAdd;j++){
+          if(t==='lord'&&(S._lordCD||0)>0)break;
+          if(t==='queen'&&(S._queenCD||0)>0)break;
+          const st=SUMMON_TYPES[t];
+          let hpM=st.hpMult,aM=st.atkMult;
+          if(t==='skeleton'){hpM*=skelHpB;aM*=skelAtkB}
+          hpM*=saBonus;aM*=saBonus;
+          const hp=Math.floor((eMaxHp()*hpM+S.hero.level*3)*dB);
+          S.summonUnits.push({type:t,hp,maxHp:hp,alive:true,atkMult:aM,_deployed:true,_dL:false});
+          summoned++;names.push(st.name);
+        }
+      }
+      if(summoned>0){addBL('📜 召唤术！'+names.join('+'),'pt');showSkillFlash('📜 召唤术！','necro-flash');renderAllySide()}
+    }
+  }
+}
+if(tgt.hp<=0){tgt.hp=0;tgt.alive=false;tgt._killProcessed=true;onMonsterKill(tgt)}checkAllDead()}
+
+function monsterDoAttack(m){if(!m.alive||S.hero.hp<=0)return;
+// Boss wave special AI
+if(m.role==='boss_wave'){if(bossWaveAI(m))return}
+// Dragon skills
+if(m.role==='dragon'){if(!m._skCD)m._skCD=0;m._skCD++;if(m._skCD>=2){m._skCD=0;const sk=Math.floor(Math.random()*5);const ad=Math.floor(m.atk*1.3);if(sk===0){S.hero.hp-=ad;showDmg(ad,false,false);animateHeroHit();addDebuff('burn','🔥灼烧',6,{dot:3,dotSum:2});addBL('🐉 龙之烈焰 '+ad+'+灼烧','rt')}else if(sk===1){S.hero.hp-=Math.floor(m.atk*0.8);addDebuff('frost','🧊冰冻',8,{spdMult:0.5});addBL('🐉 凌冬将至+减速','rt')}else if(sk===2){addDebuff('dragonbreath','💨吐息',8,{atkMult:0.7,defMult:0.7});addBL('🐉 龙之吐息 攻防-30%','rt')}else if(sk===3){S.hero.hp-=Math.floor(m.atk);aliveSummons().forEach(su=>{su.hp-=Math.floor(m.atk*0.7);if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp();showAoeFlash();addBL('🐉 龙啸天地 AOE','rt')}else{if(!m._healCount)m._healCount=0;if(m._healCount<3){m._healCount++;m.hp=Math.min(m.maxHp,m.hp+Math.floor(m.maxHp*0.2));addBL('🐉 龙鳞壁障 +20%HP('+m._healCount+'/3)','rt')}else{const d=Math.floor(m.atk*1.2);S.hero.hp-=d;addBL('🐉 龙尾横扫 '+d,'rt')}}if(S.hero.hp<=0){heroDie(m);return}}}
+// Demon skills
+if(m.role==='demon'){if(!m._skCD)m._skCD=0;m._skCD++;if(m._skCD>=2){m._skCD=0;const sk=Math.floor(Math.random()*5);if(sk===0){const d=Math.floor(m.atk*2);S.hero.hp-=d;addDebuff('stun','👁️眩晕',4,{spdMult:0.3});addBL('👹 深渊凝视 '+d,'rt')}else if(sk===1){addDebuff('dark','🌑暗黑领域',10,{atkMult:0.6,defMult:0.6,spdMult:0.7});addBL('👹 暗黑领域 全属性降','rt')}else if(sk===2){const d=Math.floor(m.atk*1.5);S.hero.hp-=d;aliveSummons().forEach(su=>{su.hp-=d;if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp();showAoeFlash();addBL('👹 毁灭陨石 '+d,'rt')}else if(sk===3){const als=aliveSummons();if(als.length>0){const t=als[Math.floor(Math.random()*als.length)];t.hp=0;t.alive=false;updateSummonHp();addBL('👹 亡者之手！','rt')}else{S.hero.hp-=Math.floor(m.atk*1.8);addBL('👹 亡者之手→勇者','rt')}}else{if(!m._healCount)m._healCount=0;if(m._healCount<3){m._healCount++;m.hp=Math.min(m.maxHp,m.hp+Math.floor(m.maxHp*0.3));m.atk=Math.floor(m.atk*1.15);addBL('👹 鲜血祭礼 回复+强化('+m._healCount+'/3)','rt')}else{const d=Math.floor(m.atk*1.5);S.hero.hp-=d;addBL('👹 暗黑打击 '+d,'rt')}}if(S.hero.hp<=0){heroDie(m);return}}}
+// Shaman skills
+if(m.role==='shaman'){if(!m._shieldCD)m._shieldCD=0;m._shieldCD++;if(m._shieldCD>=2){m._shieldCD=0;const r=Math.random();if(r<0.35){aliveMonsters().forEach(am=>{am.hp=Math.min(am.maxHp,am.hp+Math.floor(am.maxHp*0.15))});addBL('🧿 '+m.name+' 治愈术','rt')}else if(r<0.65){aliveMonsters().forEach(am=>{am._shieldBuff=(am._shieldBuff||0)+Math.floor(am.def*0.3);am._shieldTicks=4});addBL('🧿 '+m.name+' 守护盾','rt')}else{const ld=Math.floor(m.atk*1.2);S.hero.hp-=ld;animateHeroHit();aliveSummons().forEach(su=>{su.hp-=Math.floor(ld*0.5);if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp();addBL('🧿 '+m.name+' 闪电链 '+ld,'rt');if(S.hero.hp<=0){heroDie(m);return}}}}
+// Necro skills
+if(m.role==='necro'){if(!m._summonCD)m._summonCD=0;m._summonCD++;if(m._summonCD>=2){m._summonCD=0;const existing=S.monsters.filter(x=>x._summoned&&x.alive).length;if(existing<2){const mhp=Math.floor(m.maxHp*0.4);S.monsters.push({name:'亡灵小兵',icon:'💀',hp:mhp,maxHp:mhp,atk:Math.floor(m.atk*0.5),def:Math.floor(m.def*0.3),level:m.level,exp:Math.floor(m.exp*0.2),gold:Math.floor(m.gold*0.2),isBoss:false,isElite:false,alive:true,ac:0,_eL:false,role:'normal',_summoned:true,_summonCD:0,_shieldCD:0,spd:3,_atkOffset:S.monsters.length,trait:'',_traitCD:0,_skCD:0,color:'#9966bb'});addBL('🕯️ '+m.name+' 召唤亡灵小兵','rt');renderEnemySide();return}}}
+// Normal attack - enemies prioritize summons
+const mIdx=S.monsters.indexOf(m);const als=aliveSummons();const heroHitCh=als.length>0?0.1:1;
+if(als.length>0&&Math.random()>heroHitCh){const tgt=als[Math.floor(Math.random()*als.length)];
+// Assassin dodge
+if(tgt.type==='assassin'&&skB('assassinDodge')>0&&Math.random()*100<skB('assassinDodge')){addBL('💨 刺客闪避！','grt');animateMonAtk(mIdx);return}
+const dR=skB('lordDomain')/100;let dmg=Math.max(1,Math.floor(m.atk*(.5+Math.random()*.3)*(1-dR)));if(tgt._shield>0)dmg=Math.max(1,Math.floor(dmg*0.6));tgt.hp-=dmg;animateMonAtk(mIdx);const tN=tgt.type==='raised'?tgt.raisedName:(SUMMON_TYPES[tgt.type]?SUMMON_TYPES[tgt.type].name:'?');if(tgt.hp<=0){tgt.hp=0;tgt.alive=false;addBL('👹 '+m.name+'消灭'+tN,'rt')}else addBL('👹 '+m.name+'→'+tN+' '+dmg,'');updateSummonHp();return}
+if(Math.random()*100<skB('block')){addBL('🛡️ 格挡！','grt');return}
+const def=totalDef();const enrage=(m.hp/m.maxHp<0.3)?1.4:1;const lordAlive=aliveSummons().some(u=>u.type==='lord');const fearReduct=lordAlive?1-skB('lordFear')/100:1;const monCrit=Math.random()*100<(m.isBoss?18:8);let dmg=Math.max(1,Math.floor(m.atk*(.65+Math.random()*.3)*enrage*fearReduct-def*.7));if(monCrit)dmg=Math.floor(dmg*1.8);
+if(m.isBoss){m.ac=(m.ac||0)+1;if(m.ac%5===0){dmg=Math.max(1,Math.floor(m.atk*1.6*enrage-def*.15));showSkillFlash('💀 毁灭重击！','')}}
+if(m.isBoss&&Math.random()<0.2&&als.length>0){const ad=Math.floor(dmg*0.5);als.forEach(u=>{u.hp-=ad;if(u.hp<=0){u.hp=0;u.alive=false}});updateSummonHp();showAoeFlash()}
+if(skB('thorns')>0){const td=Math.floor(dmg*skB('thorns')/100);m.hp-=td;if(m.hp<=0){m.hp=0;m.alive=false;m._killProcessed=true;onMonsterKill(m);return}}
+S.hero.hp-=dmg;showDmg(dmg,monCrit,false);animateMonAtk(mIdx);animateHeroHit();
+if(S._demonContract){const extra=Math.floor(dmg*0.1);S.hero.hp-=extra;if(extra>0)addBL('😈 契约代价-'+extra,'rt')}
+addBL('👹 '+m.name+(monCrit?' 暴击':'')+' '+dmg,'');
+// Trait on-hit
+if(m.trait==='bleed')addDebuff('bleed','🩸撕裂',6,{dot:2});
+if(m.trait==='steal'){const st=Math.floor(S.hero.gold*0.05);if(st>0){S.hero.gold-=st;addBL('👺 偷走'+st+'金','rt')}}
+if(m.trait==='curse'&&Math.random()<0.3)addDebuff('curse','🕯️诅咒',8,{atkMult:0.85,defMult:0.85});
+if(m.trait==='spellstorm'&&Math.random()<0.25){const sd=Math.floor(m.atk*0.6);aliveSummons().forEach(su=>{su.hp-=sd;if(su.hp<=0){su.hp=0;su.alive=false}});updateSummonHp();showAoeFlash()}
+if(m.trait==='harden'&&!m._hardenUsed&&m.hp<m.maxHp*0.5){m._hardenUsed=true;m.def=Math.floor(m.def*1.8);addBL('🗿 石化强化！','rt')}
+if(m.trait==='dragonfear'&&Math.random()<0.15)addDebuff('fear','😱龙威',5,{atkMult:0.7,spdMult:0.6});
+if(m.trait==='dominate'&&Math.random()<0.1&&als.length>0){const t=als[Math.floor(Math.random()*als.length)];if(t.type!=='lord'&&t.type!=='queen'){t.hp=0;t.alive=false;updateSummonHp();renderAllySide();addBL('👹 支配！','rt')}}
+if(m.trait==='purge'&&Math.random()<0.2&&(S._queenShield||0)>0){S._queenShield=0;S._queenShieldTicks=0}
+if(m.trait==='reassemble'&&Math.random()<0.2)m.hp=Math.min(m.maxHp,m.hp+Math.floor(m.maxHp*0.1));
+if(S.hero.hp<=0)heroDie(m)}
+
+function heroDie(m){
+// Check undying first
+if(Math.random()*100<skB('undying')){S.hero.hp=1;addBL('🔥 不死之身！','gt');return}
+// Check necro revival - chance to revive + resurrect summons, once per wave
+const nrLv=skLv('necro_revival');
+if(nrLv>0&&!S._nrUsedThisWave){
+  const chance=[0,30,40,50,60,75][nrLv];
+  const hpPct=[0,25,30,40,50,65][nrLv];
+  const reviveCount=nrLv;
+  if(Math.random()*100<chance){
+    S._nrUsedThisWave=true;
+    S.hero.hp=Math.floor(eMaxHp()*hpPct/100);
+    // Revive dead summons (prioritize high value: queen > lord > death_knight > assassin > hunter > skeleton)
+    const priority={dark_hero:7,queen:6,lord:5,death_knight:4,assassin:3,hunter:2,raised:1,skeleton:0};
+    const dead=S.summonUnits.filter(u=>!u.alive&&u._deployed!==false);
+    dead.sort((a,b)=>(priority[b.type]||0)-(priority[a.type]||0));
+    const revived=[];
+    for(let i=0;i<Math.min(reviveCount,dead.length);i++){
+      dead[i].alive=true;dead[i].hp=Math.floor(dead[i].maxHp*0.5);dead[i]._dL=false;
+      const st=SUMMON_TYPES[dead[i].type];
+      revived.push(dead[i].type==='raised'?dead[i].raisedName:(st?st.name:'?'));
+    }
+    updateSummonHp();renderAllySide();
+    addBL('♻️ 死灵复生！+'+hpPct+'%HP'+(revived.length>0?' 复活'+revived.join(','):''),'gt');
+    addLog('♻️ 死灵复生 +'+hpPct+'%HP +'+revived.length+'召唤物','pt');
+    showSkillFlash('♻️ 死灵复生！','necro-flash');
+    return;
+  }
+}
+// Queen revive: if queen alive, chance to full revive hero
+const qrLv=skLv('queen_revive');
+if(qrLv>0&&aliveSummons().some(u=>u.type==='queen')&&!S._queenRevUsed){
+  const qrCh=qrLv*12;
+  if(Math.random()*100<qrCh){
+    S._queenRevUsed=true;S.hero.hp=eMaxHp();
+    addBL('💖 女皇复苏术！满血复活！','gt');addLog('💖 女皇复苏术','gt');
+    showSkillFlash('💖 复苏术！','necro-flash');return;
+  }
+}
+S.hero.hp=0;S.hero.combo=0;S.deathStreak++;const noL=S.shopBought.includes('revival_charm');const gL=noL?0:Math.floor(S.hero.gold*0.08);S.hero.gold-=gL;addBL('💔 被击败！'+(gL>0?'-'+gL+'g ':'')+'复活中','rt');addLog('💔 被击败 复活','rt');S.hero.hp=eMaxHp();S.monsters=[];S._persistDKs=[];renderEnemySide();setTimeout(()=>spawnWave(),1500)}
+
+function onMonsterKill(m){S.hero.kills++;S.deathStreak=Math.max(0,S.deathStreak-1);S._lastKillTick=S.focusSeconds;
+// Pet capture
+tryCapturePet(m);
+// Boss wave special reward
+if(m.role==='boss_wave'){
+  const isFinal=m._isFinalBoss;
+  const bw=isFinal?FINAL_BOSS:BOSS_WAVES[m._bwIdx||0];
+  S._isBossWave=false;
+  // Bestiary tracking
+  if(!S.bestiaryFound)S.bestiaryFound=[];
+  if(bw){const bwK='bosswave_'+bw.name;if(!S.bestiaryFound.includes(bwK))S.bestiaryFound.push(bwK)}
+  if(bw){
+    // Calculate rewards
+    const bonusGold=Math.floor(50*(1+S.hero.level*0.5)*bw.goldMult);
+    const bonusExp=Math.floor(30*(1+S.hero.level*0.5)*bw.expMult);
+    const bonusSP=Math.max(1,Math.floor((m._bwIdx||0)+1));
+    S.hero.gold+=bonusGold;S.hero.exp+=bonusExp;S.hero.skillPoints+=bonusSP;
+    grantItem(bw.dropQ);
+    while(S.hero.exp>=S.hero.maxExp)levelUp();
+    // Show boss victory popup
+    const overlay=document.createElement('div');overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:center;justify-content:center;animation:popin .3s ease-out';
+    const box=document.createElement('div');box.style.cssText='background:#111;border:3px solid '+bw.color+';padding:24px;text-align:center;max-width:350px;animation:popin .3s ease-out';
+    box.innerHTML='<div style="font-size:40px;margin-bottom:8px">🏆</div>'
+      +'<div style="font-family:Press Start 2P,monospace;font-size:14px;color:'+bw.color+';margin-bottom:6px">BOSS击败!</div>'
+      +'<div style="font-family:Press Start 2P,monospace;font-size:11px;color:#ccc;margin-bottom:12px">'+bw.name+'</div>'
+      +'<div style="border:2px solid #33333366;background:rgba(0,0,0,.3);padding:10px;margin-bottom:12px;text-align:left">'
+      +'<div style="font-family:Press Start 2P,monospace;font-size:9px;color:var(--gold);margin-bottom:6px">🎁 战利品</div>'
+      +'<div style="font-size:12px;color:#5f5;line-height:1.8">'
+      +'💰 金币 +'+bonusGold+'<br>'
+      +'📚 经验 +'+bonusExp+'<br>'
+      +'🌟 技能点 +'+bonusSP+'<br>'
+      +'📦 '+['','','','稀有','史诗','传说','神话','远古','深渊','太初','创世'][bw.dropQ]+'装备'
+      +'</div></div>'
+      +'<button style="font-family:Press Start 2P,monospace;font-size:10px;padding:8px 24px;cursor:pointer;border:2px solid '+bw.color+';background:rgba(0,0,0,.5);color:#fff" onclick="this.parentElement.parentElement.remove()">确认</button>';
+    overlay.appendChild(box);document.body.appendChild(overlay);
+    setTimeout(()=>{if(overlay.parentElement)overlay.remove()},8000);
+    addLog('🏆 击败'+bw.name+'！+'+bonusGold+'g +'+bonusExp+'exp +'+bonusSP+'SP','gt');
+    updateUI();
+    // Force save after boss kill
+    try{localStorage.setItem('idle_rpg_save',JSON.stringify({...S,monsters:[],focusing:false}))}catch(e){}
+    // Final boss victory
+    if(isFinal){setTimeout(()=>showVictoryScreen(),1500)}
+  }
+}
+// Dungeon completion: if in dungeon and all monsters dead after this kill
+if(S.dungeonActive&&aliveMonsters().length===0){setTimeout(()=>completeDungeon(),600)}
+if(!S.rlKillCount)S.rlKillCount=0;
+if(!S.rlNextTrigger)S.rlNextTrigger=10;
+S.rlKillCount++;
+if(S.rlKillCount>=S.rlNextTrigger){
+  const nextGap=10+S.rlEventCount;
+  S.rlNextTrigger+=nextGap;
+  // Don't trigger RL events during boss wave or if boss is alive
+  if(S._isBossWave||S.monsters.some(m=>m.alive&&m.isBoss)){S.rlKillCount=S.rlNextTrigger-5}
+  else{setTimeout(()=>triggerRlEvent(),400)}
+}
+if(!S.bestiaryFound)S.bestiaryFound=[];const bK=m.isBoss?('boss_'+(m.bossName||m.name)):m.isElite?m.name:m.name;if(!S.bestiaryFound.includes(bK))S.bestiaryFound.push(bK);
+const eg=Math.floor(m.exp*(1+skB('expBonus')/100)),gg=Math.floor(m.gold*(1+skB('goldBonus')/100+getPetBonus('gold')/100));S.hero.exp+=eg;S.hero.gold+=gg;
+// Active pets gain exp
+petGainExp(Math.max(1,Math.floor(eg*0.3)));
+if(skB('soulDrain')>0){const h=Math.floor(eMaxHp()*skB('soulDrain')/100);S.hero.hp=Math.min(eMaxHp(),S.hero.hp+h)}
+// Trait on-death
+if(m.trait==='split'&&!m._isSplit){for(let i=0;i<2;i++){const mhp=Math.floor(m.maxHp*0.35);S.monsters.push({name:'小史莱姆',icon:'🟢',hp:mhp,maxHp:mhp,atk:Math.floor(m.atk*0.4),def:Math.floor(m.def*0.3),level:m.level,exp:Math.floor(m.exp*0.3),gold:Math.floor(m.gold*0.3),isBoss:false,isElite:false,alive:true,ac:0,_eL:false,role:'normal',trait:'',_summonCD:0,_shieldCD:0,_traitCD:0,_isSplit:true,spd:2,_atkOffset:S.monsters.length,color:'#55cc55',_skCD:0})}addBL('🟢 分裂！','rt');renderEnemySide();if(m.isBoss){for(let i=0;i<3;i++){const shp=Math.floor(m.maxHp*0.25);S.monsters.push({name:'史莱姆从者',icon:'🟢',hp:shp,maxHp:shp,atk:Math.floor(m.atk*0.3),def:Math.floor(m.def*0.2),level:m.level,exp:Math.floor(m.exp*0.15),gold:Math.floor(m.gold*0.15),isBoss:false,isElite:false,alive:true,ac:0,_eL:false,role:'normal',trait:'',_summonCD:0,_shieldCD:0,_traitCD:0,_isSplit:true,spd:2,_atkOffset:S.monsters.length,color:'#55cc55',_skCD:0})}addBL('👑 军团！','rt');renderEnemySide()}}
+if(m.trait==='reassemble'&&!m._reassembled&&Math.random()<0.3){m._reassembled=true;m.hp=Math.floor(m.maxHp*0.4);m.alive=true;addBL('💀 重组复活！','rt');renderEnemySide();return}
+// Lord raise
+const rL=skLv('lord_raise');if(rL>0){const rCh=10+rL*8,rP=(40+rL*10)/100,rCap=rL;if(!S._raisedEnemies)S._raisedEnemies=[];const cR=S.summonUnits.filter(u=>u.type==='raised'&&u.alive).length;if(Math.random()*100<rCh&&cR<rCap){const raised={type:'raised',hp:Math.floor(m.maxHp*rP),maxHp:Math.floor(m.maxHp*rP),alive:true,_deployed:true,raisedName:m.name,raisedAtk:Math.floor(m.atk*rP),raisedDef:Math.floor(m.def*rP),raisedIcon:m.icon,raisedColor:m.color,raisedRole:m.role||'normal',_abilityCD:0};S.summonUnits.push(raised);S._raisedEnemies.push(raised);addBL('🧟 站起来！'+m.name,'gt');renderAllySide()}}
+if(skB('corpseExplode')>0){const cd=Math.floor(totalAtk()*skB('corpseExplode')/100);aliveMonsters().forEach(om=>{om.hp-=cd;if(om.hp<=0){om.hp=0;om.alive=false;om._killProcessed=true;onMonsterKill(om)}});if(cd>0)addBL('💥 尸爆 '+cd,'pt')}
+addBL('✨ 击败'+m.name+' +'+eg+'exp +'+gg+'g','gt');while(S.hero.exp>=S.hero.maxExp)levelUp();
+const hasMap=S.shopBought.includes('treasure_map');const dc=Math.min(90,15+S.focusSeconds/30+skB('dropRate')+getPetBonus('drop')+(hasMap?10:0));if(Math.random()*100<dc){let q=getDropQ();if(skB('qualityUp')>0&&Math.random()*100<15)q=Math.min(10,q+Math.min(skVal('quality_up'),2));grantItem(q);if(Math.random()*100<skB('doubleDrop'))grantItem(q)}}
+function checkAllDead(){if(aliveMonsters().length===0&&S.focusing){
+// Process any monster kills that weren't handled by heroAttack
+let hadBoss=false;
+S.monsters.forEach(m=>{if(!m.alive&&!m._killProcessed){m._killProcessed=true;if(m.role==='boss_wave')hadBoss=true;onMonsterKill(m)}});
+renderEnemySide();setTimeout(()=>{if(S.focusing)spawnWave()},hadBoss?2000:600)}}
+function getDropQ(){const m=S.focusSeconds/60,r=Math.random()*100;
+if(m>=120&&r<2)return 10;
+if(m>=90&&r<4)return 9;
+if(m>=70&&r<7)return 8;
+if(m>=55&&r<10)return 7;
+if(m>=40&&r<14)return 6;
+if(m>=25&&r<5)return 5;
+if(m>=15&&r<12)return 4;
+if(m>=8&&r<25)return 3;
+if(m>=3&&r<45)return 2;
+if(m>=1&&r<65)return 1;
+return 0}
+function levelUp(){S.hero.exp-=S.hero.maxExp;S.hero.level++;S.hero.maxExp=Math.floor(100*Math.pow(1.12,S.hero.level-1));S.hero.maxHp+=15;S.hero.hp=eMaxHp();S.hero.maxMp+=5;S.hero.mp=S.hero.maxMp;S.hero.atk+=4;S.hero.def+=2;S.hero.spd+=1;S.hero.crit=Math.min(80,S.hero.crit+0.3);if(S.hero.level%2===0){S.hero.skillPoints++;addLog('🎉 Lv.'+S.hero.level+'! +1技能点','gt');addBL('⬆ Lv.'+S.hero.level+' +1SP','gt')}else{addLog('🎉 Lv.'+S.hero.level+'!','gt');addBL('⬆ Lv.'+S.hero.level,'gt')};showLU()}
+
+// ====== ITEMS with lifesteal ======
+function itemPower(i){return i?Object.values(i.stats).reduce((a,b)=>a+b,0):0}
+function qualityRank(i){return i?QUALITIES.findIndex(q=>q.key===i.quality.key):-1}
+function grantItem(qIdx){const quality=QUALITIES[qIdx],slotIdx=Math.floor(Math.random()*4),slot=ESLOTS[slotIdx];const names=[W_N,A_N,H_N,C_N][slotIdx],nameIdx=Math.min(qIdx+Math.floor(Math.random()*2),names.length-1),name=names[nameIdx];const multi=quality.multi*(1+S.hero.level*.05),stats={};let sT='';
+if(slot.key==='weapon'){stats.atk=Math.floor(10*multi);stats.crit=Math.floor(2*quality.multi);stats.lifesteal=Math.floor(quality.multi);sT='攻击<span>+'+stats.atk+'</span><br>暴击<span>+'+stats.crit+'%</span><br>🩸吸血<span>+'+stats.lifesteal+'%</span>'}
+else if(slot.key==='armor'){stats.def=Math.floor(3*multi);stats.atk=Math.floor(3*multi);sT='防御<span>+'+stats.def+'</span><br>攻击<span>+'+stats.atk+'</span>'}
+else if(slot.key==='helmet'){stats.def=Math.floor(2*multi);stats.crit=Math.floor(1*quality.multi);sT='防御<span>+'+stats.def+'</span><br>暴击<span>+'+stats.crit+'%</span>'}
+else{stats.atk=Math.floor(3*multi);stats.def=Math.floor(2*multi);stats.lifesteal=Math.floor(quality.multi*0.8);sT='攻击<span>+'+stats.atk+'</span><br>防御<span>+'+stats.def+'</span><br>🩸吸血<span>+'+stats.lifesteal+'%</span>'}
+const item={name,icon:slot.icon,quality,slot:slot.key,stats,statsText:sT};
+if(!S.itemsFound)S.itemsFound=[];
+const record={name,slotKey:slot.key,slotLabel:slot.label,qualityKey:quality.key,qualityName:quality.name,qualityColor:quality.color,icon:slot.icon,statsText:sT,obtainedAt:S.focusSeconds};
+S.itemsFound.push(record);
+const cur=S.hero.equipment[slot.key],curQ=qualityRank(cur),newQ=qualityRank(item);const should=!cur||newQ>curQ||(newQ===curQ&&itemPower(item)>itemPower(cur));if(should){S.hero.equipment[slot.key]=item;showItemPopup(item,cur);addLog('✨ ['+quality.name+']'+name,'pt')}else addLog('📦 ['+quality.name+']'+name+'(弱)','');renderEquipGrid()}
+
+// ====== UI ======
+function showDmg(d,crit,isHero,isHeal){const sc=document.getElementById('battleScene'),el=document.createElement('div');el.className='damage-num'+(crit?' crit':'')+(isHeal?' heal':'');el.textContent=(isHeal?'+':'')+d;if(isHero)el.style.right=(40+Math.random()*50)+'px';else{el.style.left=(40+Math.random()*50)+'px';if(!crit&&!isHeal)el.style.color='#ff4444'}el.style.bottom=(110+Math.random()*30)+'px';sc.appendChild(el);setTimeout(()=>el.remove(),800)}
+function showSkillFlash(text,cls){const sc=document.getElementById('battleScene'),el=document.createElement('div');el.className='skill-flash '+(cls||'');el.textContent=text;sc.appendChild(el);setTimeout(()=>el.remove(),900)}
+function animateHA(){const c=document.getElementById('heroCanvas');c.classList.add('attacking');setTimeout(()=>{c.classList.remove('attacking')},500)}
+function animateMonAtk(i){const c=document.getElementById('monC'+i);if(!c)return;c.classList.add('mon-atk');setTimeout(()=>{if(c)c.classList.remove('mon-atk')},500)}
+function animateHeroHit(){const c=document.getElementById('heroCanvas');c.classList.add('hero-hit');setTimeout(()=>{c.classList.remove('hero-hit')},250)}
+function animateMonHit(i){const c=document.getElementById('monC'+i);if(!c)return;c.classList.add('hit');setTimeout(()=>{if(c)c.classList.remove('hit')},300)}
+function showLU(){const el=document.getElementById('levelupFlash');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1500)}
+function showItemPopup(item,old){document.getElementById('popupIcon').textContent=item.icon;document.getElementById('popupName').style.color=item.quality.color;document.getElementById('popupName').innerHTML='['+item.quality.name+']'+item.name;document.getElementById('popupStats').innerHTML=item.statsText;document.getElementById('itemPopup').style.borderColor=item.quality.color;const cmp=document.getElementById('popupCompare');if(old){let h='<div style="font-size:8px;color:'+old.quality.color+'">替换['+old.quality.name+']'+old.name+'</div>';['atk','def','crit','lifesteal'].forEach(s=>{const lb={atk:'攻',def:'防',crit:'暴',lifesteal:'吸血'};const ov=old.stats[s]||0,nv=item.stats[s]||0;if(ov||nv){const d=nv-ov;h+=lb[s]+':'+ov+'→'+nv+'<span class="'+(d>0?'better':d<0?'worse':'')+'">('+(d>0?'+':'')+d+')</span> '}});cmp.innerHTML=h;cmp.style.display='block'}else cmp.style.display='none';document.getElementById('popupTitle').textContent='✨';document.getElementById('itemPopup').classList.add('show');document.getElementById('popupOverlay').classList.add('show');clearTimeout(S._pt);S._pt=setTimeout(closePopup,3000)}
+function closePopup(){clearTimeout(S._pt);document.getElementById('itemPopup').classList.remove('show');document.getElementById('popupOverlay').classList.remove('show')}
+function addBL(t,c){const o=document.getElementById('battleLogOverlay'),l=document.createElement('div');l.className='ll '+c;l.textContent=t;o.appendChild(l);if(o.children.length>8)o.children[0].remove()}
+function addLog(t,c){const ct=document.getElementById('logContent'),e=document.createElement('div');e.className='le '+c;e.innerHTML='<span class="time">['+fmtT(S.focusSeconds)+']</span>'+t;ct.insertBefore(e,ct.firstChild);if(ct.children.length>50)ct.lastChild.remove()}
+function updateUI(){const h=S.hero,em=eMaxHp();document.getElementById('statusName').textContent=h.name;document.getElementById('statusLevel').textContent='Lv.'+h.level;document.getElementById('heroLevelLabel').textContent='Lv.'+h.level;document.getElementById('hpBar').style.width=(h.hp/em)*100+'%';document.getElementById('hpText').textContent=h.hp+'/'+em;document.getElementById('heroHpMini').style.width=(h.hp/em)*100+'%';document.getElementById('mpBar').style.width=(h.mp/h.maxMp)*100+'%';document.getElementById('mpText').textContent=h.mp+'/'+h.maxMp;document.getElementById('expBar').style.width=(h.exp/h.maxExp)*100+'%';document.getElementById('expText').textContent=h.exp+'/'+h.maxExp;document.getElementById('sAtk').textContent=totalAtk();document.getElementById('sDef').textContent=totalDef();document.getElementById('sSpd').textContent=h.spd;document.getElementById('sCrit').textContent=totalCrit().toFixed(1)+'%';document.getElementById('sLifesteal').textContent=totalLifesteal()+'%';document.getElementById('sGold').textContent=h.gold;document.getElementById('sKills').textContent=h.kills;document.getElementById('sSummon').textContent=aliveSummons().length+'/'+S.summonUnits.length;document.getElementById('skPD').textContent=h.skillPoints;
+const rl=document.getElementById('rebirthLabel');if(rl)rl.textContent=S.rebirthCount>0?('转生×'+S.rebirthCount+' | 点数:'+(S.rebirthPoints||0)):''}
+
+genStars();drawHero();renderAll();
+try{const raw=localStorage.getItem('idle_rpg_save');if(raw){const d=JSON.parse(raw);if(d&&d.hero&&typeof d.hero.level==='number'){Object.assign(S,d);S.monsters=[];S.focusing=false;S.achievedMilestones=d.achievedMilestones||[];S.shopBought=d.shopBought||[];S.shopBuyCount=d.shopBuyCount||{};S.shopRefreshes=d.shopRefreshes||0;S._shopSlots=d._shopSlots||[];S.bestiaryFound=d.bestiaryFound||[];S.skills=d.skills||{};S.summonUnits=d.summonUnits||[];S._debuffs=[];if(!S.hero.lifesteal)S.hero.lifesteal=0;S.rlKillCount=d.rlKillCount||0;S.rlTalents=d.rlTalents||[];S.rlEventCount=d.rlEventCount||0;S.rlNextTrigger=d.rlNextTrigger||10;S._rlRecentEvents=d._rlRecentEvents||[];S.itemsFound=d.itemsFound||[];
+S.pets=d.pets||[];S.activePets=d.activePets||[];S.dungeonFloor=d.dungeonFloor||0;S.dungeonBest=d.dungeonBest||0;S.dungeonActive=false;S.rebirthCount=d.rebirthCount||0;S.rebirthPoints=d.rebirthPoints||0;S.rebirthBonuses=d.rebirthBonuses||{atk:0,def:0,hp:0,crit:0,spd:0,gold:0,drop:0};S.heroElement=d.heroElement||'none';
+initSkills();drawHero();renderAll();document.getElementById('timerDisplay').textContent=fmtT(S.focusSeconds);addLog('📂 自动读档','gt')}}}catch(e){localStorage.removeItem('idle_rpg_save')}
+</script>
+</body>
+</html>
