@@ -2,7 +2,7 @@
 
 > 一款纯网页单文件像素风挂机 RPG，无需安装，打开即玩！
 
-**[🎮 立即游玩 →](https://zyh-cc.github.io/勇者闯关挂机网页小游戏/)**
+**[🎮 立即游玩 →](https://zyh-cc.github.io/hero-idle-rpg/勇者挂机物语3.0.html)**
 
 ---
 
